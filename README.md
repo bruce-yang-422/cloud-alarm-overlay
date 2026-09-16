@@ -24,6 +24,10 @@ Cloud Alarm Overlay 是常駐 Windows 系統匣的桌面提醒程式。你可以
 - 從原始碼執行：安裝 [.NET SDK 10.0.401](https://dotnet.microsoft.com/download/dotnet/10.0)；版本由 [global.json](global.json) 固定。
 - 自行製作安裝包：另外安裝 Inno Setup 6 或 7。安裝包採 self-contained 發布，使用者電腦不需要 .NET SDK。
 
+## 下載與安裝
+
+從 [GitHub Releases](https://github.com/bruce-yang-422/cloud-alarm-overlay/releases/latest) 下載安裝檔；目前的 Windows x64 安裝檔為 [CloudAlarmOverlay-v1.0.0-Setup-x64.exe](https://github.com/bruce-yang-422/cloud-alarm-overlay/releases/download/v1.0.0/CloudAlarmOverlay-v1.0.0-Setup-x64.exe)。安裝後從開始功能表啟動程式。
+
 ## 快速開始
 
 在 Windows PowerShell 執行：
@@ -50,6 +54,16 @@ dotnet run --project src/CloudAlarmOverlay.App
 3. 登入「管理者專區」→「同步來源」，填入 ID／GID，儲存並同步。Sheet A 與 Sheet B 可個別測試連線。
 
 同步間隔可設為 30–60 秒，預設 45 秒。網路中斷時，已快取的雲端任務仍可排程；本機任務不受影響。程式**不會將任務、簽收或其他本機資料回寫到 Google Sheets**。
+
+## 軟體更新
+
+管理者登入後，到「設定」→「外觀與資料」，將「公開 version.json 連結」設為以下網址，再按「儲存更新來源」：
+
+```text
+https://raw.githubusercontent.com/bruce-yang-422/cloud-alarm-overlay/main/version.json
+```
+
+程式會讀取 GitHub 上的 [version.json](version.json) 比對版本；有新版時，「開啟下載頁」會前往對應的 GitHub Release 安裝檔。更新資訊與安裝檔都由 GitHub 提供。
 
 ## 本機資料與備份
 

@@ -180,15 +180,20 @@ Get-FileHash `
 Start-Process '.\artifacts\installer\CloudAlarmOverlay-v1.0.0-Setup-x64.exe'
 ```
 
-### 同步 Google Drive 的 version.json
+### 發布 GitHub 版本資訊
 
-先自行上傳安裝檔，將它的公開分享連結填入專案根目錄的 `version.json`，並確認 `latestVersion` 與實際安裝檔版本一致。再執行：
+在 GitHub Releases 建立與安裝檔版本一致的標籤（例如 `v1.0.0`），上傳 `artifacts/installer/` 中對應的 EXE。再確認專案根目錄的 `version.json`：`latestVersion` 為程式版本，`downloadUrl` 指向該 Release 的安裝檔。
 
 ```powershell
-.\.venv\Scripts\python.exe .\scripts\sync_version_json.py
+Get-Content .\version.json | ConvertFrom-Json | Select-Object latestVersion, downloadUrl
+Get-FileHash .\artifacts\installer\CloudAlarmOverlay-v1.0.0-Setup-x64.exe -Algorithm SHA256
 ```
 
-若尚未建立 `.venv`，可先執行 `python -m pip install -r requirements.txt`，再改用 `python .\scripts\sync_version_json.py`。腳本會比較本機與雲端內容：相同就略過，不同才使用 `google_key_linkaishi0514.json` 覆蓋既有的 Drive `version.json`。它不建立新檔，也不上傳安裝檔，因此原本的 `version.json` 分享連結不會改變。
+將 `version.json` 提交並推送到 `main` 後，程式使用的更新資訊網址不變：
+
+```text
+https://raw.githubusercontent.com/bruce-yang-422/cloud-alarm-overlay/main/version.json
+```
 
 ## 9. 查看本機資料與日誌
 
