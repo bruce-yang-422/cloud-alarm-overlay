@@ -2,11 +2,11 @@
  xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:adaptive="clr-namespace:CloudAlarmOverlay.App.Styles"
  Title="管理者登入" Width="470" Height="620" MinHeight="470" MinWidth="420" WindowStartupLocation="CenterOwner"
  Background="{adaptive:AdaptiveBrush #F7FAFE}" Foreground="{adaptive:AdaptiveBrush #16243E}" FontFamily="Segoe UI, Microsoft JhengHei UI" FontSize="14"
- Icon="/CloudAlarmOverlay.App;component/Assets/Brand/LogoCloud.png">
+ Icon="/CloudAlarmOverlay.App;component/Assets/Brand/cloud_alarm_icon.png">
  <Window.Resources><ResourceDictionary><ResourceDictionary.MergedDictionaries><ResourceDictionary Source="../Styles/LightTheme.xaml"/></ResourceDictionary.MergedDictionaries></ResourceDictionary></Window.Resources>
  <Grid Margin="28" Background="{adaptive:AdaptiveBrush #F7FAFE}"><Grid.RowDefinitions><RowDefinition Height="*"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
   <ScrollViewer VerticalScrollBarVisibility="Auto"><StackPanel>
-   <Image Source="/CloudAlarmOverlay.App;component/Assets/Brand/LogoBanner.png" Width="260" Height="40" HorizontalAlignment="Left" Margin="0,0,0,16"/>
+   <Image Source="/CloudAlarmOverlay.App;component/Assets/Brand/cloud_alarm_horizontal_banner.png" Width="260" Height="40" HorizontalAlignment="Left" Margin="0,0,0,16"/>
    <TextBlock x:Name="Heading" Text="管理者登入" FontSize="26" FontWeight="SemiBold"/>
    <TextBlock x:Name="Help" Text="解鎖這台電腦的技術設定。閒置 15 分鐘後自動登出。" TextWrapping="Wrap" Margin="0,12,0,20" Foreground="{adaptive:AdaptiveBrush #697C99}"/>
    <Label Target="{Binding ElementName=Username}" Content="帳號"/>

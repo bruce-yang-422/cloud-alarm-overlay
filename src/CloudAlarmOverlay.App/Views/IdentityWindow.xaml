@@ -3,7 +3,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:adaptive="clr-namespace:CloudAlarmOverlay.App.Styles"
         Title="歡迎使用 Cloud Alarm Overlay"
         Width="520" Height="560" MinWidth="380" MinHeight="300" ResizeMode="CanResize"
-        Icon="/CloudAlarmOverlay.App;component/Assets/Brand/LogoCloud.png" WindowStartupLocation="CenterScreen" Background="{adaptive:AdaptiveBrush #F7FAFE}" Foreground="{adaptive:AdaptiveBrush #16243E}"
+        Icon="/CloudAlarmOverlay.App;component/Assets/Brand/cloud_alarm_icon.png" WindowStartupLocation="CenterScreen" Background="{adaptive:AdaptiveBrush #F7FAFE}" Foreground="{adaptive:AdaptiveBrush #16243E}"
         FontSize="15" FontFamily="Segoe UI, Microsoft JhengHei UI">
     <Window.Resources>
         <ResourceDictionary>
@@ -19,7 +19,7 @@
         </Grid.RowDefinitions>
         <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
         <StackPanel Margin="0,0,8,0">
-        <Image Source="/CloudAlarmOverlay.App;component/Assets/Brand/LogoSquare.png" Height="65" HorizontalAlignment="Left" Stretch="Uniform" Margin="0,0,0,10"/><TextBlock Text="設定這台電腦" Style="{StaticResource Heading}"/>
+        <Image Source="/CloudAlarmOverlay.App;component/Assets/Brand/cloud_alarm_square_logo.png" Height="65" HorizontalAlignment="Left" Stretch="Uniform" Margin="0,0,0,10"/><TextBlock Text="設定這台電腦" Style="{StaticResource Heading}"/>
         <TextBlock Text="請輸入 IT 提供的裝置代碼與顯示名稱。通知將依此識別對象，設定後無法在此修改。"
                    Style="{StaticResource Muted}" Margin="0,8,0,22"/>
         <TextBlock Text="裝置代碼"/>

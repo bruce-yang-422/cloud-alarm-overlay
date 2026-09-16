@@ -7,10 +7,7 @@
   <ItemGroup>
     <Resource Include="Assets/Emoji/*.png" />
     <Content Include="Assets/Emoji/LICENSE.txt" CopyToOutputDirectory="PreserveNewest" />
-    <Resource Include="../../Logo_雲.png" Link="Assets/Brand/LogoCloud.png" />
-    <Resource Include="../../Logo_字.png" Link="Assets/Brand/LogoWordmark.png" />
-    <Resource Include="../../Logo_橫幅版.png" Link="Assets/Brand/LogoBanner.png" />
-    <Resource Include="../../Logo_方形版.png" Link="Assets/Brand/LogoSquare.png" />
+    <Resource Include="Assets/Brand/*.png" />
     <ProjectReference Include="../CloudAlarmOverlay.Core/CloudAlarmOverlay.Core.csproj" />
     <ProjectReference Include="../CloudAlarmOverlay.Data/CloudAlarmOverlay.Data.csproj" />
     <ProjectReference Include="../CloudAlarmOverlay.BackgroundServices/CloudAlarmOverlay.BackgroundServices.csproj" />

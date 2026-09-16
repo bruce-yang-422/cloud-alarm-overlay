@@ -82,7 +82,7 @@ public partial class MainWindow:Window
             }));
         };
         menu.Items.Add(quit);
-        var logo=new BitmapImage(new Uri("pack://application:,,,/CloudAlarmOverlay.App;component/Assets/Brand/LogoCloud.png"));
+        var logo=new BitmapImage(new Uri("pack://application:,,,/CloudAlarmOverlay.App;component/Assets/Brand/cloud_alarm_icon.png"));
         tray=new TaskbarIcon{ToolTipText="Cloud Alarm Overlay",IconSource=logo,ContextMenu=menu,DoubleClickCommand=new RelayCommand(Open)};
         refreshTimer.Tick+=(_,_)=>OnDataChanged();
         refreshTimer.Start();

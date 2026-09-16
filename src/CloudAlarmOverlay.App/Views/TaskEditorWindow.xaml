@@ -4,7 +4,7 @@
  xmlns:primitives="clr-namespace:System.Windows.Controls.Primitives;assembly=PresentationFramework"
  xmlns:controls="clr-namespace:CloudAlarmOverlay.App.Controls"
  Title="{Binding Heading}" Width="880" Height="790" MinWidth="480" MinHeight="450"
- Icon="/CloudAlarmOverlay.App;component/Assets/Brand/LogoCloud.png" WindowStartupLocation="CenterOwner" Background="{adaptive:AdaptiveBrush #F7FAFE}" Foreground="{adaptive:AdaptiveBrush #16243E}"
+ Icon="/CloudAlarmOverlay.App;component/Assets/Brand/cloud_alarm_icon.png" WindowStartupLocation="CenterOwner" Background="{adaptive:AdaptiveBrush #F7FAFE}" Foreground="{adaptive:AdaptiveBrush #16243E}"
  FontSize="14" FontFamily="Segoe UI, Microsoft JhengHei UI" UseLayoutRounding="True">
  <Window.Resources>
   <ResourceDictionary>
