@@ -1,5 +1,11 @@
 # Cloud Alarm Overlay
 
+[![.NET 10](https://img.shields.io/badge/.NET-10-512BD4?logo=dotnet&logoColor=white)](https://dotnet.microsoft.com/download/dotnet/10.0)
+[![Windows](https://img.shields.io/badge/platform-Windows-0078D4?logo=windows&logoColor=white)](https://github.com/bruce-yang-422/cloud-alarm-overlay#啟動與預覽)
+[![WPF](https://img.shields.io/badge/UI-WPF-5C2D91)](https://learn.microsoft.com/dotnet/desktop/wpf/)
+[![MIT License](https://img.shields.io/github/license/bruce-yang-422/cloud-alarm-overlay?color=green)](LICENSE)
+[![Last commit](https://img.shields.io/github/last-commit/bruce-yang-422/cloud-alarm-overlay)](https://github.com/bruce-yang-422/cloud-alarm-overlay/commits/main/)
+
 C# / WPF / MVVM / .NET 10。提供本機提醒、公開 CSV 同步、管理者登入、兩層權限、設定鎖定、稽核紀錄及 Employees 通知例外。
 
 驗收與測試結果請見 [驗收清單.md](驗收清單.md)，常用建置與封裝命令見 [常用 CLI 指令](常用CLI指令.md)。
@@ -71,6 +77,10 @@ UI 外觀以目前 WPF 實作為準，操作以鍵盤及一般滑鼠優先。
 任務的補充說明與備註可跨欄展開，兩項內容都會顯示於通知。
 
 任務歷史支援名稱、日期、來源、結果篩選，包含摘要統計、15 筆分頁及完整篩選結果 CSV 匯出。
+
+## 授權
+
+本專案採用 [MIT License](LICENSE)。內建 Emoji 素材的原始授權與著作權聲明見 [Emoji LICENSE](src/CloudAlarmOverlay.App/Assets/Emoji/LICENSE.txt)。
 
 ## 本機維護（2026-09-16）
 「設定 → 外觀與資料」提供主題、視窗行為、更新檢查及資料重置；管理員專區「備份與還原」提供 .calbak 備份／還原及變更管理者密碼。首次設定亦可匯入備份。
