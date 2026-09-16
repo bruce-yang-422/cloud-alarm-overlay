@@ -1,0 +1,36 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="1200" height="630" viewBox="0 0 1200 630" role="img" aria-labelledby="title desc">
+  <title id="title">Cloud Alarm Overlay 分享預覽圖</title>
+  <desc id="desc">重要的事，準時看見。Windows 桌面提醒程式首頁預覽。</desc>
+  <defs>
+    <linearGradient id="background" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#f8fbff"/>
+      <stop offset="1" stop-color="#ddecff"/>
+    </linearGradient>
+    <filter id="shadow" x="-20%" y="-25%" width="145%" height="155%">
+      <feDropShadow dx="0" dy="18" stdDeviation="20" flood-color="#284f82" flood-opacity=".20"/>
+    </filter>
+    <clipPath id="window">
+      <rect x="615" y="112" width="525" height="401" rx="21"/>
+    </clipPath>
+  </defs>
+  <rect width="1200" height="630" fill="url(#background)"/>
+  <circle cx="1135" cy="72" r="248" fill="#c9e0ff" opacity=".55"/>
+  <circle cx="63" cy="604" r="190" fill="#eaf4ff" opacity=".8"/>
+  <image xlink:href="../src/CloudAlarmOverlay.App/Assets/Brand/cloud_alarm_icon.png" x="67" y="71" width="76" height="58"/>
+  <text x="155" y="111" fill="#173456" font-family="Segoe UI, Microsoft JhengHei, sans-serif" font-size="33" font-weight="700">Cloud Alarm Overlay</text>
+  <text x="68" y="246" fill="#183352" font-family="Segoe UI, Microsoft JhengHei, sans-serif" font-size="62" font-weight="700">重要的事，</text>
+  <text x="68" y="326" fill="#135dce" font-family="Segoe UI, Microsoft JhengHei, sans-serif" font-size="67" font-weight="700">準時看見。</text>
+  <text x="70" y="404" fill="#536e8c" font-family="Segoe UI, Microsoft JhengHei, sans-serif" font-size="24">Windows 桌面提醒 · 團隊任務同步</text>
+  <text x="70" y="441" fill="#536e8c" font-family="Segoe UI, Microsoft JhengHei, sans-serif" font-size="24">分級通知 · 番茄鐘</text>
+  <rect x="69" y="489" width="280" height="52" rx="15" fill="#1462db"/>
+  <text x="95" y="524" fill="#fff" font-family="Segoe UI, Microsoft JhengHei, sans-serif" font-size="20" font-weight="700">免費下載 Windows 版</text>
+  <g filter="url(#shadow)"><rect x="615" y="112" width="525" height="401" rx="21" fill="#fff"/></g>
+  <g clip-path="url(#window)">
+    <rect x="615" y="112" width="525" height="31" fill="#edf4fc"/>
+    <circle cx="632" cy="128" r="4" fill="#b5c8dd"/>
+    <circle cx="647" cy="128" r="4" fill="#b5c8dd"/>
+    <circle cx="662" cy="128" r="4" fill="#b5c8dd"/>
+    <image xlink:href="screenshots/home_light.png" x="615" y="143" width="525" height="391"/>
+  </g>
+  <rect x="615" y="112" width="525" height="401" rx="21" fill="none" stroke="#c9dcef"/>
+</svg>
