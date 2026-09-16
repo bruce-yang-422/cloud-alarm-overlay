@@ -216,7 +216,7 @@ public partial class MainViewModel(ITaskRepository tasks,ITaskService taskServic
             var nextLunarEntry=nextReminderAt is {} date?await lunar.GetByDateAsync(DateOnly.FromDateTime(date)):null;
             NextLunar=string.IsNullOrWhiteSpace(nextLunarEntry?.LunarDate)?"":"農曆 "+nextLunarEntry.LunarDate;
             UpdateCountdown();
-            NextTime=Upcoming.FirstOrDefault() is {} first?$"{first.NextAt:MM/dd HH:mm:ss}  ·  {first.Level}  ·  {first.Source}":"新增本機任務，或前往設定連接公開試算表。";
+            NextTime=Upcoming.FirstOrDefault() is {} first?$"{first.NextAt:MM/dd HH:mm:ss}  ·  {CloudAlarmOverlay.App.Styles.AlarmLevelLabelConverter.Label(first.Level)}  ·  {first.Source}":"新增本機任務，或前往設定連接公開試算表。";
             var todayHistory=allHistory.Where(h=>(h.ScheduledAt??h.TriggeredAt).Date==now.Date).ToArray();
             TodayCount=upcoming.Count(t=>t.NextAt?.Date==now.Date)+todayHistory.Length;
             AcknowledgedCount=todayHistory.Count(h=>h.AcknowledgedAt is not null);

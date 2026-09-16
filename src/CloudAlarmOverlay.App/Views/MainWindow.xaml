@@ -247,10 +247,10 @@
                       </Grid.ColumnDefinitions>
                       <TextBlock Text="提醒預覽" FontSize="12" Foreground="{adaptive:AdaptiveBrush #697C99}" Margin="0,0,10,0" />
                       <UniformGrid Grid.Column="1" Columns="4">
-                        <Button Content="一般提醒" Command="{Binding PreviewCommand}" CommandParameter="低級" FontSize="12" Padding="6,5" />
-                        <Button Content="重要提醒" Command="{Binding PreviewCommand}" CommandParameter="中級" FontSize="12" Padding="6,5" />
-                        <Button Content="緊急提醒" Command="{Binding PreviewCommand}" CommandParameter="高級" FontSize="12" Padding="6,5" />
-                        <Button Content="強制通知" Command="{Binding PreviewCommand}" CommandParameter="最高級" FontSize="12" Padding="6,5" />
+                        <Button Content="一般提醒" Command="{Binding PreviewCommand}" CommandParameter="一般提醒" FontSize="12" Padding="6,5" />
+                        <Button Content="重要提醒" Command="{Binding PreviewCommand}" CommandParameter="重要提醒" FontSize="12" Padding="6,5" />
+                        <Button Content="緊急提醒" Command="{Binding PreviewCommand}" CommandParameter="緊急提醒" FontSize="12" Padding="6,5" />
+                        <Button Content="強制通知" Command="{Binding PreviewCommand}" CommandParameter="強制通知" FontSize="12" Padding="6,5" />
                       </UniformGrid>
                     </Grid>
                   </StackPanel>

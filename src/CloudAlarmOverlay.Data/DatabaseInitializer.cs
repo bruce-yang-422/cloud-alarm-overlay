@@ -5,7 +5,7 @@ namespace CloudAlarmOverlay.Data;
 
 public sealed class DatabaseInitializer(ISqliteConnectionFactory connections) : IDatabaseInitializer
 {
-    public const int CurrentSchemaVersion = 4;
+    public const int CurrentSchemaVersion = 5;
 
     public async Task InitializeAsync(CancellationToken cancellationToken = default)
     {
@@ -62,6 +62,13 @@ public sealed class DatabaseInitializer(ISqliteConnectionFactory connections) : 
             using var reader = new StreamReader(stream);
             await ExecuteNonQueryAsync(connection, transaction, await reader.ReadToEndAsync(cancellationToken), cancellationToken);
             await ExecuteNonQueryAsync(connection, transaction, "PRAGMA user_version = 4;", cancellationToken);
+        }
+        if (version < 5)
+        {
+            using var stream = typeof(DatabaseInitializer).Assembly.GetManifestResourceStream("CloudAlarmOverlay.Data.Migrations.V5.sql")!;
+            using var reader = new StreamReader(stream);
+            await ExecuteNonQueryAsync(connection, transaction, await reader.ReadToEndAsync(cancellationToken), cancellationToken);
+            await ExecuteNonQueryAsync(connection, transaction, "PRAGMA user_version = 5;", cancellationToken);
         }
         // Fail before displaying the main window if an expected table/column is missing.
         using (var validation = connection.CreateCommand())

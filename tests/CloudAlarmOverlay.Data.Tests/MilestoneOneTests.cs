@@ -121,9 +121,25 @@ public sealed class MilestoneOneTests : IDisposable
     {
         const string csv = "\uFEFFTitle,Enabled,Id,Time,Unknown\n名稱,啟用,編號,時間,未知\n\"會議,確認\",TRUE,1,2026-09-15 09:00,ignore\n";
         var task = Assert.Single(Get<ICsvSheetParser>().ParseTasks(csv, TaskSources.SheetA));
-        Assert.Equal("會議,確認", task.Title); Assert.Equal("SheetA:1", task.Id); Assert.Equal("中級", task.Level); Assert.Equal("None", task.Recurrence);
+        Assert.Equal("會議,確認", task.Title); Assert.Equal("SheetA:1", task.Id); Assert.Equal(AlarmLevels.Mid, task.Level); Assert.Equal("None", task.Recurrence);
         Assert.Throws<FormatException>(() => Get<ICsvSheetParser>().ParseTasks("Id,Title\n編號,名稱\n", TaskSources.SheetA));
         Assert.Throws<FormatException>(() => Get<ICsvSheetParser>().ParseTasks(csv + "會議,TRUE,1,2026-09-15 09:00,x\n", TaskSources.SheetA));
+    }
+    [Theory]
+    [InlineData("一般提醒", "一般提醒")]
+    [InlineData("重要提醒", "重要提醒")]
+    [InlineData("緊急提醒", "緊急提醒")]
+    [InlineData("強制通知", "強制通知")]
+    [InlineData("低級", "一般提醒")]
+    [InlineData("中級", "重要提醒")]
+    [InlineData("高級", "緊急提醒")]
+    [InlineData("最高級", "強制通知")]
+    public void Csv_normalizes_current_and_legacy_reminder_names(string input,string expected)
+    {
+        var taskCsv=$"Id,Time,Title,Level,Enabled\n編號,時間,標題,等級,啟用\n1,2026-09-15 09:00,測試,{input},TRUE\n";
+        var employeeCsv=$"Id,MaxAllowedLevel\n編號,通知上限\nPC-1,{input}\n";
+        Assert.Equal(expected,Assert.Single(Get<ICsvSheetParser>().ParseTasks(taskCsv,TaskSources.SheetA)).Level);
+        Assert.Equal(expected,Assert.Single(Get<ICsvSheetParser>().ParseEmployees(employeeCsv)).MaxAllowedLevel);
     }
     [Fact]
     public void All_repository_csv_examples_parse_without_credentials()
@@ -212,7 +228,7 @@ public sealed class MilestoneOneTests : IDisposable
             }
             await new DatabaseInitializer(factory).InitializeAsync();
             var db = new Database(factory);
-            Assert.Equal(4, Assert.Single(await db.QueryAsync<int>("PRAGMA user_version;")));
+            Assert.Equal(5, Assert.Single(await db.QueryAsync<int>("PRAGMA user_version;")));
             Assert.Equal("舊任務", Assert.Single(await db.QueryAsync<string>("SELECT TaskName FROM AcknowledgementLogs;")));
             Assert.Equal("本機", Assert.Single(await db.QueryAsync<string>("SELECT Source FROM AcknowledgementLogs;")));
         }

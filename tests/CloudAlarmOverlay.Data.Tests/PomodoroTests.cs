@@ -104,7 +104,7 @@ public sealed class PomodoroTests:IDisposable
         var row=Assert.Single(await Logs());Assert.Equal(row.CompletedAt,row.EndedAt);
         Assert.False(row.IsActive);Assert.Equal(0,row.PlannedMinutes);
         Assert.Equal("keep",Assert.Single(await Repo.GetSettingsAsync()).Value);
-        Assert.Equal(4,Assert.Single(await db.QueryAsync<int>("PRAGMA user_version")));
+        Assert.Equal(5,Assert.Single(await db.QueryAsync<int>("PRAGMA user_version")));
     }
     public void Dispose(){services.Dispose();Microsoft.Data.Sqlite.SqliteConnection.ClearAllPools();if(Directory.Exists(paths.DataDirectory))Directory.Delete(paths.DataDirectory,true);}
     private sealed class Clock:TimeProvider

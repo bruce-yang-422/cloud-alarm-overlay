@@ -9,6 +9,7 @@ using System.Runtime.InteropServices;
 using CommunityToolkit.Mvvm.Input;
 using CloudAlarmOverlay.App.ViewModels;
 using CloudAlarmOverlay.Core.Services;
+using CloudAlarmOverlay.Core.Models;
 using Hardcodet.Wpf.TaskbarNotification;
 namespace CloudAlarmOverlay.App.Views;
 public partial class MainWindow:Window
@@ -56,7 +57,7 @@ public partial class MainWindow:Window
         Add("立即同步",()=>vm.SyncCommand.Execute(null));
         Add("新增任務",()=>{Open();vm.NewTaskCommand.Execute(null);});
         var previews=new MenuItem{Header="測試通知"};
-        foreach(var level in new[]{"低級","中級","高級","最高級"})
+        foreach(var level in new[]{AlarmLevels.Low,AlarmLevels.Mid,AlarmLevels.High,AlarmLevels.Max})
         {var item=new MenuItem{Header=CloudAlarmOverlay.App.Styles.AlarmLevelLabelConverter.Label(level),Command=vm.PreviewCommand,CommandParameter=level};previews.Items.Add(item);}
         menu.Items.Add(previews);
         Add("設定",()=>{vm.PageIndex=4;Open();});

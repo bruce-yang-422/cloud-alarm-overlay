@@ -41,7 +41,7 @@ internal sealed class CsvSheetParser : ICsvSheetParser
             if(!DateTime.TryParseExact(Get(row,"Time"),new[]{"yyyy-MM-dd HH:mm","yyyy-MM-dd HH:mm:ss","yyyy-MM-ddTHH:mm:ss"},CultureInfo.InvariantCulture,DateTimeStyles.None,out var at))
                 throw new FormatException($"任務 {Get(row,"Id")} 時間格式錯誤。");
             var title=Get(row,"Title"); if(title.Length is <1 or >50) throw new FormatException("任務名稱需為 1–50 字。");
-            var level=Get(row,"Level",AlarmLevels.Mid); if(level=="")level=AlarmLevels.Mid;
+            var level=AlarmLevels.Normalize(Get(row,"Level",AlarmLevels.Mid)); if(level=="")level=AlarmLevels.Mid;
             if(level is not (AlarmLevels.Low or AlarmLevels.Mid or AlarmLevels.High or AlarmLevels.Max)) throw new FormatException($"無效等級：{level}");
             return new AlarmTask{Id=source+":"+Get(row,"Id"),ExternalId=Get(row,"Id"),Title=title,Description=Get(row,"Description"),
                 ScheduledAt=at,Level=level,Enabled=Bool(Get(row,"Enabled")),RequireAcknowledgement=Bool(Get(row,"RequireAck"),level!=AlarmLevels.Low),
@@ -59,7 +59,7 @@ internal sealed class CsvSheetParser : ICsvSheetParser
     public IReadOnlyList<Employee> ParseEmployees(string csv)
     {
         var result=Read(csv,"Id").Select(r=>{
-            var max=Get(r,"MaxAllowedLevel");
+            var max=AlarmLevels.Normalize(Get(r,"MaxAllowedLevel"));
             if(max is not ("" or "-" or AlarmLevels.Low or AlarmLevels.Mid or AlarmLevels.High or AlarmLevels.Max))throw new FormatException("員工等級上限無效。");
             var ack=Get(r,"RequireAckOverride");
             return new Employee{DeviceId=Get(r,"Id"),Name=Get(r,"Name"),Department=Get(r,"Department"),

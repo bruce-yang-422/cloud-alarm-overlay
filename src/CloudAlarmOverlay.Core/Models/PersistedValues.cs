@@ -1,6 +1,6 @@
 namespace CloudAlarmOverlay.Core.Models;
 
-// Persist these exact strings; CSV aliases are converted at the future import boundary.
+// Persist these exact strings; older CSV and backups are normalized at their import boundaries.
 public static class TaskSources
 {
     public const string Local = "本機";
@@ -10,10 +10,19 @@ public static class TaskSources
 
 public static class AlarmLevels
 {
-    public const string Low = "低級";
-    public const string Mid = "中級";
-    public const string High = "高級";
-    public const string Max = "最高級";
+    public const string Low = "一般提醒";
+    public const string Mid = "重要提醒";
+    public const string High = "緊急提醒";
+    public const string Max = "強制通知";
+
+    public static string Normalize(string value) => value switch
+    {
+        "低級" => Low,
+        "中級" => Mid,
+        "高級" => High,
+        "最高級" => Max,
+        _ => value
+    };
 }
 
 public static class AcknowledgementResults
@@ -23,4 +32,3 @@ public static class AcknowledgementResults
     public const string OverdueUnacked = "Overdue_Unacked";
     public const string NotLaunched = "NotLaunched";
 }
-

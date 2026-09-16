@@ -1,7 +1,7 @@
 ﻿Id,Time,Title,Level,Enabled,Description,RequireAck,Recurrence,SkipOnHoliday,TargetDeviceOrName,ExcludeDeviceOrName
-編號,時間(YYYY-MM-DD HH:mm),標題,等級(低級/中級/高級/最高級),是否啟用(TRUE/FALSE),說明,是否需確認(TRUE/FALSE),重複規則(ONCE/DAILY/WEEKLY/MONTHLY/LunarDay:n),國定假日略過(TRUE/FALSE),目標對象(留空=全公司；可填部門/姓名/裝置代碼，分號分隔),排除對象(同左)
-TA-001,2026-09-14 18:00,團隊進度會議,中級,TRUE,每日下班前同步當日進度,TRUE,DAILY,FALSE,,
-TA-002,2026-09-14 21:00,每日備份確認,中級,TRUE,確認當日資料庫備份是否完成,TRUE,DAILY,FALSE,,
-TA-003,2026-09-15 09:00,月報表繳交提醒,高級,TRUE,業務部門月報表繳交截止日,TRUE,MONTHLY,TRUE,業務部,
-TA-004,2026-09-14 22:00,系統維護檢查,低級,TRUE,IT例行系統健康度檢查,FALSE,DAILY,FALSE,,
-TA-005,2026-09-20 17:00,業務未回報銷售數據提醒,最高級,TRUE,業務未於期限內回報當週銷售數據，須立即處理,TRUE,WEEKLY,FALSE,業務部,王小強
+編號,時間(YYYY-MM-DD HH:mm),標題,等級(一般提醒/重要提醒/緊急提醒/強制通知),是否啟用(TRUE/FALSE),說明,是否需確認(TRUE/FALSE),重複規則(ONCE/DAILY/WEEKLY/MONTHLY/LunarDay:n),國定假日略過(TRUE/FALSE),目標對象(留空=全公司；可填部門/姓名/裝置代碼，分號分隔),排除對象(同左)
+TA-001,2026-09-14 18:00,團隊進度會議,重要提醒,TRUE,每日下班前同步當日進度,TRUE,DAILY,FALSE,,
+TA-002,2026-09-14 21:00,每日備份確認,重要提醒,TRUE,確認當日資料庫備份是否完成,TRUE,DAILY,FALSE,,
+TA-003,2026-09-15 09:00,月報表繳交提醒,緊急提醒,TRUE,業務部門月報表繳交截止日,TRUE,MONTHLY,TRUE,業務部,
+TA-004,2026-09-14 22:00,系統維護檢查,一般提醒,TRUE,IT例行系統健康度檢查,FALSE,DAILY,FALSE,,
+TA-005,2026-09-20 17:00,業務未回報銷售數據提醒,強制通知,TRUE,業務未於期限內回報當週銷售數據，須立即處理,TRUE,WEEKLY,FALSE,業務部,王小強

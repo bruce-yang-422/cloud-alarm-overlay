@@ -95,11 +95,11 @@ public sealed class MilestoneTwoTests:IDisposable
         var repo=Get<ISettingsRepository>();
         await Assert.ThrowsAsync<UnauthorizedAccessException>(()=>repo.SaveAsync(new(){Key="FlashMilliseconds",Value="500"}));
         await Assert.ThrowsAsync<UnauthorizedAccessException>(()=>repo.SaveAsync(new(){Key="QuietPeriods",Value="[]"}));
-        await Assert.ThrowsAsync<UnauthorizedAccessException>(()=>repo.SaveAsync(new(){Key="Sound:最高級",Value="{}",Locked=true}));
-        await repo.SaveAsync(new(){Key="Sound:最高級",Value="{\"Enabled\":true}"});
+        await Assert.ThrowsAsync<UnauthorizedAccessException>(()=>repo.SaveAsync(new(){Key="Sound:強制通知",Value="{}",Locked=true}));
+        await repo.SaveAsync(new(){Key="Sound:強制通知",Value="{\"Enabled\":true}"});
         Assert.True((await Get<NotificationPreferences>().SoundAsync(AlarmLevels.Max)).Enabled);
         Assert.True(await Get<IAuthenticationService>().AuthenticateAsync("it-admin","Testing-1234"));
-        await Assert.ThrowsAsync<ArgumentException>(()=>store.SaveAsync([new(){Key="Sound:最高級",Value="{}",Locked=true}]));
+        await Assert.ThrowsAsync<ArgumentException>(()=>store.SaveAsync([new(){Key="Sound:強制通知",Value="{}",Locked=true}]));
         var entries=await Get<IAuditLogRepository>().GetRangeAsync(DateTime.MinValue,DateTime.MaxValue);
         Assert.Contains(entries,e=>e.Action=="FlashMilliseconds"&&e.NewValue!.Contains("800"));
         await store.SaveAsync([new(){Key="FlashMilliseconds",Value="800",Locked=false}]);
@@ -129,10 +129,10 @@ public sealed class MilestoneTwoTests:IDisposable
         await Assert.ThrowsAsync<UnauthorizedAccessException>(()=>Get<ISettingsRepository>().SaveAsync(new(){Key="SyncOptions",Value="{}"}));
     }
     [Theory]
-    [InlineData("高級","FALSE","高級",false)]
-    [InlineData("中級","TRUE","中級",true)]
-    [InlineData("-",null,"最高級",true)]
-    [InlineData(null,"-","最高級",true)]
+    [InlineData("緊急提醒","FALSE","緊急提醒",false)]
+    [InlineData("重要提醒","TRUE","重要提醒",true)]
+    [InlineData("-",null,"強制通知",true)]
+    [InlineData(null,"-","強制通知",true)]
     public void Employee_policy_caps_level_and_applies_ack_override(string? max,string? ack,string expected,bool require)
     {
         var task=SampleTask() with{Level=AlarmLevels.Max,RequireAcknowledgement=true};
@@ -196,7 +196,7 @@ public sealed class MilestoneTwoTests:IDisposable
             }
             await new DatabaseInitializer(factory).InitializeAsync();
             var db=new Database(factory);
-            Assert.Equal(4,Assert.Single(await db.QueryAsync<int>("PRAGMA user_version;")));
+            Assert.Equal(5,Assert.Single(await db.QueryAsync<int>("PRAGMA user_version;")));
             Assert.Equal("keep-hash",Assert.Single(await db.QueryAsync<string>("SELECT PasswordHash FROM Users;")));
             Assert.Equal(1,Assert.Single(await db.QueryAsync<int>("SELECT Locked FROM Settings WHERE Key='FlashMilliseconds';")));
             Assert.Equal("before-migration",Assert.Single(await db.QueryAsync<string>("SELECT Action FROM AuditLogs;")));

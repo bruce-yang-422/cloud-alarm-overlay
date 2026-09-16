@@ -193,15 +193,15 @@
       <TextBlock x:Name="BadgeText" Text="{Binding Level,Converter={StaticResource AlarmLevelLabel}}" Foreground="{adaptive:AdaptiveBrush #0766FF}" FontWeight="SemiBold" />
     </Border>
     <DataTemplate.Triggers>
-      <DataTrigger Binding="{Binding Level}" Value="中級">
+      <DataTrigger Binding="{Binding Level}" Value="重要提醒">
         <Setter TargetName="Badge" Property="Background" Value="{adaptive:AdaptiveBrush #EDF7F2}" />
         <Setter TargetName="BadgeText" Property="Foreground" Value="{adaptive:AdaptiveBrush #14715E}" />
       </DataTrigger>
-      <DataTrigger Binding="{Binding Level}" Value="高級">
+      <DataTrigger Binding="{Binding Level}" Value="緊急提醒">
         <Setter TargetName="Badge" Property="Background" Value="{adaptive:AdaptiveBrush #FAEEF0}" />
         <Setter TargetName="BadgeText" Property="Foreground" Value="{adaptive:AdaptiveBrush #963D52}" />
       </DataTrigger>
-      <DataTrigger Binding="{Binding Level}" Value="最高級">
+      <DataTrigger Binding="{Binding Level}" Value="強制通知">
         <Setter TargetName="Badge" Property="Background" Value="{adaptive:AdaptiveBrush #FFF0EC}" />
         <Setter TargetName="BadgeText" Property="Foreground" Value="{adaptive:AdaptiveBrush #BC2925}" />
       </DataTrigger>

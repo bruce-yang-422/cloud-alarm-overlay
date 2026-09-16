@@ -29,12 +29,12 @@ public sealed class DatabaseInitializerTests : IDisposable
     };
 
     [Fact]
-    public async Task Fresh_database_has_version_three_and_exactly_fourteen_empty_business_tables()
+    public async Task Fresh_database_has_version_five_and_exactly_fourteen_empty_business_tables()
     {
         Assert.False(File.Exists(_paths.DatabasePath));
         await Initializer.InitializeAsync();
         Assert.True(File.Exists(_paths.DatabasePath));
-        Assert.Equal(4L, await ScalarAsync("PRAGMA user_version;"));
+        Assert.Equal(5L, await ScalarAsync("PRAGMA user_version;"));
         Assert.Equal(14L, await ScalarAsync(
             "SELECT COUNT(*) FROM sqlite_master WHERE type = 'table' AND name NOT LIKE 'sqlite_%';"));
         foreach (var row in TableColumns)
@@ -90,6 +90,25 @@ public sealed class DatabaseInitializerTests : IDisposable
         Assert.Equal("Sheet", await ScalarAsync("SELECT Source FROM Holidays;"));
     }
 
+    [Fact]
+    public async Task Version_five_converts_old_levels_and_preserves_sound_preferences()
+    {
+        await Initializer.InitializeAsync();
+        await ExecuteAsync("""
+            INSERT INTO Tasks(Id,Title,ScheduledAt,Source,Level,CreatedAt,UpdatedAt)
+            VALUES ('old', '舊任務', '2026-09-15T09:00:00', '本機', '高級', '2026-09-14', '2026-09-14');
+            INSERT INTO Employees(DeviceId,MaxAllowedLevel) VALUES ('PC-1','中級');
+            INSERT INTO Settings(Key,Value,Locked) VALUES ('Sound:最高級','{"Enabled":true,"Name":"Chime"}',0);
+            PRAGMA user_version=4;
+            """);
+        await Initializer.InitializeAsync();
+        Assert.Equal(5L,await ScalarAsync("PRAGMA user_version;"));
+        Assert.Equal("緊急提醒",await ScalarAsync("SELECT Level FROM Tasks WHERE Id='old';"));
+        Assert.Equal("重要提醒",await ScalarAsync("SELECT MaxAllowedLevel FROM Employees WHERE DeviceId='PC-1';"));
+        Assert.Equal("{\"Enabled\":true,\"Name\":\"Chime\"}",await ScalarAsync("SELECT Value FROM Settings WHERE Key='Sound:強制通知';"));
+        Assert.Equal(0L,await ScalarAsync("SELECT COUNT(*) FROM Settings WHERE Key='Sound:最高級';"));
+    }
+
     [Theory]
     [InlineData("INSERT INTO LunarCalendar (Date, LunarDay) VALUES ('2026-09-15', 5), ('2026-09-15', 6);")]
     [InlineData("INSERT INTO Users (Username, PasswordHash, Salt) VALUES ('admin', 'hash', 'salt'), ('admin', 'hash', 'salt');")]
@@ -127,7 +146,7 @@ public sealed class DatabaseInitializerTests : IDisposable
         await Initializer.InitializeAsync();
         await ExecuteAsync("ALTER TABLE Employees DROP COLUMN Department;");
         await Assert.ThrowsAsync<SqliteException>(() => Initializer.InitializeAsync());
-        Assert.Equal(4L, await ScalarAsync("PRAGMA user_version;"));
+        Assert.Equal(5L, await ScalarAsync("PRAGMA user_version;"));
     }
 
     [Fact]
@@ -145,7 +164,7 @@ public sealed class DatabaseInitializerTests : IDisposable
     {
         await Task.WhenAll(Enumerable.Range(0, 4)
             .Select(_ => Task.Run(() => new DatabaseInitializer(Factory).InitializeAsync())));
-        Assert.Equal(4L, await ScalarAsync("PRAGMA user_version;"));
+        Assert.Equal(5L, await ScalarAsync("PRAGMA user_version;"));
         Assert.Equal("ok", await ScalarAsync("PRAGMA integrity_check;"));
     }
 
@@ -184,7 +203,7 @@ public sealed class DatabaseInitializerTests : IDisposable
             "SELECT COUNT(*) FROM sqlite_master WHERE name NOT LIKE 'sqlite_%';"));
         // A clean retry must succeed without repairing partial DDL.
         await Initializer.InitializeAsync();
-        Assert.Equal(4L, await ScalarAsync("PRAGMA user_version;"));
+        Assert.Equal(5L, await ScalarAsync("PRAGMA user_version;"));
     }
 
     private sealed class ShadowingFactory(ISqliteConnectionFactory inner) : ISqliteConnectionFactory
@@ -229,4 +248,3 @@ public sealed class DatabaseInitializerTests : IDisposable
         public string DatabasePath => Path.Combine(DataDirectory, "test.db");
     }
 }
-

@@ -14,7 +14,7 @@ namespace CloudAlarmOverlay.Data;
 public sealed class BackupRestoreService(Database db, IAuthenticationService authentication, AdminSession session, ChangeSignal changes) : IBackupRestoreService
 {
     private const long MaxArchiveBytes = 64 * 1024 * 1024;
-    private static readonly HashSet<string> AllowedSettings = ["KeepWindowAspectRatio", "FlashMilliseconds", "QuietPeriods", "EmojiLibrary", "ThemeMode", "NotificationColorMode", "NotificationColorScheme", .. new[] { AlarmLevels.Low, AlarmLevels.Mid, AlarmLevels.High, AlarmLevels.Max }.Select(x => "Sound:" + x)];
+    private static readonly HashSet<string> AllowedSettings = ["KeepWindowAspectRatio", "FlashMilliseconds", "QuietPeriods", "EmojiLibrary", "ThemeMode", "NotificationColorMode", "NotificationColorScheme", .. new[] { AlarmLevels.Low, AlarmLevels.Mid, AlarmLevels.High, AlarmLevels.Max, "低級", "中級", "高級", "最高級" }.Select(x => "Sound:" + x)];
     public Task CreateBackupAsync(string path, CancellationToken cancellationToken = default) => CreateBackupAsync(path, null, cancellationToken);
     public async Task RestoreAsync(string path, CancellationToken cancellationToken = default) => await RestoreAsync(path, false, null, cancellationToken);
     private async Task VerifyAsync(BackupCredentials? credentials, CancellationToken ct)
@@ -116,7 +116,7 @@ public sealed class BackupRestoreService(Database db, IAuthenticationService aut
         }
         foreach(var task in package.Tasks)
         {
-            if(task.Source!=TaskSources.Local || string.IsNullOrWhiteSpace(task.Id)||string.IsNullOrWhiteSpace(task.Title)||task.Title.Length>50 || !new[] { AlarmLevels.Low, AlarmLevels.Mid, AlarmLevels.High, AlarmLevels.Max }.Contains(task.Level))throw new InvalidDataException("備份含無效本機任務。");
+            if(task.Source!=TaskSources.Local || string.IsNullOrWhiteSpace(task.Id)||string.IsNullOrWhiteSpace(task.Title)||task.Title.Length>50 || !new[] { AlarmLevels.Low, AlarmLevels.Mid, AlarmLevels.High, AlarmLevels.Max }.Contains(AlarmLevels.Normalize(task.Level)))throw new InvalidDataException("備份含無效本機任務。");
             RecurrenceRule.Validate(task.Recurrence);
         }
         foreach(var log in package.Logs)
@@ -157,10 +157,13 @@ public sealed class BackupRestoreService(Database db, IAuthenticationService aut
         await Run("DELETE FROM Devices;");
         await Insert(c,tx,"Devices",p.Identity with{Id=1},cancellationToken);
         foreach(var setting in p.Settings)
-            await Run("INSERT INTO Settings(Key,Value,Locked) VALUES(@Key,@Value,0) ON CONFLICT(Key) DO UPDATE SET Value=excluded.Value WHERE Settings.Locked=0;",setting);
+        {
+            var key=setting.Key.StartsWith("Sound:",StringComparison.Ordinal)?"Sound:"+AlarmLevels.Normalize(setting.Key[6..]):setting.Key;
+            await Run("INSERT INTO Settings(Key,Value,Locked) VALUES(@Key,@Value,0) ON CONFLICT(Key) DO UPDATE SET Value=excluded.Value WHERE Settings.Locked=0;",setting with {Key=key});
+        }
         int tasks=0,logs=0;
         var imported=new HashSet<string>();
-        foreach(var task in p.Tasks)if(await Insert(c,tx,"Tasks",task,cancellationToken)>0){tasks++;imported.Add(task.Id);}
+        foreach(var task in p.Tasks)if(await Insert(c,tx,"Tasks",task with {Level=AlarmLevels.Normalize(task.Level)},cancellationToken)>0){tasks++;imported.Add(task.Id);}
         foreach(var occurrence in p.Occurrences.Where(o=>imported.Contains(o.TaskId)))
             await Insert(c,tx,"Occurrences",occurrence with { State=occurrence.State is "Claimed" or "Displayed"?"Completed":occurrence.State },cancellationToken);
         foreach(var log in p.Logs)

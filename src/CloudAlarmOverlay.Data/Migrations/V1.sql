@@ -5,7 +5,7 @@ CREATE TABLE IF NOT EXISTS Tasks (
     Description             TEXT,
     ScheduledAt             TEXT NOT NULL,          -- ISO8601 本地時間字串，完整日期時間（見 20.2 節：本身支援跨日）
     Source                  TEXT NOT NULL,          -- '本機' / 'SheetA' / 'SheetB'
-    Level                   TEXT NOT NULL,          -- '低級' / '中級' / '高級' / '最高級'
+    Level                   TEXT NOT NULL,          -- '一般提醒' / '重要提醒' / '緊急提醒' / '強制通知'
     Enabled                 INTEGER NOT NULL DEFAULT 1,
     IsTriggered             INTEGER NOT NULL DEFAULT 0,
     RequireAcknowledgement  INTEGER NOT NULL DEFAULT 0,
@@ -69,7 +69,7 @@ CREATE TABLE IF NOT EXISTS Employees (
     DeviceId            TEXT NOT NULL,   -- 對應 Sheet A/Employees 的 Id 欄
     Name                TEXT,            -- 可留空（公用電腦，見 19.1 節）
     Department          TEXT,            -- 供部門查表展開用（19.2 節），非純顯示，程式會讀取
-    MaxAllowedLevel     TEXT,            -- 低級/中級/高級/最高級/NULL（NULL 或 '-' 代表沿用全體預設=最高級）
+    MaxAllowedLevel     TEXT,            -- 一般提醒/重要提醒/緊急提醒/強制通知/NULL（NULL 或 '-' 代表沿用全體預設=強制通知）
     RequireAckOverride  TEXT             -- TRUE/FALSE/NULL（NULL 或 '-' 代表不覆寫，沿用任務本身設定）
 );
 
