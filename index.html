@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#f5f9ff">
-  <meta name="description" content="Cloud Alarm Overlay 是 Windows 桌面提醒程式：建立本機任務、從 Google Sheets 公開 CSV 同步團隊任務，使用分級通知、簽收紀錄與番茄鐘。免費下載 Windows x64 安裝檔。">
+  <meta name="description" content="Cloud Alarm Overlay 是 Windows 桌面提醒程式：建立本機任務、從 Google Sheets 公開 CSV 同步團隊任務，提供一般、重要、緊急與強制通知四種提醒模式，以及簽收紀錄與番茄鐘。">
   <meta name="robots" content="index,follow,max-image-preview:large">
   <title>Cloud Alarm Overlay｜Windows 桌面提醒、任務同步與番茄鐘</title>
   <link rel="canonical" href="https://bruce-yang-422.github.io/cloud-alarm-overlay/">
@@ -14,7 +14,7 @@
   <meta property="og:locale" content="zh_TW">
   <meta property="og:site_name" content="Cloud Alarm Overlay">
   <meta property="og:title" content="Cloud Alarm Overlay｜重要的事，準時看見">
-  <meta property="og:description" content="Windows 桌面提醒程式，整合本機任務、Google Sheets 團隊任務、分級通知、簽收紀錄與番茄鐘。">
+  <meta property="og:description" content="Windows 桌面提醒程式，整合本機與 Google Sheets 任務、四種提醒模式、簽收紀錄與番茄鐘。">
   <meta property="og:url" content="https://bruce-yang-422.github.io/cloud-alarm-overlay/">
   <meta property="og:image" content="https://bruce-yang-422.github.io/cloud-alarm-overlay/site-assets/og-preview.png">
   <meta property="og:image:width" content="1200">
@@ -31,7 +31,7 @@
       "@id": "https://bruce-yang-422.github.io/cloud-alarm-overlay/#software",
       "name": "Cloud Alarm Overlay",
       "url": "https://bruce-yang-422.github.io/cloud-alarm-overlay/",
-      "description": "Windows 桌面提醒程式，支援本機任務、Google Sheets 公開 CSV 同步、分級通知、簽收紀錄與番茄鐘。",
+      "description": "Windows 桌面提醒程式，支援本機任務、Google Sheets 公開 CSV 同步、四種提醒模式、簽收紀錄與番茄鐘。",
       "applicationCategory": "BusinessApplication",
       "operatingSystem": "Windows",
       "image": "https://bruce-yang-422.github.io/cloud-alarm-overlay/site-assets/og-preview.png",
@@ -163,6 +163,24 @@
     .feature h3 { margin-bottom: 9px; font-size: 1.16rem; letter-spacing: -.02em; }
     .feature p { margin-bottom: 0; color: var(--muted); font-size: .91rem; }
 
+    .levels-section { background: #edf5ff; }
+    .levels-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px; }
+    .level-card {
+      --level-accent: #245fa4; --level-soft: #edf5ff;
+      position: relative; display: flex; flex-direction: column; min-height: 294px;
+      padding: 27px 23px 23px; overflow: hidden; border: 1px solid var(--line);
+      border-radius: 20px; background: #fff; box-shadow: 0 7px 22px #3d66920a;
+    }
+    .level-card::before { content: ""; position: absolute; inset: 0 0 auto; height: 5px; background: var(--level-accent); }
+    .level-card.important { --level-accent: #14715e; --level-soft: #edf7f2; }
+    .level-card.urgent { --level-accent: #963d52; --level-soft: #faeef0; }
+    .level-card.mandatory { --level-accent: #bc2925; --level-soft: #fff0ec; }
+    .level-number { display: inline-grid; place-items: center; width: 44px; height: 44px; margin-bottom: 20px; border-radius: 13px; color: var(--level-accent); background: var(--level-soft); font-size: .85rem; font-weight: 850; }
+    .level-card h3 { margin-bottom: 9px; font-size: 1.2rem; letter-spacing: -.02em; }
+    .level-card p { margin-bottom: 18px; color: var(--muted); font-size: .91rem; }
+    .level-behavior { display: block; margin-top: auto; padding: 9px 11px; border-radius: 10px; color: var(--level-accent); background: var(--level-soft); font-size: .82rem; font-weight: 750; }
+    .levels-note { margin: 20px 0 0; color: #56708e; font-size: .9rem; }
+
     .workflow { padding: 78px 0; background: #143156; color: #fff; }
     .workflow .section-kicker { color: #95c5ff; }
     .workflow .section-heading > p:last-child { color: #bdd0e9; }
@@ -213,7 +231,7 @@
 
     @media (max-width: 980px) {
       .hero-grid { gap: 32px; }
-      .features { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .features, .levels-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
       .visual-caption { right: 8px; }
     }
     @media (max-width: 760px) {
@@ -238,8 +256,8 @@
       .hero-actions { margin-top: 26px; }
       .button { width: 100%; }
       .hero-meta { font-size: .78rem; }
-      .features { grid-template-columns: 1fr; }
-      .feature { min-height: 0; }
+      .features, .levels-grid { grid-template-columns: 1fr; }
+      .feature, .level-card { min-height: 0; }
       .preview-image-link img { height: 245px; }
       .notice-showcase { grid-template-columns: 1fr; }
       .notice-showcase a { justify-self: start; width: 200px; }
@@ -268,6 +286,7 @@
       </a>
       <nav class="main-nav" aria-label="頁面導覽">
         <a href="#features">主要功能</a>
+        <a href="#levels">提醒模式</a>
         <a href="#preview">介面預覽</a>
         <a href="#getting-started">如何開始</a>
       </nav>
@@ -316,6 +335,23 @@
       </div>
     </section>
 
+    <section class="section levels-section" id="levels" aria-labelledby="levels-title">
+      <div class="container">
+        <div class="section-heading">
+          <p class="section-kicker">FOUR NOTIFICATION LEVELS</p>
+          <h2 id="levels-title">四種提醒模式，依急迫程度呈現。</h2>
+          <p>從右下角的短暫提示，到需要閱讀確認的全螢幕通知；顏色、視窗大小和簽收方式都會隨等級改變。</p>
+        </div>
+        <div class="levels-grid">
+          <article class="level-card"><span class="level-number" aria-hidden="true">01</span><h3>一般提醒</h3><p>右下角的小通知適合日常事項。10 秒後自動關閉；滑鼠移入時會暫停倒數，也可提前按鈕確認。</p><span class="level-behavior">輕量提示 · 自動關閉</span></article>
+          <article class="level-card important"><span class="level-number" aria-hidden="true">02</span><h3>重要提醒</h3><p>置頂顯示於右下角。閱讀任務內容後，按下「我已閱讀，確認」完成簽收，適合需要確實看到的待辦。</p><span class="level-behavior">置頂通知 · 按鈕簽收</span></article>
+          <article class="level-card urgent"><span class="level-number" aria-hidden="true">03</span><h3>緊急提醒</h3><p>以較大的置頂視窗顯示在畫面中央。需要閱讀並按鈕確認，適合時限緊迫、需要立即處理的事項。</p><span class="level-behavior">中央大視窗 · 按鈕簽收</span></article>
+          <article class="level-card mandatory"><span class="level-number" aria-hidden="true">04</span><h3>強制通知</h3><p>全螢幕顯示並閃爍邊框。閱讀後須輸入畫面上的 9 位數字確認碼，才可完成簽收；僅由公司／系統雲端指派。</p><span class="level-behavior">全螢幕 · 9 位數字確認</span></article>
+        </div>
+        <p class="levels-note">本機任務可選一般、重要或緊急提醒。強制通知的確認碼顯示為 xxx-xxx-xxx，輸入時可省略連字號。</p>
+      </div>
+    </section>
+
     <section class="workflow" id="getting-started" aria-labelledby="steps-title">
       <div class="container">
         <div class="section-heading">
@@ -349,7 +385,7 @@
           </article>
         </div>
         <div class="notice-showcase">
-          <div><p class="section-kicker">CLEAR WHEN IT MATTERS</p><h3>提醒來了，訊息清楚看見。</h3><p>通知會顯示任務內容與補充說明，並依提醒等級使用不同的確認方式。重要的工作不會只留下模糊的一聲提示。</p></div>
+          <div><p class="section-kicker">CLEAR WHEN IT MATTERS</p><h3>重要提醒：訊息清楚看見。</h3><p>右側是「重要提醒」的實際畫面。通知顯示任務內容與補充說明；閱讀後按下確認，即可完成簽收。</p></div>
           <a href="site-assets/screenshots/notification_light.png" target="_blank" rel="noopener noreferrer" aria-label="查看通知完整截圖（新視窗）"><img src="site-assets/screenshots/notification_light.png" alt="淺色模式的重要提醒通知，顯示任務詳情、備註與確認按鈕" width="430" height="520" loading="lazy"></a>
         </div>
       </div>
