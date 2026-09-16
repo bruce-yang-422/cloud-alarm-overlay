@@ -31,7 +31,7 @@ Python 的 `.venv` 不影響此 WPF 程式，不必先關閉。若舊程式仍�
 初始來源留空，不會自動連線或建立範例任務。需要雲端同步時：
 
 - 由「管理者登入」驗證後，前往「同步來源」，填入 Sheet A / B 的 Spreadsheet ID 與分頁 GID，再按「儲存並同步」。
-- CSV 欄位解析見 [CsvSheetParser.cs](src/CloudAlarmOverlay.Core/Services/CsvSheetParser.cs)；版本庫僅保留 `SheetA_Holidays.csv` 與 `SheetA_LunarCalendar.csv`，正式資料及本機連線設定由 IT 另行管理。
+- CSV 欄位解析見 [CsvSheetParser.cs](src/CloudAlarmOverlay.Core/Services/CsvSheetParser.cs)；版本庫僅保留 `SheetA_Tasks.csv`、`SheetA_Employees.csv`、`SheetA_Holidays.csv`、`SheetA_LunarCalendar.csv` 與 `SheetB_Tasks.csv` 五份範例，正式資料及本機連線設定由 IT 另行管理。
 - Sheet A 包含 Tasks、Holidays、Employees、LunarCalendar 四個分頁；Sheet B 包含 Tasks。
 - 同步間隔可設 30–60 秒，預設 45 秒。只使用公開 CSV 的 HTTP GET，不使用 Google Sheets API、OAuth 或本機金鑰。
 - 第 1 列為欄名，第 2 列固定為中文說明，第 3 列起為資料。分頁解析失敗會保留原快取；首頁和管理者系統紀錄可查看原因。

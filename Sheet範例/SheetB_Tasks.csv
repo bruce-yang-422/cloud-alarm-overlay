@@ -1,0 +1,2 @@
+Id,Time,Title,Level,Enabled,Description,RequireAck,Recurrence,SkipOnHoliday,TargetDeviceOrName,ExcludeDeviceOrName
+編號,時間(YYYY-MM-DD HH:mm),標題,等級(低級/中級/高級/最高級),是否啟用(TRUE/FALSE),說明,是否需確認(TRUE/FALSE),重複規則(ONCE/DAILY/WEEKLY/MONTHLY/LunarDay:n),國定假日略過(TRUE/FALSE),目標對象(留空=全公司；可填部門/姓名/裝置代碼，分號分隔),排除對象(同左)

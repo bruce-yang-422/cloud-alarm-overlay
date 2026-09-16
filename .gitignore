@@ -83,6 +83,9 @@ scripts/_gid_output.json
 /Sheet範例/*
 !/Sheet範例/SheetA_Holidays.csv
 !/Sheet範例/SheetA_LunarCalendar.csv
+!/Sheet範例/SheetA_Tasks.csv
+!/Sheet範例/SheetA_Employees.csv
+!/Sheet範例/SheetB_Tasks.csv
 
 # OS and temporary output
 Thumbs.db
