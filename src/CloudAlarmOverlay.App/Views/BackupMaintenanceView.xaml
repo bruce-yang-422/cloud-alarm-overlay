@@ -1,0 +1,16 @@
+<UserControl x:Class="CloudAlarmOverlay.App.Views.BackupMaintenanceView" xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+<UserControl.Resources><ResourceDictionary><ResourceDictionary.MergedDictionaries><ResourceDictionary Source="../Styles/LightTheme.xaml"/></ResourceDictionary.MergedDictionaries></ResourceDictionary></UserControl.Resources>
+<ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled"><StackPanel>  <TextBlock Text="本機備份與還原" FontSize="18" FontWeight="SemiBold"/>
+  <TextBlock Text="備份任務、個人設定、裝置身分及歷史。還原時重複任務保留本機版本。" TextWrapping="Wrap" Margin="0,8,0,8"/>
+  <CheckBox x:Name="IncludeAdmin" Content="備份包含管理者帳密" Style="{StaticResource PillSwitch}"/>
+  <WrapPanel><StackPanel Margin="0,0,10,0"><TextBlock Text="目前管理者帳號"/><TextBox Height="34" VerticalContentAlignment="Center" x:Name="AdminName" Width="160" ToolTip="目前管理者帳號（包含／還原帳密時必填）" AutomationProperties.Name="驗證管理者帳號"/>
+   </StackPanel><StackPanel><TextBlock Text="目前管理者密碼"/><PasswordBox x:Name="AdminPassword" Width="160" Margin="0,4,0,8" ToolTip="目前管理者密碼" AutomationProperties.Name="驗證管理者密碼"/>
+  </StackPanel></WrapPanel>
+  <WrapPanel><Button Content="建立備份" Click="ExportBackup"/><Button Content="匯入備份" Click="ImportBackup"/></WrapPanel>
+  <Expander Header="變更管理者密碼" Margin="0,16,0,0"><StackPanel>
+   <TextBlock Text="使用上方目前帳號與密碼驗證；新密碼需 8–128 字。" TextWrapping="Wrap"/>
+   <PasswordBox x:Name="NewPassword" Margin="0,4,0,8" MaxLength="128" AutomationProperties.Name="新管理者密碼"/>
+   <PasswordBox x:Name="ConfirmPassword" Margin="0,4,0,8" MaxLength="128" AutomationProperties.Name="再次輸入新密碼"/>
+   <Button Content="變更密碼" Click="ChangePassword" HorizontalAlignment="Left"/>
+  </StackPanel></Expander>
+<TextBlock Text="{Binding Message}" TextWrapping="Wrap" Margin="0,12,0,0"/></StackPanel></ScrollViewer></UserControl>

@@ -1,0 +1,5 @@
+ALTER TABLE PomodoroLog ADD COLUMN EndedAt TEXT NULL;
+ALTER TABLE PomodoroLog ADD COLUMN PlannedMinutes INTEGER NOT NULL DEFAULT 0;
+ALTER TABLE PomodoroLog ADD COLUMN IsActive INTEGER NOT NULL DEFAULT 0;
+UPDATE PomodoroLog SET EndedAt = CompletedAt;
+CREATE INDEX IX_PomodoroLog_StartedAt ON PomodoroLog(StartedAt);

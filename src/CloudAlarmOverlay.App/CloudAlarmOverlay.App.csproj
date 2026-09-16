@@ -1,0 +1,26 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net10.0-windows</TargetFramework>
+    <OutputType>WinExe</OutputType>
+    <UseWPF>true</UseWPF>
+  </PropertyGroup>
+  <ItemGroup>
+    <Resource Include="Assets/Emoji/*.png" />
+    <Content Include="Assets/Emoji/LICENSE.txt" CopyToOutputDirectory="PreserveNewest" />
+    <Resource Include="../../Logo_雲.png" Link="Assets/Brand/LogoCloud.png" />
+    <Resource Include="../../Logo_字.png" Link="Assets/Brand/LogoWordmark.png" />
+    <Resource Include="../../Logo_橫幅版.png" Link="Assets/Brand/LogoBanner.png" />
+    <Resource Include="../../Logo_方形版.png" Link="Assets/Brand/LogoSquare.png" />
+    <ProjectReference Include="../CloudAlarmOverlay.Core/CloudAlarmOverlay.Core.csproj" />
+    <ProjectReference Include="../CloudAlarmOverlay.Data/CloudAlarmOverlay.Data.csproj" />
+    <ProjectReference Include="../CloudAlarmOverlay.BackgroundServices/CloudAlarmOverlay.BackgroundServices.csproj" />
+    <ProjectReference Include="../CloudAlarmOverlay.Infrastructure/CloudAlarmOverlay.Infrastructure.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.2" />
+    <PackageReference Include="Hardcodet.NotifyIcon.Wpf" Version="2.0.1" />
+    <PackageReference Include="HtmlAgilityPack" Version="1.12.4" />
+    <PackageReference Include="Markdig" Version="1.3.2" />
+    <PackageReference Include="Microsoft.Extensions.Hosting" Version="10.0.12" />
+  </ItemGroup>
+</Project>

@@ -1,0 +1,27 @@
+<UserControl x:Class="CloudAlarmOverlay.App.Controls.TimeWheel"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:adaptive="clr-namespace:CloudAlarmOverlay.App.Styles"
+             Height="240" MinWidth="64" Focusable="False" Cursor="Hand"
+             IsManipulationEnabled="True" Stylus.IsPressAndHoldEnabled="False">
+    <Grid Background="Transparent">
+     <Grid.RowDefinitions><RowDefinition Height="30"/><RowDefinition Height="180"/><RowDefinition Height="30"/></Grid.RowDefinitions>
+     <Button x:Name="IncreaseButton" Content="＋" Click="IncreaseClick" Padding="8,0" Margin="8,0,8,2" Focusable="False" ToolTip="增加 1（也可按 ↑）" AutomationProperties.Name="增加時間"/>
+    <Grid x:Name="Surface" Grid.Row="1" Background="Transparent" ClipToBounds="True">
+        <Border x:Name="FocusRing" Margin="1,71,1,71" CornerRadius="10" BorderBrush="Transparent" BorderThickness="1"/>
+        <StackPanel x:Name="Numbers" IsHitTestVisible="False">
+            <StackPanel.RenderTransform><TranslateTransform x:Name="Slide"/></StackPanel.RenderTransform>
+            <TextBlock x:Name="AboveTwo" Height="36" TextAlignment="Center" FontSize="20" Foreground="{adaptive:AdaptiveBrush #B8C4D5}" Padding="0,4,0,0"/>
+            <TextBlock x:Name="AboveOne" Height="36" TextAlignment="Center" FontSize="24" Foreground="{adaptive:AdaptiveBrush #8193AE}" Padding="0,2,0,0"/>
+            <TextBlock x:Name="Selected" Height="36" Visibility="Hidden"/>
+            <TextBlock x:Name="BelowOne" Height="36" TextAlignment="Center" FontSize="24" Foreground="{adaptive:AdaptiveBrush #8193AE}" Padding="0,2,0,0"/>
+            <TextBlock x:Name="BelowTwo" Height="36" TextAlignment="Center" FontSize="20" Foreground="{adaptive:AdaptiveBrush #B8C4D5}" Padding="0,4,0,0"/>
+        </StackPanel>
+        <TextBox x:Name="SelectedInput" Height="36" VerticalAlignment="Center" TextAlignment="Center"
+                 VerticalContentAlignment="Center" FontSize="26" FontWeight="SemiBold" Foreground="{adaptive:AdaptiveBrush #132F55}"
+                 Background="Transparent" BorderThickness="0" Padding="0" Margin="3,0" MaxLength="2" Cursor="IBeam"
+                 PreviewTextInput="OnTextInput" GotKeyboardFocus="OnInputFocused" LostKeyboardFocus="OnInputBlurred"
+                 ToolTip="直接輸入數字；↑ 增加、↓ 減少；Tab 切換欄位"/>
+    </Grid>
+     <Button x:Name="DecreaseButton" Grid.Row="2" Content="−" Click="DecreaseClick" Padding="8,0" Margin="8,2,8,0" Focusable="False" ToolTip="減少 1（也可按 ↓）" AutomationProperties.Name="減少時間"/>
+    </Grid>
+</UserControl>

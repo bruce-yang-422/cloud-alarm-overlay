@@ -1,0 +1,156 @@
+<UserControl x:Class="CloudAlarmOverlay.App.Views.AdminView" xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:adaptive="clr-namespace:CloudAlarmOverlay.App.Styles"><UserControl.Resources><ResourceDictionary><ResourceDictionary.MergedDictionaries><ResourceDictionary Source="../Styles/LightTheme.xaml"/></ResourceDictionary.MergedDictionaries>
+ <Style x:Key="ConnectionStateText" TargetType="TextBlock">
+  <Setter Property="FontWeight" Value="SemiBold"/><Setter Property="Foreground" Value="{adaptive:AdaptiveBrush #697C99}"/>
+  <Style.Triggers>
+   <Trigger Property="Text" Value="測試中"><Setter Property="Foreground" Value="{adaptive:AdaptiveBrush #1668CA}"/></Trigger>
+   <Trigger Property="Text" Value="成功"><Setter Property="Foreground" Value="{adaptive:AdaptiveBrush #147A46}"/></Trigger>
+   <Trigger Property="Text" Value="部分失敗"><Setter Property="Foreground" Value="{adaptive:AdaptiveBrush #A15C00}"/></Trigger>
+   <Trigger Property="Text" Value="失敗"><Setter Property="Foreground" Value="{adaptive:AdaptiveBrush #B42318}"/></Trigger>
+  </Style.Triggers>
+ </Style>
+</ResourceDictionary></UserControl.Resources>
+ <Grid IsEnabled="{Binding Admin.IsAuthenticated}"><Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="*"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
+ <DockPanel><Button DockPanel.Dock="Right" Content="登出管理者" Command="{Binding Admin.LogoutCommand}" HorizontalAlignment="Right" VerticalAlignment="Top" Margin="12,0,0,0"/>
+  <StackPanel><TextBlock Text="管理者專區" Style="{StaticResource Heading}"/><TextBlock Text="管理這台電腦的同步來源、通知設定、紀錄及備份還原。" Style="{StaticResource Muted}" Margin="0,0,0,12"/></StackPanel>
+ </DockPanel>
+ <WrapPanel Grid.Row="1" Margin="0,0,0,16" Visibility="{Binding Admin.ShowsLogFilter,Converter={StaticResource BoolVisibility}}">
+ <TextBlock Text="查詢日期" VerticalAlignment="Center" Margin="0,0,8,0"/>
+ <DatePicker Style="{StaticResource HistoryDatePicker}" SelectedDate="{Binding Admin.From}" Width="180" AutomationProperties.Name="紀錄起始日期"/><TextBlock Text="至" Margin="8" VerticalAlignment="Center"/>
+ <DatePicker Style="{StaticResource HistoryDatePicker}" SelectedDate="{Binding Admin.To}" Width="180" AutomationProperties.Name="紀錄結束日期"/>
+ <Button Style="{StaticResource Primary}" Padding="20,10" Content="查詢紀錄" Command="{Binding Admin.RefreshLogsCommand}" Margin="12,0"/>
+ </WrapPanel>
+ <TabControl Style="{StaticResource FolderTabs}" Grid.Row="2" SelectedIndex="{Binding Admin.SelectedTab}" Padding="18">
+ 
+ <TabItem Header="同步來源"><ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled"><Grid VerticalAlignment="Top">
+ <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
+ <StackPanel Margin="0,0,0,12">
+ <WrapPanel>
+  <TextBlock Text="{Binding Admin.LinkState}" VerticalAlignment="Center" Margin="0,0,12,0"/>
+  <Button Content="{Binding Admin.LinkToggleText}" Command="{Binding Admin.ToggleLinksCommand}"/>
+  <Button Content="測試 Sheet A" Command="{Binding TestSheetACommand}"/>
+  <Button Content="測試 Sheet B" Command="{Binding TestSheetBCommand}"/>
+ </WrapPanel>
+ <WrapPanel IsEnabled="{Binding Admin.LinksEditable}" Margin="0,2,0,0">
+  <TextBlock Text="同步間隔（Sheet A／B 共用）" VerticalAlignment="Center" Margin="0,0,12,0"/>
+  <StackPanel Width="260" Margin="0,0,12,0">
+   <Slider Value="{Binding IntervalSeconds,Mode=TwoWay,UpdateSourceTrigger=PropertyChanged}" Minimum="30" Maximum="60" TickFrequency="5"
+           IsSnapToTickEnabled="True" SmallChange="5" LargeChange="5" Style="{StaticResource CompactSecondsSlider}"
+           AutomationProperties.Name="共用同步間隔秒數"/>
+   <Grid><TextBlock Text="30" HorizontalAlignment="Left" Style="{StaticResource Muted}" FontSize="11"/>
+    <TextBlock Text="45" HorizontalAlignment="Center" Style="{StaticResource Muted}" FontSize="11"/>
+    <TextBlock Text="60 秒" HorizontalAlignment="Right" Style="{StaticResource Muted}" FontSize="11"/></Grid>
+  </StackPanel>
+  <Border Background="{adaptive:AdaptiveBrush #EAF3FF}" CornerRadius="6" Padding="10,5" VerticalAlignment="Center">
+   <TextBlock Text="{Binding IntervalSeconds,StringFormat={}{0} 秒}" Foreground="{adaptive:AdaptiveBrush #0766FF}" FontWeight="SemiBold"/>
+  </Border>
+ </WrapPanel>
+ </StackPanel>
+ <Border Grid.Row="1">
+  <Grid>
+   <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="16"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+   <Border Style="{StaticResource Card}"><StackPanel>
+    <TextBlock Text="Sheet A · 公司共用" FontSize="20" FontWeight="SemiBold" Foreground="{adaptive:AdaptiveBrush #0766FF}"/>
+    <TextBlock Text="任務、假日、人員例外與農曆對照" Style="{StaticResource Muted}" Margin="0,4,0,10"/>
+    <StackPanel IsEnabled="{Binding Admin.LinksEditable}">
+    <TextBlock Text="Spreadsheet ID" Style="{StaticResource Muted}"/>
+    <TextBox Text="{Binding SheetAId,UpdateSourceTrigger=PropertyChanged}" AutomationProperties.Name="Sheet A Spreadsheet ID"/>
+    <Grid><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="12"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+     <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
+     <StackPanel><TextBlock Text="Tasks GID"/><TextBox Text="{Binding TasksAGid,UpdateSourceTrigger=PropertyChanged}" AutomationProperties.Name="Tasks GID"/></StackPanel>
+     <StackPanel Grid.Column="2"><TextBlock Text="Holidays GID"/><TextBox Text="{Binding HolidaysGid,UpdateSourceTrigger=PropertyChanged}" AutomationProperties.Name="Holidays GID"/></StackPanel>
+     <StackPanel Grid.Row="1"><TextBlock Text="Employees GID"/><TextBox Text="{Binding EmployeesGid,UpdateSourceTrigger=PropertyChanged}" AutomationProperties.Name="Employees GID"/></StackPanel>
+     <StackPanel Grid.Row="1" Grid.Column="2"><TextBlock Text="LunarCalendar GID"/><TextBox Text="{Binding LunarGid,UpdateSourceTrigger=PropertyChanged}" AutomationProperties.Name="LunarCalendar GID"/></StackPanel>
+    </Grid></StackPanel>
+    <Border BorderBrush="{adaptive:AdaptiveBrush #D6E1EF}" BorderThickness="1" CornerRadius="7" Padding="10" Margin="0,12,0,0" DataContext="{Binding Admin}">
+     <Grid><Grid.ColumnDefinitions><ColumnDefinition Width="110"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+      <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
+      <TextBlock Text="連線狀態" FontWeight="SemiBold"/><TextBlock Grid.Column="1" Text="{Binding SheetATestState}" Style="{StaticResource ConnectionStateText}"/>
+      <TextBlock Grid.Row="1" Text="Tasks" Style="{StaticResource Muted}"/><TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding SheetATasksStatus}" TextWrapping="Wrap"/>
+      <TextBlock Grid.Row="2" Text="Holidays" Style="{StaticResource Muted}"/><TextBlock Grid.Row="2" Grid.Column="1" Text="{Binding SheetAHolidaysStatus}" TextWrapping="Wrap"/>
+      <TextBlock Grid.Row="3" Text="Employees" Style="{StaticResource Muted}"/><TextBlock Grid.Row="3" Grid.Column="1" Text="{Binding SheetAEmployeesStatus}" TextWrapping="Wrap"/>
+      <TextBlock Grid.Row="4" Text="LunarCalendar" Style="{StaticResource Muted}"/><TextBlock Grid.Row="4" Grid.Column="1" Text="{Binding SheetALunarStatus}" TextWrapping="Wrap"/>
+      <TextBlock Grid.Row="5" Grid.ColumnSpan="2" Text="{Binding SheetATestedAt}" Style="{StaticResource Muted}" FontSize="11" Margin="0,6,0,0"/>
+     </Grid>
+    </Border>
+   </StackPanel></Border>
+   <Border Grid.Column="2" Style="{StaticResource Card}"><StackPanel>
+    <TextBlock Text="Sheet B · 團隊共用" FontSize="20" FontWeight="SemiBold" Foreground="{adaptive:AdaptiveBrush #18964A}"/>
+    <TextBlock Text="額外的團隊任務" Style="{StaticResource Muted}" Margin="0,4,0,10"/>
+    <StackPanel IsEnabled="{Binding Admin.LinksEditable}">
+    <TextBlock Text="Spreadsheet ID" Style="{StaticResource Muted}"/><TextBox Text="{Binding SheetBId,UpdateSourceTrigger=PropertyChanged}" AutomationProperties.Name="Sheet B Spreadsheet ID"/>
+    <TextBlock Text="Tasks GID" Style="{StaticResource Muted}"/><TextBox Text="{Binding TasksBGid,UpdateSourceTrigger=PropertyChanged}" AutomationProperties.Name="Sheet B Tasks GID"/>
+    </StackPanel>
+    <Border BorderBrush="{adaptive:AdaptiveBrush #D6E1EF}" BorderThickness="1" CornerRadius="7" Padding="10" Margin="0,12,0,0" DataContext="{Binding Admin}">
+     <Grid><Grid.ColumnDefinitions><ColumnDefinition Width="110"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+      <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
+      <TextBlock Text="連線狀態" FontWeight="SemiBold"/><TextBlock Grid.Column="1" Text="{Binding SheetBTestState}" Style="{StaticResource ConnectionStateText}"/>
+      <TextBlock Grid.Row="1" Text="Tasks" Style="{StaticResource Muted}"/><TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding SheetBTasksStatus}" TextWrapping="Wrap"/>
+      <TextBlock Grid.Row="2" Grid.ColumnSpan="2" Text="{Binding SheetBTestedAt}" Style="{StaticResource Muted}" FontSize="11" Margin="0,6,0,0"/>
+     </Grid>
+    </Border>
+   </StackPanel></Border>
+  </Grid>
+ </Border>
+ <StackPanel Grid.Row="2">
+  <TextBlock Text="使用 Google Sheets 公開 CSV，留空該來源 ID 可停用同步。測試連線不會變更快取。" Style="{StaticResource Muted}" TextWrapping="Wrap" Margin="0,8"/>
+  <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+   <Button Content="立即同步" Command="{Binding SyncCommand}"/>
+   <Button Content="儲存並同步" Command="{Binding SaveSettingsCommand}" IsEnabled="{Binding Admin.LinksEditable}" Style="{StaticResource Primary}"/>
+  </StackPanel>
+ </StackPanel>
+</Grid></ScrollViewer></TabItem>
+ <TabItem Header="本機設定"><ScrollViewer VerticalScrollBarVisibility="Auto"><StackPanel DataContext="{Binding Admin}">
+ <Border Style="{StaticResource Card}"><StackPanel>
+  <TextBlock Text="程式啟動" FontSize="20" FontWeight="SemiBold"/>
+  <CheckBox Content="登入 Windows 後自動啟動程式" IsChecked="{Binding AutoStartEnabled}" Click="ToggleAutoStart" Style="{StaticResource PillSwitch}" Margin="0,10,0,4"/>
+  <TextBlock Text="電腦重開機並登入目前使用者後，程式會自動啟動並顯示提醒。" Style="{StaticResource Muted}" TextWrapping="Wrap"/>
+ </StackPanel></Border>
+ <Border Style="{StaticResource Card}"><StackPanel>
+ <TextBlock Text="一般使用者可以調整哪些項目？" FontSize="20" FontWeight="SemiBold"/>
+ <TextBlock Text="鎖定後，一般設定頁會顯示鎖頭。音效開關仍由使用者自由調整。" Style="{StaticResource Muted}" Margin="0,12,0,24" TextWrapping="Wrap"/>
+ <CheckBox Content="鎖定閃爍設定" IsChecked="{Binding LockFlash}" Command="{Binding SavePolicyCommand}" Style="{StaticResource PillSwitch}" Margin="0,8"/>
+ <TextBlock Text="閃爍間隔（200–5000 毫秒）" Margin="0,16,0,6"/>
+ <ComboBox ItemsSource="{Binding Preferences.FlashChoices}" IsEditable="True" Text="{Binding FlashMilliseconds}" Width="180" HorizontalAlignment="Left"/>
+ <CheckBox Content="禁止使用者修改靜音時段" IsChecked="{Binding LockQuiet}" Command="{Binding SavePolicyCommand}" Style="{StaticResource PillSwitch}" Margin="0,20"/>
+ <Button Content="儲存本機政策" Command="{Binding SavePolicyCommand}" Style="{StaticResource Primary}" HorizontalAlignment="Left"/>
+ </StackPanel></Border>
+ <Border Style="{StaticResource Card}"><StackPanel>
+  <TextBlock Text="結束程式密碼保護" FontSize="20" FontWeight="SemiBold"/>
+  <CheckBox Content="結束程式時要求密碼" IsChecked="{Binding ExitPasswordRequired}" Click="ToggleExitPasswordRequirement" Style="{StaticResource PillSwitch}" Margin="0,10,0,4"/>
+  <TextBlock Text="開啟時，從系統匣結束程式須驗證；可使用管理員帳密或獨立的結束密碼。" Style="{StaticResource Muted}" Margin="0,0,0,10"/>
+  <TextBlock Text="{Binding ExitPasswordModeLabel}" FontWeight="SemiBold" Margin="0,0,0,10"/>
+  <WrapPanel><StackPanel Margin="0,0,12,0"><TextBlock Text="新結束密碼（8–128 字）"/><PasswordBox x:Name="ExitPassword" Width="220" MaxLength="128" AutomationProperties.Name="新結束程式密碼"/></StackPanel>
+   <StackPanel><TextBlock Text="再次輸入新密碼"/><PasswordBox x:Name="ExitPasswordConfirm" Width="220" MaxLength="128" AutomationProperties.Name="確認結束程式密碼"/></StackPanel></WrapPanel>
+  <TextBlock Text="忘記專用密碼時，登入管理員後直接在此重設，不需要輸入舊的結束密碼。" Style="{StaticResource Muted}" Margin="0,8,0,10"/>
+  <WrapPanel><Button Content="設定／重設專用密碼" Click="SetExitPassword" Style="{StaticResource Primary}"/><Button Content="改用管理員帳密" Click="UseAdminExitPassword"/></WrapPanel>
+ </StackPanel></Border>
+ </StackPanel></ScrollViewer></TabItem>
+ <TabItem Header="系統紀錄"><Grid><Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/></Grid.RowDefinitions>
+ <TextBlock Text="{Binding Admin.Version,StringFormat=目前程式版本：{0}}" Style="{StaticResource Muted}" Margin="0,0,0,12"/>
+ <TabControl Grid.Row="1" Style="{StaticResource SegmentedTabs}"><TabItem Header="同步紀錄"><DockPanel>
+ <Border DockPanel.Dock="Top" Padding="0,0,0,10"><Button Content="匯出同步紀錄 CSV" Command="{Binding Admin.ExportCommand}" CommandParameter="SyncLog" HorizontalAlignment="Right" Margin="0"/></Border>
+ <DataGrid ItemsSource="{Binding Admin.Logs}"><DataGrid.Columns>
+ <DataGridTextColumn Header="時間" Binding="{Binding Time,StringFormat=yyyy-MM-dd HH:mm:ss}" Width="155"/>
+ <DataGridTextColumn Header="來源" Binding="{Binding Source}" Width="180"/><DataGridTextColumn Header="狀態" Binding="{Binding Status}" Width="70"/>
+ <DataGridTextColumn Header="訊息" Binding="{Binding Message}" Width="*"/>
+ </DataGrid.Columns></DataGrid></DockPanel></TabItem>
+ <TabItem Header="系統事件"><DockPanel>
+ <Border DockPanel.Dock="Top" Padding="0,0,0,10"><Button Content="匯出系統事件 CSV" Command="{Binding Admin.ExportCommand}" CommandParameter="SystemEvent" HorizontalAlignment="Right" Margin="0"/></Border>
+ <DataGrid ItemsSource="{Binding Admin.Events}"><DataGrid.Columns>
+ <DataGridTextColumn Header="時間" Binding="{Binding Time,StringFormat=yyyy-MM-dd HH:mm:ss}" Width="155"/>
+ <DataGridTextColumn Header="事件" Binding="{Binding EventType}" Width="140"/>
+ <DataGridTextColumn Header="訊息" Binding="{Binding Message}" Width="*"/>
+ </DataGrid.Columns></DataGrid></DockPanel></TabItem></TabControl>
+ </Grid></TabItem>
+ <TabItem Header="操作稽核"><DockPanel>
+ <Border DockPanel.Dock="Top" Padding="0,0,0,10"><Button Content="匯出稽核紀錄 CSV" Command="{Binding Admin.ExportCommand}" CommandParameter="AuditLog" HorizontalAlignment="Right" Margin="0"/></Border>
+ <DataGrid ItemsSource="{Binding Admin.Audit}"><DataGrid.Columns>
+ <DataGridTextColumn Header="時間" Binding="{Binding CreatedAt,StringFormat=yyyy-MM-dd HH:mm:ss}" Width="155"/>
+ <DataGridTextColumn Header="操作人" Binding="{Binding UserId}" Width="90"/><DataGridTextColumn Header="項目" Binding="{Binding Action}" Width="180"/>
+ <DataGridTextColumn Header="舊值" Binding="{Binding OldValue}" Width="*"/><DataGridTextColumn Header="新值" Binding="{Binding NewValue}" Width="*"/>
+ </DataGrid.Columns></DataGrid></DockPanel></TabItem>
+<TabItem Header="備份與還原" xmlns:views="clr-namespace:CloudAlarmOverlay.App.Views"><views:BackupMaintenanceView DataContext="{Binding Preferences.Maintenance}"/></TabItem>
+ </TabControl>
+ <ScrollViewer Grid.Row="3" VerticalScrollBarVisibility="Auto" MaxHeight="100"><TextBlock Text="{Binding Admin.Message}" TextWrapping="Wrap" Foreground="{adaptive:AdaptiveBrush #3664A0}" Margin="0,12"/></ScrollViewer>
+ </Grid>
+</UserControl>

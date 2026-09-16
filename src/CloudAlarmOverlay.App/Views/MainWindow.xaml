@@ -1,0 +1,404 @@
+<Window x:Class="CloudAlarmOverlay.App.Views.MainWindow" xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:adaptive="clr-namespace:CloudAlarmOverlay.App.Styles" Title="{Binding Title}" Icon="/CloudAlarmOverlay.App;component/Assets/Brand/LogoCloud.png" Width="1280" Height="980" MinWidth="1050" MinHeight="680" WindowStartupLocation="CenterScreen" Background="{adaptive:AdaptiveBrush #F7FAFE}" Foreground="{adaptive:AdaptiveBrush #16243E}" FontFamily="Segoe UI, Microsoft JhengHei UI" FontSize="14">
+  <Window.Resources>
+    <ResourceDictionary>
+      <ResourceDictionary.MergedDictionaries>
+        <ResourceDictionary Source="../Styles/LightTheme.xaml" />
+      </ResourceDictionary.MergedDictionaries>
+    </ResourceDictionary>
+  </Window.Resources>
+  <Grid Background="{adaptive:AdaptiveBrush #F7FAFE}">
+    <Grid.ColumnDefinitions>
+      <ColumnDefinition Width="184" />
+      <ColumnDefinition Width="*" />
+    </Grid.ColumnDefinitions>
+    <Grid.RowDefinitions>
+      <RowDefinition Height="54" />
+      <RowDefinition Height="*" />
+    </Grid.RowDefinitions>
+    <Border Grid.ColumnSpan="2" Background="{adaptive:AdaptiveBrush #F0F5FB}" BorderBrush="{adaptive:AdaptiveBrush #DEE6F1}" BorderThickness="0,0,0,1" Padding="20,6">
+      <Grid>
+        <Image Source="/CloudAlarmOverlay.App;component/Assets/Brand/LogoBanner.png" Width="260" Height="40" Stretch="Uniform" HorizontalAlignment="Left" AutomationProperties.Name="Cloud Alarm Overlay" />
+        <TextBlock Text="{Binding DeviceLabel}" HorizontalAlignment="Right" Foreground="{adaptive:AdaptiveBrush #697C99}" VerticalAlignment="Center" />
+      </Grid>
+    </Border>
+    <Border Grid.Row="1" Background="{adaptive:AdaptiveBrush #F0F5FB}" BorderBrush="{adaptive:AdaptiveBrush #DEE6F1}" BorderThickness="0,0,1,0">
+      <DockPanel Margin="12,18,12,12">
+        <StackPanel DockPanel.Dock="Top" Margin="10,0,0,18">
+          <TextBlock Text="工作空間" Foreground="{adaptive:AdaptiveBrush #697C99}" FontSize="12" />
+        </StackPanel>
+        <StackPanel DockPanel.Dock="Bottom">
+          <Border Background="{adaptive:AdaptiveBrush #EAF4FF}" Padding="12" CornerRadius="8">
+            <StackPanel>
+              <TextBlock Text="●  本機排程運作中" Foreground="{adaptive:AdaptiveBrush #18964A}" FontSize="12" />
+              <TextBlock Text="{Binding DeviceLabel}" TextWrapping="Wrap" Style="{StaticResource Muted}" Margin="0,6,0,0" />
+            </StackPanel>
+          </Border>
+          <Image Source="/CloudAlarmOverlay.App;component/Assets/Brand/LogoWordmark.png" Width="160" Height="22" Stretch="Uniform" Margin="0,18,0,0" AutomationProperties.Name="Cloud Alarm Overlay" />
+          <TextBlock Text="讓重要的事，不再遺漏。" FontSize="11" Style="{StaticResource Muted}" Margin="4,6,0,0" />
+        </StackPanel>
+        <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+          <StackPanel xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation">
+            <ListBox x:Name="PrimaryNavigation" ItemsSource="{Binding Pages}" SelectedIndex="{Binding NavigationIndex}" Background="Transparent" BorderThickness="0" Foreground="{adaptive:AdaptiveBrush #697C99}">
+              <ListBox.ItemTemplate>
+                <DataTemplate>
+                  <Grid>
+                    <Grid.ColumnDefinitions>
+                      <ColumnDefinition Width="30" />
+                      <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+                    <TextBlock x:Name="NavIcon" Text="" FontFamily="Segoe MDL2 Assets" FontSize="20" Foreground="{Binding Foreground,RelativeSource={RelativeSource AncestorType=ListBoxItem}}" />
+                    <TextBlock Grid.Column="1" Text="{Binding}" Foreground="{Binding Foreground,RelativeSource={RelativeSource AncestorType=ListBoxItem}}" />
+                  </Grid>
+                  <DataTemplate.Triggers>
+                    <DataTrigger Binding="{Binding}" Value="我的任務">
+                      <Setter TargetName="NavIcon" Property="Text" Value="" />
+                    </DataTrigger>
+                    <DataTrigger Binding="{Binding}" Value="歷史紀錄">
+                      <Setter TargetName="NavIcon" Property="Text" Value="" />
+                    </DataTrigger>
+                    <DataTrigger Binding="{Binding}" Value="番茄鐘"><Setter TargetName="NavIcon" Property="Text" Value="&#xE916;"/></DataTrigger>
+                    <DataTrigger Binding="{Binding}" Value="設定">
+                      <Setter TargetName="NavIcon" Property="Text" Value="" />
+                    </DataTrigger>
+                    <DataTrigger Binding="{Binding}" Value="管理者專區">
+                      <Setter TargetName="NavIcon" Property="Text" Value="&#xE72E;" />
+                    </DataTrigger>
+                  </DataTemplate.Triggers>
+                </DataTemplate>
+              </ListBox.ItemTemplate>
+              <ListBox.ItemContainerStyle>
+                <Style TargetType="ListBoxItem">
+                  <Setter Property="Padding" Value="12,9" />
+                  <Setter Property="Margin" Value="0,0,0,8" />
+                  <Setter Property="FontSize" Value="14" />
+                  <Setter Property="Cursor" Value="Hand" />
+                  <Setter Property="Template">
+                    <Setter.Value>
+                      <ControlTemplate TargetType="ListBoxItem">
+                        <Border x:Name="Nav" Padding="{TemplateBinding Padding}" CornerRadius="7" Background="Transparent">
+                          <ContentPresenter />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                          <Trigger Property="IsSelected" Value="True">
+                            <Setter TargetName="Nav" Property="Background" Value="{adaptive:AdaptiveBrush #E6F0FF}" />
+                            <Setter Property="Foreground" Value="{adaptive:AdaptiveBrush #0766FF}" />
+                            <Setter Property="FontWeight" Value="SemiBold" />
+                          </Trigger>
+                          <Trigger Property="IsMouseOver" Value="True">
+                            <Setter TargetName="Nav" Property="Opacity" Value=".8" />
+                          </Trigger>
+                        </ControlTemplate.Triggers>
+                      </ControlTemplate>
+                    </Setter.Value>
+                  </Setter>
+                </Style>
+              </ListBox.ItemContainerStyle>
+            </ListBox>
+          </StackPanel>
+        </ScrollViewer>
+      </DockPanel>
+    </Border>
+    <DockPanel Grid.Row="1" Grid.Column="1" Margin="20,14,20,10">
+      <Border DockPanel.Dock="Bottom" BorderBrush="{adaptive:AdaptiveBrush #DEE6F1}" BorderThickness="0,1,0,0" Padding="0,10,0,0">
+        <TextBlock Text="{Binding Status}" Style="{StaticResource Muted}" FontSize="12" />
+      </Border>
+      <TabControl SelectedIndex="{Binding PageIndex}" Background="Transparent" Foreground="{adaptive:AdaptiveBrush #16243E}" BorderThickness="0">
+        <TabControl.Template>
+          <ControlTemplate TargetType="TabControl">
+            <ContentPresenter ContentSource="SelectedContent" />
+          </ControlTemplate>
+        </TabControl.Template>
+        <TabItem Header="首頁">
+          <ScrollViewer xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" VerticalScrollBarVisibility="Auto" PanningMode="VerticalOnly">
+            <StackPanel>
+              <Border Background="{adaptive:AdaptiveBrush #EEF4FB}" CornerRadius="12" Padding="20,10" Margin="0,0,0,12">
+                <UniformGrid Columns="4">
+                  <StackPanel><TextBlock Text="國曆日期" Style="{StaticResource Muted}" FontSize="12"/><TextBlock Text="{Binding SolarDate}" FontSize="18" FontWeight="SemiBold" Margin="0,5,0,0"/></StackPanel>
+                  <StackPanel><TextBlock Text="農曆日期" Style="{StaticResource Muted}" FontSize="12"/><TextBlock Text="{Binding LunarToday}" FontSize="18" FontWeight="SemiBold" Margin="0,5,0,0"/></StackPanel>
+                  <StackPanel><TextBlock Text="現在時間" Style="{StaticResource Muted}" FontSize="12"/><TextBlock Text="{Binding CurrentClock}" FontSize="22" FontFamily="Consolas" FontWeight="SemiBold" Margin="0,5,0,0"/></StackPanel>
+                  <StackPanel><TextBlock Text="節氣" Style="{StaticResource Muted}" FontSize="12"/><TextBlock Text="{Binding CurrentSolarTerm}" FontSize="18" FontWeight="SemiBold" Margin="0,5,0,0"/></StackPanel>
+                </UniformGrid>
+              </Border>
+              <TextBlock Text="{Binding CalendarWarning}" Foreground="{adaptive:AdaptiveBrush #B46B00}" TextWrapping="Wrap" Margin="0,0,0,12" Visibility="{Binding HasCalendarWarning,Converter={StaticResource BoolVisibility}}" />
+              <Grid xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation">
+                <Grid.ColumnDefinitions>
+                  <ColumnDefinition Width="1.7*" />
+                  <ColumnDefinition Width="16" />
+                  <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+                <Grid.RowDefinitions>
+                  <RowDefinition Height="Auto" />
+                  <RowDefinition Height="Auto" />
+                </Grid.RowDefinitions>
+                <Border xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:controls="clr-namespace:CloudAlarmOverlay.App.Controls" Style="{StaticResource Card}" Padding="14">
+                  <Grid>
+                    <Grid.RowDefinitions>
+                      <RowDefinition Height="Auto" />
+                      <RowDefinition Height="*" />
+                    </Grid.RowDefinitions>
+                    <StackPanel Orientation="Horizontal" Margin="2,0,0,10">
+                      <TextBlock Text="" FontFamily="Segoe MDL2 Assets" Foreground="{adaptive:AdaptiveBrush #0766FF}" FontSize="22" Margin="0,0,10,0" />
+                      <TextBlock Text="下一個提醒" FontSize="21" FontWeight="SemiBold" />
+                    </StackPanel>
+                    <Border Grid.Row="1" Background="{adaptive:AdaptiveBrush #FFF3F5}" BorderBrush="{adaptive:AdaptiveBrush #FFE1E6}" BorderThickness="1" CornerRadius="10" Padding="14" MinHeight="140">
+                      <Grid>
+                        <Grid.ColumnDefinitions>
+                          <ColumnDefinition Width="*" />
+                          <ColumnDefinition Width="126" />
+                          <ColumnDefinition Width="112" />
+                        </Grid.ColumnDefinitions>
+                        <StackPanel VerticalAlignment="Center" Margin="0,0,10,0">
+                          <ContentControl Content="{Binding NextReminder}" ContentTemplate="{StaticResource LevelBadge}" HorizontalAlignment="Left" />
+                          <TextBlock Text="{Binding NextTitle}" FontWeight="SemiBold" FontSize="21" TextWrapping="Wrap" MaxHeight="86" TextTrimming="CharacterEllipsis" ToolTip="{Binding NextTitle}" Margin="0,8,0,6" />
+                          <TextBlock Text="{Binding NextDescription}" FontSize="13" TextWrapping="Wrap" TextTrimming="CharacterEllipsis" MaxHeight="48" ToolTip="{Binding NextDescription}" Margin="0,0,0,10" />
+                          <WrapPanel>
+                            <ContentControl Content="{Binding NextReminder}" ContentTemplate="{StaticResource SourceBadge}" />
+                            <TextBlock Text="🔒 唯讀" FontSize="12" Foreground="{adaptive:AdaptiveBrush #697C99}" Margin="8,0,0,0">
+                              <TextBlock.Style>
+                                <Style TargetType="TextBlock">
+                                  <Setter Property="Visibility" Value="Visible" />
+                                  <Style.Triggers>
+                                    <DataTrigger Binding="{Binding NextReminder.IsLocal}" Value="True">
+                                      <Setter Property="Visibility" Value="Collapsed" />
+                                    </DataTrigger>
+                                    <DataTrigger Binding="{Binding NextReminder}" Value="{x:Null}" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+                                      <Setter Property="Visibility" Value="Collapsed" />
+                                    </DataTrigger>
+                                  </Style.Triggers>
+                                </Style>
+                              </TextBlock.Style>
+                            </TextBlock>
+                          </WrapPanel>
+                        </StackPanel>
+                        <Border Grid.Column="1" BorderBrush="{adaptive:AdaptiveBrush #F7D8DE}" BorderThickness="1,0" Padding="6,0">
+                          <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
+                            <TextBlock Text="" FontFamily="Segoe MDL2 Assets" FontSize="25" Foreground="{adaptive:AdaptiveBrush #536982}" HorizontalAlignment="Center" Margin="0,0,0,10" />
+                            <TextBlock Text="{Binding NextDate}" FontSize="12" HorizontalAlignment="Center" />
+                            <TextBlock Text="{Binding NextClock}" FontSize="32" FontWeight="Bold" HorizontalAlignment="Center" Margin="0,4" />
+                            <TextBlock Text="{Binding NextLunar}" FontSize="12" Foreground="{adaptive:AdaptiveBrush #697C99}" HorizontalAlignment="Center" TextWrapping="Wrap" />
+                          </StackPanel>
+                        </Border>
+                        <Grid Grid.Column="2" Width="104" Height="104" Margin="8,0,0,0" ToolTip="剩餘時間；環形以 24 小時為一圈">
+                          <controls:CountdownRing TrackBrush="{adaptive:AdaptiveBrush #F9CFD5}" ProgressBrush="{adaptive:AdaptiveBrush #E12A43}" RemainingHours="{Binding RemainingHours}" />
+                          <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
+                            <TextBlock Text="剩餘" FontSize="13" HorizontalAlignment="Center" />
+                            <TextBlock Text="{Binding CountdownLabel}" Foreground="{adaptive:AdaptiveBrush #D72540}" FontWeight="Bold" FontSize="18" HorizontalAlignment="Center" Margin="0,3,0,0" />
+                          </StackPanel>
+                        </Grid>
+                      </Grid>
+                    </Border>
+                  </Grid>
+                </Border>
+                <Border xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" Grid.Column="2" Style="{StaticResource Card}" Padding="14">
+                  <Grid>
+                    <Grid.RowDefinitions>
+                      <RowDefinition Height="Auto" />
+                      <RowDefinition Height="*" />
+                    </Grid.RowDefinitions>
+                    <StackPanel Orientation="Horizontal" Margin="2,0,0,10">
+                      <TextBlock Text="" FontFamily="Segoe MDL2 Assets" FontSize="21" Foreground="{adaptive:AdaptiveBrush #536982}" Margin="0,0,10,0" />
+                      <TextBlock Text="今日任務概況" FontSize="20" FontWeight="SemiBold" />
+                    </StackPanel>
+                    <UniformGrid Grid.Row="1" Columns="3" MinHeight="140">
+                      <Border Background="{adaptive:AdaptiveBrush #F6FAFF}" BorderBrush="{adaptive:AdaptiveBrush #E2ECF7}" BorderThickness="1" CornerRadius="9" Margin="0,0,7,0" Padding="4,12">
+                        <StackPanel VerticalAlignment="Center">
+                          <TextBlock Text="" FontFamily="Segoe MDL2 Assets" FontSize="24" Foreground="{adaptive:AdaptiveBrush #0766FF}" HorizontalAlignment="Center" Margin="0,0,0,12" />
+                          <TextBlock Text="今天總任務" FontSize="12" FontWeight="SemiBold" HorizontalAlignment="Center" />
+                          <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,12,0,0">
+                            <TextBlock Text="{Binding TodayCount}" FontSize="34" FontWeight="Bold" Foreground="{adaptive:AdaptiveBrush #0766FF}" />
+                            <TextBlock Text="項" FontSize="12" Margin="3,12,0,0" />
+                          </StackPanel>
+                        </StackPanel>
+                      </Border>
+                      <Border Background="{adaptive:AdaptiveBrush #F6FAFF}" BorderBrush="{adaptive:AdaptiveBrush #E2ECF7}" BorderThickness="1" CornerRadius="9" Margin="0,0,7,0" Padding="4,12">
+                        <StackPanel VerticalAlignment="Center">
+                          <TextBlock Text="" FontFamily="Segoe MDL2 Assets" FontSize="24" Foreground="{adaptive:AdaptiveBrush #F07822}" HorizontalAlignment="Center" Margin="0,0,0,12" />
+                          <TextBlock Text="待處理" FontSize="12" FontWeight="SemiBold" HorizontalAlignment="Center" />
+                          <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,12,0,0">
+                            <TextBlock Text="{Binding PendingCount}" FontSize="34" FontWeight="Bold" Foreground="{adaptive:AdaptiveBrush #F07822}" />
+                            <TextBlock Text="項" FontSize="12" Margin="3,12,0,0" />
+                          </StackPanel>
+                        </StackPanel>
+                      </Border>
+                      <Border Background="{adaptive:AdaptiveBrush #F6FAFF}" BorderBrush="{adaptive:AdaptiveBrush #E2ECF7}" BorderThickness="1" CornerRadius="9" Margin="0" Padding="4,12">
+                        <StackPanel VerticalAlignment="Center">
+                          <TextBlock Text="" FontFamily="Segoe MDL2 Assets" FontSize="24" Foreground="{adaptive:AdaptiveBrush #099666}" HorizontalAlignment="Center" Margin="0,0,0,12" />
+                          <TextBlock Text="已確認完成" FontSize="12" FontWeight="SemiBold" HorizontalAlignment="Center" />
+                          <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,12,0,0">
+                            <TextBlock Text="{Binding AcknowledgedCount}" FontSize="34" FontWeight="Bold" Foreground="{adaptive:AdaptiveBrush #099666}" />
+                            <TextBlock Text="項" FontSize="12" Margin="3,12,0,0" />
+                          </StackPanel>
+                        </StackPanel>
+                      </Border>
+                    </UniformGrid>
+                  </Grid>
+                </Border>
+                <Border xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" Grid.Row="1" Style="{StaticResource Card}" Padding="14">
+                  <StackPanel>
+                    <TextBlock Text="即時操作" FontSize="17" FontWeight="SemiBold" Margin="0,0,0,10" />
+                    <UniformGrid Columns="2">
+                      <Button Content="＋ 新增本機任務" Command="{Binding NewTaskCommand}" Style="{StaticResource Primary}" Padding="10,8" />
+                      <Button Content="⟳ 立即同步" Command="{Binding SyncCommand}" Padding="10,8" Margin="0" />
+                    </UniformGrid>
+                    <Grid Margin="0,10,0,0">
+                      <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="*" />
+                      </Grid.ColumnDefinitions>
+                      <TextBlock Text="提醒預覽" FontSize="12" Foreground="{adaptive:AdaptiveBrush #697C99}" Margin="0,0,10,0" />
+                      <UniformGrid Grid.Column="1" Columns="4">
+                        <Button Content="一般提醒" Command="{Binding PreviewCommand}" CommandParameter="低級" FontSize="12" Padding="6,5" />
+                        <Button Content="重要提醒" Command="{Binding PreviewCommand}" CommandParameter="中級" FontSize="12" Padding="6,5" />
+                        <Button Content="緊急提醒" Command="{Binding PreviewCommand}" CommandParameter="高級" FontSize="12" Padding="6,5" />
+                        <Button Content="強制通知" Command="{Binding PreviewCommand}" CommandParameter="最高級" FontSize="12" Padding="6,5" />
+                      </UniformGrid>
+                    </Grid>
+                  </StackPanel>
+                </Border>
+                <Border xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" Grid.Row="1" Grid.Column="2" Style="{StaticResource Card}" Padding="14">
+                  <StackPanel>
+                    <TextBlock Text="⟳ 雲端同步狀態" FontSize="17" FontWeight="SemiBold" Margin="0,0,0,10" />
+                    <Border Background="{adaptive:AdaptiveBrush #F2F7FF}" CornerRadius="7" Padding="10,9" Margin="0,0,0,8">
+                      <Grid>
+                        <Grid.ColumnDefinitions>
+                          <ColumnDefinition Width="70" />
+                          <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Text="Sheet A" Foreground="{adaptive:AdaptiveBrush #0766FF}" FontWeight="SemiBold" ToolTip="公司排程" />
+                        <TextBlock Grid.Column="1" Text="{Binding SheetAStatus}" Foreground="{adaptive:AdaptiveBrush #697C99}" FontSize="12" TextTrimming="CharacterEllipsis" MaxHeight="18" ToolTip="{Binding SheetAStatus}" />
+                      </Grid>
+                    </Border>
+                    <Border Background="{adaptive:AdaptiveBrush #F0FAF5}" CornerRadius="7" Padding="10,9" Margin="0,0,0,0">
+                      <Grid>
+                        <Grid.ColumnDefinitions>
+                          <ColumnDefinition Width="70" />
+                          <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Text="Sheet B" Foreground="{adaptive:AdaptiveBrush #159447}" FontWeight="SemiBold" ToolTip="團隊任務" />
+                        <TextBlock Grid.Column="1" Text="{Binding SheetBStatus}" Foreground="{adaptive:AdaptiveBrush #697C99}" FontSize="12" TextTrimming="CharacterEllipsis" MaxHeight="18" ToolTip="{Binding SheetBStatus}" />
+                      </Grid>
+                    </Border>
+                  </StackPanel>
+                </Border>
+              </Grid>
+              <Border Style="{StaticResource Card}" Padding="16" Margin="0">
+                <StackPanel>
+                  <DockPanel xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" Margin="0,0,0,12">
+                    <Button DockPanel.Dock="Right" HorizontalAlignment="Right" Content="查看全部任務 →" Command="{Binding OpenTasksCommand}" Background="Transparent" Foreground="{adaptive:AdaptiveBrush #0766FF}" Padding="8,4" Margin="0" />
+                    <TextBlock Text="◷ 即將到來的任務" FontWeight="SemiBold" FontSize="18" />
+                  </DockPanel>
+                  <TextBlock Text="目前沒有待辦提醒，新增第一個任務開始使用。" Style="{StaticResource Muted}" Visibility="{Binding IsUpcomingEmpty,Converter={StaticResource BoolVisibility}}" Margin="0,12" />
+                  <DataGrid ItemsSource="{Binding Upcoming}" MaxHeight="300" ColumnHeaderHeight="34" RowHeight="36">
+                    <DataGrid.Columns>
+                      <DataGridTextColumn Header="時間" Binding="{Binding NextTime}" Width="120" />
+                      <DataGridTextColumn Header="任務標題" Binding="{Binding Title}" Width="*" />
+                      <DataGridTemplateColumn Header="來源" CellTemplate="{StaticResource SourceBadge}" Width="110" />
+                      <DataGridTemplateColumn Header="提醒等級" CellTemplate="{StaticResource LevelBadge}" Width="110" />
+                      <DataGridTextColumn Header="狀態" Binding="{Binding UpcomingState}" Width="90" />
+                      <DataGridTextColumn Header="備註" Binding="{Binding Task.Note}" Width="1.1*" />
+                    </DataGrid.Columns>
+                  </DataGrid>
+                </StackPanel>
+              </Border>
+            </StackPanel>
+          </ScrollViewer>
+        </TabItem>
+        <TabItem Header="我的任務">
+          <DockPanel>
+            <StackPanel DockPanel.Dock="Top">
+              <TextBlock Text="我的任務" Style="{StaticResource Heading}" />
+              <TextBlock Text="管理本機提醒；雲端任務會自動同步，僅供檢視。" Style="{StaticResource Muted}" Margin="0,0,0,10" />
+              <Grid>
+                <Grid.ColumnDefinitions>
+                  <ColumnDefinition Width="*" />
+                  <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <TextBox Text="{Binding Search,UpdateSourceTrigger=PropertyChanged}" ToolTip="搜尋任務名稱或說明" Margin="0,0,8,8" Height="34" VerticalContentAlignment="Center" />
+                <Button Grid.Column="1" Content="＋ 新增任務" Command="{Binding NewTaskCommand}" Style="{StaticResource Primary}" Margin="0,0,0,8" />
+              </Grid>
+              <WrapPanel Margin="0,0,0,8">
+                <TextBlock Text="任務來源" Foreground="{adaptive:AdaptiveBrush #697C99}" Margin="0,0,12,0" VerticalAlignment="Center"/>
+                <ListBox ItemsSource="{Binding Sources}" SelectedItem="{Binding SourceFilter}" Style="{StaticResource SegmentedSelector}" AutomationProperties.Name="依任務來源篩選">
+                  <ListBox.ItemTemplate><DataTemplate>
+                    <TextBlock x:Name="SourceLabel" Text="{Binding}"/>
+                    <DataTemplate.Triggers>
+                      <DataTrigger Binding="{Binding}" Value="全部來源"><Setter TargetName="SourceLabel" Property="Text" Value="全部"/></DataTrigger>
+                      <DataTrigger Binding="{Binding}" Value="本機"><Setter TargetName="SourceLabel" Property="Text" Value="本機任務"/><Setter TargetName="SourceLabel" Property="ToolTip" Value="這台電腦建立的提醒"/></DataTrigger>
+                      <DataTrigger Binding="{Binding}" Value="SheetA"><Setter TargetName="SourceLabel" Property="Text" Value="公司共用"/><Setter TargetName="SourceLabel" Property="ToolTip" Value="SheetA · 公司共用任務，僅供檢視"/></DataTrigger>
+                      <DataTrigger Binding="{Binding}" Value="SheetB"><Setter TargetName="SourceLabel" Property="Text" Value="團隊共用"/><Setter TargetName="SourceLabel" Property="ToolTip" Value="SheetB · 團隊共用任務，僅供檢視"/></DataTrigger>
+                    </DataTemplate.Triggers>
+                  </DataTemplate></ListBox.ItemTemplate>
+                </ListBox>
+              </WrapPanel>
+              <WrapPanel Margin="0,0,0,8">
+                <Button Content="編輯" ToolTip="{Binding SelectionHint}" ToolTipService.ShowOnDisabled="True" Command="{Binding EditTaskCommand}" />
+                <Button Content="複製" ToolTip="{Binding SelectionHint}" ToolTipService.ShowOnDisabled="True" Command="{Binding CopyTaskCommand}" />
+                <Button Content="啟用／停用" ToolTip="{Binding SelectionHint}" ToolTipService.ShowOnDisabled="True" Command="{Binding ToggleTaskCommand}" />
+                <Button Content="刪除" ToolTip="{Binding SelectionHint}" ToolTipService.ShowOnDisabled="True" Command="{Binding DeleteTaskCommand}" />
+                <Button Content="匯出完整觸發日誌" Command="{Binding ExportTaskTriggerLogCommand}" ToolTip="匯出此任務每一次排定觸發的完整紀錄，含未產生簽收結果的觸發失敗情形" />
+                <Button Content="重新整理" Command="{Binding RefreshCommand}" /><Button Content="全選結果" Click="SelectAllTasks"/>
+              </WrapPanel>
+              <WrapPanel Margin="0,0,0,8" Visibility="{Binding HasTaskSelection,Converter={StaticResource BoolVisibility}}">
+ <Button Content="取消選取" Click="ClearTaskSelection"/>
+ <Button Content="批次複製成本機" Command="{Binding BatchTasksCommand}" CommandParameter="copy"/>
+ <Button Content="啟用所選本機" Command="{Binding BatchTasksCommand}" CommandParameter="enable"/>
+ <Button Content="停用所選本機" Command="{Binding BatchTasksCommand}" CommandParameter="disable"/>
+ <Button Content="刪除所選本機" Command="{Binding BatchTasksCommand}" CommandParameter="delete"/>
+</WrapPanel>
+<TextBlock Text="{Binding SelectionSummary}" Style="{StaticResource Muted}" Visibility="{Binding HasTaskSelection,Converter={StaticResource BoolVisibility}}"/>
+<TextBlock Text="{Binding SelectionHint}" Style="{StaticResource Muted}" Margin="0,4,0,8"/><TextBlock Text="沒有符合條件的任務。按「新增任務」建立本機提醒。" Style="{StaticResource Muted}" Visibility="{Binding IsTasksEmpty,Converter={StaticResource BoolVisibility}}" Margin="0,12" />
+            </StackPanel>
+            <DataGrid x:Name="TaskGrid" ItemsSource="{Binding Tasks}" SelectionMode="Extended" SelectionUnit="FullRow" SelectionChanged="TaskSelectionChanged">
+              <DataGrid.RowStyle><Style TargetType="DataGridRow">
+                <Style.Triggers>
+                  <DataTrigger Binding="{Binding IsLocal}" Value="False">
+                    <Setter Property="Background" Value="{adaptive:AdaptiveBrush #F3EFFA}"/>
+                    <Setter Property="ToolTip" Value="雲端唯讀：啟用狀態依 Sheet 設定；可選取並複製成本機任務。"/>
+                  </DataTrigger>
+                  <Trigger Property="IsSelected" Value="True"><Setter Property="Background" Value="{adaptive:AdaptiveBrush #E6F0FF}"/></Trigger>
+                </Style.Triggers>
+              </Style></DataGrid.RowStyle>
+              <DataGrid.Columns><DataGridTemplateColumn Header="選取" Width="55">
+ <DataGridTemplateColumn.CellTemplate><DataTemplate>
+  <CheckBox Style="{StaticResource TaskSelectionCheckBox}" HorizontalAlignment="Center" PreviewMouseLeftButtonDown="TaskCheckMouseDown" PreviewKeyDown="TaskCheckKeyDown" IsChecked="{Binding IsSelected,RelativeSource={RelativeSource AncestorType=DataGridRow},Mode=OneWay}" AutomationProperties.Name="選取任務"/>
+ </DataTemplate></DataGridTemplateColumn.CellTemplate>
+</DataGridTemplateColumn>
+<DataGridTemplateColumn Header="權限" Width="65">
+ <DataGridTemplateColumn.CellTemplate><DataTemplate>
+  <TextBlock Text="&#xE72E;" FontFamily="Segoe MDL2 Assets" HorizontalAlignment="Center" ToolTip="雲端唯讀：不能編輯、刪除或切換啟用；可複製成本機任務。">
+   <TextBlock.Style><Style TargetType="TextBlock" BasedOn="{StaticResource {x:Type TextBlock}}"><Style.Triggers><DataTrigger Binding="{Binding IsLocal}" Value="True"><Setter Property="Visibility" Value="Collapsed"/></DataTrigger></Style.Triggers></Style></TextBlock.Style>
+  </TextBlock>
+ </DataTemplate></DataGridTemplateColumn.CellTemplate>
+</DataGridTemplateColumn>
+                <DataGridTextColumn Header="任務名稱" Binding="{Binding Title}" Width="*" MinWidth="180" />
+                <DataGridTextColumn Header="日期 / 時間" Binding="{Binding Time}" Width="145" MinWidth="140" />
+                <DataGridTemplateColumn Header="等級" CellTemplate="{StaticResource LevelBadge}" Width="SizeToCells" MinWidth="110" />
+                <DataGridTextColumn Header="重複" Binding="{Binding Recurrence}" Width="130" MinWidth="110" />
+                <DataGridTemplateColumn Header="狀態" Width="175" MinWidth="165"><DataGridTemplateColumn.CellTemplate><DataTemplate>
+                  <Grid><Grid.ColumnDefinitions><ColumnDefinition Width="58"/><ColumnDefinition/></Grid.ColumnDefinitions>
+                    <CheckBox Style="{StaticResource PillSwitch}" IsChecked="{Binding Task.Enabled,Mode=OneWay}" IsEnabled="{Binding IsLocal}" VerticalAlignment="Center" Margin="0"
+                      PreviewMouseLeftButtonDown="TaskStateMouseDown" PreviewKeyDown="TaskStateKeyDown" ToolTip="{Binding StateOrigin}" ToolTipService.ShowOnDisabled="True" AutomationProperties.Name="任務啟用開關"/>
+                    <StackPanel Grid.Column="1"><TextBlock Text="{Binding State}"/><TextBlock Text="{Binding StateOrigin}" FontSize="11" Foreground="{adaptive:AdaptiveBrush #70568F}"/></StackPanel>
+                  </Grid>
+                </DataTemplate></DataGridTemplateColumn.CellTemplate></DataGridTemplateColumn>
+                <DataGridTemplateColumn Header="來源" CellTemplate="{StaticResource SourceBadge}" Width="100" />
+              </DataGrid.Columns>
+            </DataGrid>
+          </DockPanel>
+        </TabItem>
+        <TabItem Header="歷史紀錄"><TabControl SelectedIndex="{Binding HistoryTabIndex}" Style="{StaticResource FolderTabs}"><TabItem Header="任務提醒" xmlns:views="clr-namespace:CloudAlarmOverlay.App.Views"><views:TaskHistoryView/></TabItem><TabItem Header="番茄鐘" xmlns:views="clr-namespace:CloudAlarmOverlay.App.Views"><views:PomodoroHistoryView DataContext="{Binding Pomodoro}"/></TabItem></TabControl></TabItem>
+        <TabItem Header="番茄鐘" xmlns:views="clr-namespace:CloudAlarmOverlay.App.Views"><views:PomodoroView DataContext="{Binding Pomodoro}"/></TabItem>
+        <TabItem Header="設定">
+          <Grid xmlns:views="clr-namespace:CloudAlarmOverlay.App.Views">
+            <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/></Grid.RowDefinitions>
+            <TextBlock Text="設定" Style="{StaticResource Heading}"/>
+            <views:PreferencesView Grid.Row="1" DataContext="{Binding Preferences}"/>
+          </Grid>
+        </TabItem>
+        <TabItem xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:views="clr-namespace:CloudAlarmOverlay.App.Views" Header="管理者">
+          <views:AdminView Visibility="{Binding Admin.IsAuthenticated,Converter={StaticResource BoolVisibility}}" />
+        </TabItem>
+      </TabControl>
+    </DockPanel>
+  </Grid>
+</Window>

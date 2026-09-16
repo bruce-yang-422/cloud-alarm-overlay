@@ -1,0 +1,67 @@
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:a="clr-namespace:CloudAlarmOverlay.App.Styles">
+ <Style x:Key="TaskSelectionCheckBox" TargetType="CheckBox">
+  <Setter Property="Cursor" Value="Hand"/><Setter Property="Margin" Value="0"/>
+  <Setter Property="Template"><Setter.Value><ControlTemplate TargetType="CheckBox">
+   <Border x:Name="Focus" Padding="4" BorderThickness="1" BorderBrush="Transparent" CornerRadius="7" Background="Transparent">
+    <Border x:Name="Box" Width="21" Height="21" CornerRadius="5" BorderThickness="1.5" BorderBrush="{a:AdaptiveBrush #D6E1EF}" Background="{a:AdaptiveBrush #FDFEFF}">
+     <Path x:Name="Mark" Data="M 4,10 L 8,14 L 16,6" Stroke="White" StrokeThickness="2" StrokeStartLineCap="Round" StrokeEndLineCap="Round" Visibility="Collapsed"/>
+    </Border>
+   </Border>
+   <ControlTemplate.Triggers>
+    <Trigger Property="IsMouseOver" Value="True"><Setter TargetName="Box" Property="BorderBrush" Value="{a:AdaptiveBrush #0766FF}"/></Trigger>
+    <Trigger Property="IsChecked" Value="True"><Setter TargetName="Box" Property="Background" Value="#2563EB"/><Setter TargetName="Box" Property="BorderBrush" Value="#2563EB"/><Setter TargetName="Mark" Property="Visibility" Value="Visible"/></Trigger>
+    <Trigger Property="IsKeyboardFocused" Value="True"><Setter TargetName="Focus" Property="BorderBrush" Value="{a:AdaptiveBrush #0766FF}"/></Trigger>
+    <Trigger Property="IsEnabled" Value="False"><Setter Property="Opacity" Value=".5"/></Trigger>
+   </ControlTemplate.Triggers>
+  </ControlTemplate></Setter.Value></Setter>
+ </Style>
+ <Style TargetType="Label"><Setter Property="Foreground" Value="{a:AdaptiveBrush #16243E}"/></Style>
+ <Style TargetType="Expander"><Setter Property="Foreground" Value="{a:AdaptiveBrush #16243E}"/></Style>
+ <Style TargetType="PasswordBox">
+  <Setter Property="Foreground" Value="{a:AdaptiveBrush #16243E}"/><Setter Property="Background" Value="{a:AdaptiveBrush #FDFEFF}"/><Setter Property="CaretBrush" Value="{a:AdaptiveBrush #16243E}"/>
+  <Setter Property="Padding" Value="0"/><Setter Property="Height" Value="34"/><Setter Property="FontSize" Value="14"/><Setter Property="Margin" Value="0,4,0,8"/>
+  <Setter Property="Template"><Setter.Value><ControlTemplate TargetType="PasswordBox">
+   <Border x:Name="Field" Background="{TemplateBinding Background}" BorderBrush="{a:AdaptiveBrush #D6E1EF}" BorderThickness="1" CornerRadius="7"><ScrollViewer x:Name="PART_ContentHost" Margin="9,0" VerticalAlignment="Center"/></Border>
+   <ControlTemplate.Triggers><Trigger Property="IsKeyboardFocusWithin" Value="True"><Setter TargetName="Field" Property="BorderBrush" Value="{a:AdaptiveBrush #0766FF}"/></Trigger><Trigger Property="IsEnabled" Value="False"><Setter Property="Opacity" Value=".55"/></Trigger></ControlTemplate.Triggers>
+  </ControlTemplate></Setter.Value></Setter>
+ </Style>
+ <Style TargetType="ComboBoxItem">
+  <Setter Property="Foreground" Value="{a:AdaptiveBrush #16243E}"/><Setter Property="Padding" Value="10,6"/>
+  <Setter Property="Template"><Setter.Value><ControlTemplate TargetType="ComboBoxItem">
+   <Border x:Name="Item" CornerRadius="5" Background="Transparent" Padding="{TemplateBinding Padding}"><ContentPresenter TextElement.Foreground="{TemplateBinding Foreground}"/></Border>
+   <ControlTemplate.Triggers>
+    <Trigger Property="IsSelected" Value="True"><Setter TargetName="Item" Property="Background" Value="{a:AdaptiveBrush #E6F0FF}"/></Trigger>
+    <Trigger Property="IsHighlighted" Value="True"><Setter TargetName="Item" Property="Background" Value="{a:AdaptiveBrush #E6F0FF}"/></Trigger>
+    <Trigger Property="IsEnabled" Value="False"><Setter Property="Opacity" Value=".55"/></Trigger>
+   </ControlTemplate.Triggers>
+  </ControlTemplate></Setter.Value></Setter>
+ </Style>
+ <Style TargetType="ComboBox">
+  <Setter Property="Foreground" Value="{a:AdaptiveBrush #16243E}"/><Setter Property="Background" Value="{a:AdaptiveBrush #FDFEFF}"/>
+  <Setter Property="MinHeight" Value="34"/><Setter Property="Margin" Value="0,4,0,8"/><Setter Property="Padding" Value="10,6"/>
+  <Setter Property="ScrollViewer.HorizontalScrollBarVisibility" Value="Disabled"/>
+  <Setter Property="Template"><Setter.Value><ControlTemplate TargetType="ComboBox">
+   <Grid>
+    <Border x:Name="Field" Background="{TemplateBinding Background}" BorderBrush="{a:AdaptiveBrush #D6E1EF}" BorderThickness="1" CornerRadius="7"/>
+    <ToggleButton Focusable="False" IsChecked="{Binding IsDropDownOpen,RelativeSource={RelativeSource TemplatedParent},Mode=TwoWay}">
+     <ToggleButton.Template><ControlTemplate TargetType="ToggleButton"><Border Background="Transparent"><TextBlock Text="⌄" HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0,0,12,0" Foreground="{a:AdaptiveBrush #697C99}"/></Border></ControlTemplate></ToggleButton.Template>
+    </ToggleButton>
+    <ContentPresenter x:Name="Selection" Margin="10,5,32,5" VerticalAlignment="Center" IsHitTestVisible="False" Content="{TemplateBinding SelectionBoxItem}" ContentTemplate="{TemplateBinding SelectionBoxItemTemplate}" ContentStringFormat="{TemplateBinding SelectionBoxItemStringFormat}" TextElement.Foreground="{TemplateBinding Foreground}"/>
+    <TextBox x:Name="PART_EditableTextBox" Visibility="Collapsed" Margin="10,2,34,2" Padding="2" Background="Transparent" Foreground="{TemplateBinding Foreground}" IsReadOnly="{TemplateBinding IsReadOnly}" VerticalContentAlignment="Center">
+     <TextBox.Template><ControlTemplate TargetType="TextBox"><ScrollViewer x:Name="PART_ContentHost"/></ControlTemplate></TextBox.Template>
+    </TextBox>
+    <Popup x:Name="PART_Popup" IsOpen="{TemplateBinding IsDropDownOpen}" Placement="Bottom" AllowsTransparency="True" Focusable="False">
+     <Border Background="{a:AdaptiveBrush White}" BorderBrush="{a:AdaptiveBrush #D6E1EF}" BorderThickness="1" CornerRadius="7" Padding="4" MinWidth="{Binding ActualWidth,RelativeSource={RelativeSource TemplatedParent}}">
+      <ScrollViewer MaxHeight="{TemplateBinding MaxDropDownHeight}" CanContentScroll="True"><ItemsPresenter KeyboardNavigation.DirectionalNavigation="Contained"/></ScrollViewer>
+     </Border>
+    </Popup>
+   </Grid>
+   <ControlTemplate.Triggers>
+    <Trigger Property="IsEditable" Value="True"><Setter TargetName="Selection" Property="Visibility" Value="Collapsed"/><Setter TargetName="PART_EditableTextBox" Property="Visibility" Value="Visible"/></Trigger>
+    <Trigger Property="IsKeyboardFocusWithin" Value="True"><Setter TargetName="Field" Property="BorderBrush" Value="{a:AdaptiveBrush #0766FF}"/></Trigger>
+    <Trigger Property="IsMouseOver" Value="True"><Setter TargetName="Field" Property="BorderBrush" Value="{a:AdaptiveBrush #1668CA}"/></Trigger>
+    <Trigger Property="IsEnabled" Value="False"><Setter Property="Opacity" Value=".55"/></Trigger>
+   </ControlTemplate.Triggers>
+  </ControlTemplate></Setter.Value></Setter>
+ </Style>
+</ResourceDictionary>
