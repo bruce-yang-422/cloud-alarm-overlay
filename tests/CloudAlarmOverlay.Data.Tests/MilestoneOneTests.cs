@@ -193,7 +193,10 @@ public sealed class MilestoneOneTests : IDisposable
         client.Csv["A/4"] = "Date,LunarDay\n日期,農曆";
         client.Csv["A/1"] = "Id,Time,Title,Enabled,TargetDeviceOrName\n編號,時間,名稱,啟用,對象\n1,2026-09-15 09:00,自己的任務,TRUE,資訊部\n2,2026-09-15 09:00,其他人的任務,TRUE,other";
         client.Csv["B/5"] = "broken";
-        await Get<ISyncService>().SyncAsync();
+        var firstRun=await Get<ISyncService>().SyncAsync();
+        Assert.Equal(2,firstRun.DownloadedTaskCount); Assert.Equal(1,firstRun.IncludedTaskCount);
+        Assert.Equal(4,firstRun.Entries.Count(e=>e.Status=="成功"));
+        Assert.Single(firstRun.Entries,e=>e.Status=="失敗");
         var task = Assert.Single(await Get<ITaskRepository>().GetAllAsync()); Assert.Equal("自己的任務", task.Title);
         Assert.Contains(await Get<ISyncLogRepository>().GetRangeAsync(DateTime.Today, DateTime.Now), l => l.Source == "SheetB/Tasks" && l.Status == "失敗");
         client.Csv.Clear();
@@ -205,6 +208,27 @@ public sealed class MilestoneOneTests : IDisposable
         Assert.Equal("個人任務",Assert.Single(await Get<ITaskRepository>().GetAllAsync()).Title);
         Assert.Single(await Get<IEmployeeRepository>().GetAllAsync()); // last successful notification ceiling cache is retained.
     }
+    [Fact]
+    public async Task Manual_sync_waits_for_an_in_progress_sync_instead_of_being_dropped()
+    {
+        await Get<IDeviceIdentityService>().SetInitialIdentityAsync("IT-001","小明");
+        await Get<IAuthenticationService>().CreateInitialAsync("admin","test-password");
+        Assert.True(await Get<IAuthenticationService>().AuthenticateAsync("admin","test-password"));
+        await Get<SyncConfiguration>().SaveAsync(new(){SheetBId="B",TasksBGid="5"});
+        var client=(FakeCsv)Get<ISheetCsvClient>();
+        client.Csv["B/5"]="Id,Time,Title,Enabled,TargetDeviceOrName\n1,2026-09-15 09:00,自己的任務,TRUE,IT-001";
+        client.DownloadBlock=new(TaskCreationOptions.RunContinuationsAsynchronously);
+        client.DownloadStarted=new(TaskCreationOptions.RunContinuationsAsynchronously);
+        var sync=Get<ISyncService>();
+        var first=sync.SyncAsync();
+        await client.DownloadStarted.Task.WaitAsync(TimeSpan.FromSeconds(5));
+        var second=sync.SyncAsync();
+        client.DownloadBlock.SetResult(true);
+        var runs=await Task.WhenAll(first,second).WaitAsync(TimeSpan.FromSeconds(10));
+        Assert.Single(runs[0].Entries);
+        Assert.Single(runs[1].Entries);
+        Assert.Equal(2,(await Get<ISyncLogRepository>().GetRangeAsync(DateTime.Today,DateTime.Now.AddSeconds(1))).Count(l=>l.Source=="SheetB/Tasks"));
+    }
     public void Dispose() { services.Dispose(); Directory.Delete(paths.DataDirectory, true); }
     private sealed class Paths : IAppPaths
     {
@@ -214,6 +238,13 @@ public sealed class MilestoneOneTests : IDisposable
     private sealed class FakeCsv : ISheetCsvClient
     {
         public Dictionary<string, string> Csv { get; } = [];
-        public Task<string> DownloadAsync(string id, string gid, CancellationToken ct = default) => Csv.TryGetValue(id + "/" + gid, out var csv) ? Task.FromResult(csv) : Task.FromException<string>(new HttpRequestException("離線"));
+        public TaskCompletionSource<bool>? DownloadBlock {get;set;}
+        public TaskCompletionSource<bool>? DownloadStarted {get;set;}
+        public async Task<string> DownloadAsync(string id, string gid, CancellationToken ct = default)
+        {
+            DownloadStarted?.TrySetResult(true);
+            if(DownloadBlock is not null)await DownloadBlock.Task.WaitAsync(ct);
+            return Csv.TryGetValue(id + "/" + gid, out var csv) ? csv : throw new HttpRequestException("離線");
+        }
     }
 }

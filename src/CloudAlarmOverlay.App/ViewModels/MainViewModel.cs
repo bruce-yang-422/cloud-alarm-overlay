@@ -128,6 +128,7 @@ public partial class MainViewModel(ITaskRepository tasks,ITaskService taskServic
     [ObservableProperty] private string sourceFilter="全部來源";
     public string[] Sources {get;}=["全部來源",TaskSources.Local,TaskSources.SheetA,TaskSources.SheetB];
     [ObservableProperty] private string status="準備就緒";
+    [ObservableProperty] private string syncMessage="";
     [ObservableProperty] private string deviceLabel="尚未設定裝置";
     [ObservableProperty] private string nextTitle="目前沒有即將到來的提醒";
     [ObservableProperty] private string nextTime="新增本機任務，或前往設定連接公開試算表。";
@@ -292,9 +293,30 @@ public partial class MainViewModel(ITaskRepository tasks,ITaskService taskServic
     }
     [RelayCommand] private async Task SyncAsync()
     {
-        try {Status="正在同步公開 CSV…";await sync.SyncAsync();await RefreshAsync();Status="同步作業完成；各來源結果請見同步狀態。";}
-        catch(Exception ex){Status=ex.Message;}
+        try
+        {
+            var saved=await configuration.LoadAsync();
+            if(CurrentOptions()!=saved)
+            {
+                SetSyncMessage("畫面上的同步設定尚未儲存；請按「儲存並同步」後再試。");
+                return;
+            }
+            SetSyncMessage("正在同步公開 CSV；若背景同步正在執行，將接續執行…");
+            var result=await sync.SyncAsync();
+            if(result.SkippedReason is not null){SetSyncMessage(result.SkippedReason);return;}
+            await RefreshAsync();
+            if(Admin.IsAuthenticated)await Admin.RefreshLogsCommand.ExecuteAsync(null);
+            var failed=result.Entries.Where(e=>e.Status=="失敗").ToArray();
+            var succeeded=result.Entries.Count-failed.Length;
+            var summary=$"同步完成：{succeeded} 個分頁成功、{failed.Length} 個失敗；任務下載 {result.DownloadedTaskCount} 筆，本機符合 {result.IncludedTaskCount} 筆。";
+            if(failed.Length>0)summary+=$" {failed[0].Source}：{failed[0].Message}";
+            else if(result.DownloadedTaskCount>0&&result.IncludedTaskCount==0)
+                summary+=" 若預期有任務，請檢查本機裝置 ID 與 Sheet 任務對象欄位。";
+            SetSyncMessage(summary);
+        }
+        catch(Exception ex){SetSyncMessage("同步失敗："+ex.Message);}
     }
+    private void SetSyncMessage(string message){Status=message;SyncMessage=message;Admin.Message=message;}
     private SyncOptions CurrentOptions()=>new(){SheetAId=SheetAId.Trim(),TasksAGid=TasksAGid.Trim(),HolidaysGid=HolidaysGid.Trim(),EmployeesGid=EmployeesGid.Trim(),LunarGid=LunarGid.Trim(),SheetBId=SheetBId.Trim(),TasksBGid=TasksBGid.Trim(),IntervalSeconds=IntervalSeconds};
     [RelayCommand] private Task TestSheetAAsync()=>Admin.TestConnectionAsync(CurrentOptions(),true);
     [RelayCommand] private Task TestSheetBAsync()=>Admin.TestConnectionAsync(CurrentOptions(),false);
@@ -304,9 +326,9 @@ public partial class MainViewModel(ITaskRepository tasks,ITaskService taskServic
         {
             await configuration.SaveAsync(new SyncOptions{SheetAId=SheetAId.Trim(),TasksAGid=TasksAGid.Trim(),HolidaysGid=HolidaysGid.Trim(),EmployeesGid=EmployeesGid.Trim(),
                 LunarGid=LunarGid.Trim(),SheetBId=SheetBId.Trim(),TasksBGid=TasksBGid.Trim(),IntervalSeconds=IntervalSeconds});
-            Status="同步設定已儲存。";await SyncAsync();
+            SetSyncMessage("同步設定已儲存，準備同步…");await SyncAsync();
         }
-        catch(Exception ex){Status=ex.Message;}
+        catch(Exception ex){SetSyncMessage("無法儲存同步設定："+ex.Message);}
     }
     [RelayCommand] private async Task PreviewAsync(string level)
     {

@@ -169,6 +169,8 @@ public sealed class MilestoneTwoTests
                 Assert.Contains("成功",vm.Admin.SheetATasksStatus);
                 Assert.StartsWith("最後測試：",vm.Admin.SheetATestedAt);
                 Assert.Empty(await host.Services.GetRequiredService<ITaskRepository>().GetAllAsync());
+                await vm.SyncCommand.ExecuteAsync(null);
+                Assert.Contains("尚未儲存",vm.SyncMessage);
                 await vm.Admin.RefreshLogsCommand.ExecuteAsync(null);
                 Assert.Contains(vm.Admin.Audit,a=>a.Action=="FlashMilliseconds");
                 await vm.Admin.ExportCommand.ExecuteAsync("AuditLog");
