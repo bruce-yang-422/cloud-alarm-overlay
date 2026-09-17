@@ -87,25 +87,6 @@ public sealed class PomodoroTests:IDisposable
         Assert.Single(await Logs());await Timer.SkipAsync();await Timer.ResetAsync();await Timer.ConfirmAsync();
         Assert.Equal("Idle",Timer.State.Status);Assert.Single(await Logs());
     }
-    [Fact] public async Task V3_upgrade_preserves_existing_completed_log_and_settings()
-    {
-        var db=services.GetRequiredService<Database>();
-        await db.ExecuteAsync("""
-            DROP INDEX IX_PomodoroLog_StartedAt;
-            ALTER TABLE PomodoroLog DROP COLUMN EndedAt;
-            ALTER TABLE PomodoroLog DROP COLUMN PlannedMinutes;
-            ALTER TABLE PomodoroLog DROP COLUMN IsActive;
-            INSERT INTO PomodoroLog(Id,Type,StartedAt,CompletedAt,Result)
-            VALUES('legacy','Focus','2026-09-14T08:00:00','2026-09-14T08:25:00','Completed');
-            INSERT INTO PomodoroSettings(Key,Value) VALUES('legacy','keep');
-            PRAGMA user_version=3;
-            """);
-        await services.GetRequiredService<IDatabaseInitializer>().InitializeAsync();
-        var row=Assert.Single(await Logs());Assert.Equal(row.CompletedAt,row.EndedAt);
-        Assert.False(row.IsActive);Assert.Equal(0,row.PlannedMinutes);
-        Assert.Equal("keep",Assert.Single(await Repo.GetSettingsAsync()).Value);
-        Assert.Equal(5,Assert.Single(await db.QueryAsync<int>("PRAGMA user_version")));
-    }
     public void Dispose(){services.Dispose();Microsoft.Data.Sqlite.SqliteConnection.ClearAllPools();if(Directory.Exists(paths.DataDirectory))Directory.Delete(paths.DataDirectory,true);}
     private sealed class Clock:TimeProvider
     {

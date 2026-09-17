@@ -205,35 +205,6 @@ public sealed class MilestoneOneTests : IDisposable
         Assert.Equal("個人任務",Assert.Single(await Get<ITaskRepository>().GetAllAsync()).Title);
         Assert.Single(await Get<IEmployeeRepository>().GetAllAsync()); // last successful notification ceiling cache is retained.
     }
-    [Fact]
-    public async Task V1_upgrades_transactionally_with_existing_task_and_log_snapshot()
-    {
-        var other = new Paths();
-        try
-        {
-            var factory = new SqliteConnectionFactory(other);
-            await using (var c = await factory.OpenConnectionAsync())
-            {
-                using var stream = typeof(DatabaseInitializer).Assembly.GetManifestResourceStream("CloudAlarmOverlay.Data.Migrations.V1.sql")!;
-                using var reader = new StreamReader(stream);
-                using var command = c.CreateCommand();
-                command.CommandText = await reader.ReadToEndAsync() + """
-                    INSERT INTO Tasks(Id,Title,ScheduledAt,Source,Level,CreatedAt,UpdatedAt)
-                    VALUES('old','舊任務','2026-09-15T09:00:00','本機','中級','2026-09-14','2026-09-14');
-                    INSERT INTO AcknowledgementLogs(Id,TaskId,DeviceId,TriggeredAt,Result)
-                    VALUES('ack','old','IT','2026-09-15T09:00:00','Acknowledged');
-                    PRAGMA user_version=1;
-                    """;
-                await command.ExecuteNonQueryAsync();
-            }
-            await new DatabaseInitializer(factory).InitializeAsync();
-            var db = new Database(factory);
-            Assert.Equal(5, Assert.Single(await db.QueryAsync<int>("PRAGMA user_version;")));
-            Assert.Equal("舊任務", Assert.Single(await db.QueryAsync<string>("SELECT TaskName FROM AcknowledgementLogs;")));
-            Assert.Equal("本機", Assert.Single(await db.QueryAsync<string>("SELECT Source FROM AcknowledgementLogs;")));
-        }
-        finally { Directory.Delete(other.DataDirectory, true); }
-    }
     public void Dispose() { services.Dispose(); Directory.Delete(paths.DataDirectory, true); }
     private sealed class Paths : IAppPaths
     {

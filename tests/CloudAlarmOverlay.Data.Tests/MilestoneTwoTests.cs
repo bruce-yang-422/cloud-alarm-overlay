@@ -176,33 +176,6 @@ public sealed class MilestoneTwoTests:IDisposable
         Assert.Equal("變更",row.NewValue);
         Assert.NotEmpty(await Get<ISystemEventStore>().GetRangeAsync(DateTime.Today,DateTime.Now.AddSeconds(1)));
     }
-    [Fact] public async Task V2_upgrade_preserves_admin_hash_settings_locks_and_audit()
-    {
-        var prior=new Paths();
-        try
-        {
-            var factory=new SqliteConnectionFactory(prior);
-            await using(var c=await factory.OpenConnectionAsync())
-            {
-                foreach(var version in new[]{"V1","V2"})
-                {
-                    using var stream=typeof(DatabaseInitializer).Assembly.GetManifestResourceStream("CloudAlarmOverlay.Data.Migrations."+version+".sql")!;
-                    using var reader=new StreamReader(stream);using var command=c.CreateCommand();
-                    command.CommandText=await reader.ReadToEndAsync();await command.ExecuteNonQueryAsync();
-                }
-                using var seed=c.CreateCommand();
-                seed.CommandText="INSERT INTO Users(Username,PasswordHash,Salt) VALUES('legacy','keep-hash','keep-salt'); INSERT INTO Settings(Key,Value,Locked) VALUES('FlashMilliseconds','800',1); INSERT INTO AuditLogs(UserId,Action,CreatedAt) VALUES('legacy','before-migration','2026-01-01T00:00:00'); PRAGMA user_version=2;";
-                await seed.ExecuteNonQueryAsync();
-            }
-            await new DatabaseInitializer(factory).InitializeAsync();
-            var db=new Database(factory);
-            Assert.Equal(5,Assert.Single(await db.QueryAsync<int>("PRAGMA user_version;")));
-            Assert.Equal("keep-hash",Assert.Single(await db.QueryAsync<string>("SELECT PasswordHash FROM Users;")));
-            Assert.Equal(1,Assert.Single(await db.QueryAsync<int>("SELECT Locked FROM Settings WHERE Key='FlashMilliseconds';")));
-            Assert.Equal("before-migration",Assert.Single(await db.QueryAsync<string>("SELECT Action FROM AuditLogs;")));
-        }
-        finally{if(Directory.Exists(prior.DataDirectory))Directory.Delete(prior.DataDirectory,true);}
-    }
 
     private static AlarmTask SampleTask()=>new(){Id="SheetA:policy",ExternalId="policy",Source=TaskSources.SheetA,Title="政策測試",Level=AlarmLevels.Max,RequireAcknowledgement=true,ScheduledAt=DateTime.Now,CreatedAt=DateTime.Now,UpdatedAt=DateTime.Now};
     public void Dispose(){services.Dispose();if(Directory.Exists(paths.DataDirectory))Directory.Delete(paths.DataDirectory,true);}

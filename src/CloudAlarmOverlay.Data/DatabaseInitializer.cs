@@ -5,7 +5,7 @@ namespace CloudAlarmOverlay.Data;
 
 public sealed class DatabaseInitializer(ISqliteConnectionFactory connections) : IDatabaseInitializer
 {
-    public const int CurrentSchemaVersion = 5;
+    public const int CurrentSchemaVersion = 1;
 
     public async Task InitializeAsync(CancellationToken cancellationToken = default)
     {
@@ -27,7 +27,7 @@ public sealed class DatabaseInitializer(ISqliteConnectionFactory connections) : 
                 cancellationToken).ConfigureAwait(false));
             if (existingObjects != 0)
                 throw new InvalidOperationException(
-                    "An unversioned database already contains objects. Refusing to mark an unknown schema as version 1.");
+                    "An unversioned database already contains objects. Refusing to initialize an unknown schema.");
 
             using var stream = typeof(DatabaseInitializer).Assembly.GetManifestResourceStream(
                 "CloudAlarmOverlay.Data.Migrations.V1.sql")
@@ -35,40 +35,8 @@ public sealed class DatabaseInitializer(ISqliteConnectionFactory connections) : 
             using var reader = new StreamReader(stream);
             var sql = await reader.ReadToEndAsync(cancellationToken).ConfigureAwait(false);
             await ExecuteNonQueryAsync(connection, transaction, sql, cancellationToken).ConfigureAwait(false);
-            await ExecuteNonQueryAsync(connection, transaction, "PRAGMA user_version = 1;",
+            await ExecuteNonQueryAsync(connection, transaction, $"PRAGMA user_version = {CurrentSchemaVersion};",
                 cancellationToken).ConfigureAwait(false);
-        }
-
-        if (version < 2)
-        {
-            using var stream = typeof(DatabaseInitializer).Assembly.GetManifestResourceStream(
-                "CloudAlarmOverlay.Data.Migrations.V2.sql")!;
-            using var reader = new StreamReader(stream);
-            await ExecuteNonQueryAsync(connection, transaction,
-                await reader.ReadToEndAsync(cancellationToken).ConfigureAwait(false), cancellationToken).ConfigureAwait(false);
-            await ExecuteNonQueryAsync(connection, transaction, "PRAGMA user_version = 2;",
-                cancellationToken).ConfigureAwait(false);
-        }
-        if (version < 3)
-        {
-            using var stream = typeof(DatabaseInitializer).Assembly.GetManifestResourceStream("CloudAlarmOverlay.Data.Migrations.V3.sql")!;
-            using var reader = new StreamReader(stream);
-            await ExecuteNonQueryAsync(connection, transaction, await reader.ReadToEndAsync(cancellationToken), cancellationToken);
-            await ExecuteNonQueryAsync(connection, transaction, "PRAGMA user_version = 3;", cancellationToken);
-        }
-        if (version < 4)
-        {
-            using var stream = typeof(DatabaseInitializer).Assembly.GetManifestResourceStream("CloudAlarmOverlay.Data.Migrations.V4.sql")!;
-            using var reader = new StreamReader(stream);
-            await ExecuteNonQueryAsync(connection, transaction, await reader.ReadToEndAsync(cancellationToken), cancellationToken);
-            await ExecuteNonQueryAsync(connection, transaction, "PRAGMA user_version = 4;", cancellationToken);
-        }
-        if (version < 5)
-        {
-            using var stream = typeof(DatabaseInitializer).Assembly.GetManifestResourceStream("CloudAlarmOverlay.Data.Migrations.V5.sql")!;
-            using var reader = new StreamReader(stream);
-            await ExecuteNonQueryAsync(connection, transaction, await reader.ReadToEndAsync(cancellationToken), cancellationToken);
-            await ExecuteNonQueryAsync(connection, transaction, "PRAGMA user_version = 5;", cancellationToken);
         }
         // Fail before displaying the main window if an expected table/column is missing.
         using (var validation = connection.CreateCommand())
