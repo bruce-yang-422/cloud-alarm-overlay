@@ -24,8 +24,11 @@ internal sealed class UserRepository(Database db,AdminSession session):IUserRepo
         await using var c=await db.OpenAsync(cancellationToken);
         using var tx=c.BeginTransaction(deferred:false);
         session.RequireAdmin();
-        await c.ExecuteAsync(new CommandDefinition("UPDATE Users SET DisplayName=@DisplayName,PasswordHash=@PasswordHash,Salt=@Salt,Enabled=@Enabled WHERE Username=@Username;",user,tx,cancellationToken:cancellationToken));
-        await c.ExecuteAsync(new CommandDefinition("INSERT INTO AuditLogs(UserId,Action,CreatedAt) VALUES(@actor,'更新管理者帳號',@at);",new {actor,at=DateTime.Now.ToString("O")},tx,cancellationToken:cancellationToken));
+        var updated=await c.ExecuteAsync(new CommandDefinition("UPDATE Users SET Username=@Username,DisplayName=@DisplayName,PasswordHash=@PasswordHash,Salt=@Salt,Enabled=@Enabled WHERE Id=@Id AND Username=@actor;",
+            new {user.Id,user.Username,user.DisplayName,user.PasswordHash,user.Salt,user.Enabled,actor},tx,cancellationToken:cancellationToken));
+        if(updated!=1)throw new UnauthorizedAccessException("只能更新目前登入的管理者帳號。");
+        await c.ExecuteAsync(new CommandDefinition("INSERT INTO AuditLogs(UserId,Action,OldValue,NewValue,CreatedAt) VALUES(@actor,'更新管理者帳號',@actor,@newUsername,@at);",
+            new {actor,newUsername=user.Username,at=DateTime.Now.ToString("O")},tx,cancellationToken:cancellationToken));
         tx.Commit();
     }
 }

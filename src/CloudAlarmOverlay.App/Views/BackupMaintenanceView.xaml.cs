@@ -9,20 +9,6 @@ public partial class BackupMaintenanceView : UserControl
 {
     public BackupMaintenanceView()=>InitializeComponent();
     private BackupCredentials Credentials()=>new(AdminName.Text,AdminPassword.Password);
-    private async void ChangePassword(object sender,RoutedEventArgs e)
-    {
-        if(DataContext is not MaintenanceViewModel vm||vm.Busy)return;
-        vm.Busy=true;IsEnabled=false;
-        try
-        {
-            vm.RequireAdministrator();
-            if(NewPassword.Password!=ConfirmPassword.Password)throw new ArgumentException("兩次新密碼不一致。");
-            await vm.ChangePasswordAsync(AdminName.Text,AdminPassword.Password,NewPassword.Password);
-            vm.Message="管理者密碼已更新，請以新密碼重新登入。";
-        }
-        catch(Exception ex){vm.Message=ex.Message;}
-        finally{AdminPassword.Clear();NewPassword.Clear();ConfirmPassword.Clear();vm.Busy=false;IsEnabled=true;}
-    }
     private async void ExportBackup(object sender,RoutedEventArgs e)
     {
         if(DataContext is not MaintenanceViewModel vm||vm.Busy)return;

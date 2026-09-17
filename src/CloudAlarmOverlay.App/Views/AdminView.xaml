@@ -102,6 +102,19 @@
 </Grid></ScrollViewer></TabItem>
  <TabItem Header="本機設定"><ScrollViewer VerticalScrollBarVisibility="Auto"><StackPanel DataContext="{Binding Admin}">
  <Border Style="{StaticResource Card}"><StackPanel>
+  <TextBlock Text="管理者帳號與密碼" FontSize="20" FontWeight="SemiBold"/>
+  <TextBlock Text="輸入目前密碼驗證。新密碼留空可只修改帳號；儲存後需重新登入。" Style="{StaticResource Muted}" TextWrapping="Wrap" Margin="0,6,0,12"/>
+  <WrapPanel>
+   <StackPanel Margin="0,0,12,8"><TextBlock Text="管理者帳號"/><TextBox Text="{Binding AdminUsername,UpdateSourceTrigger=PropertyChanged}" Width="200" MaxLength="50" AutomationProperties.Name="新管理者帳號"/></StackPanel>
+   <StackPanel Margin="0,0,12,8"><TextBlock Text="目前密碼"/><PasswordBox x:Name="CurrentAdminPassword" Width="200" MaxLength="128" AutomationProperties.Name="目前管理者密碼"/></StackPanel>
+  </WrapPanel>
+  <WrapPanel>
+   <StackPanel Margin="0,0,12,8"><TextBlock Text="新密碼（留空則不變）"/><PasswordBox x:Name="NewAdminPassword" Width="200" MaxLength="128" AutomationProperties.Name="新管理者密碼"/></StackPanel>
+   <StackPanel Margin="0,0,12,8"><TextBlock Text="確認新密碼"/><PasswordBox x:Name="ConfirmAdminPassword" Width="200" MaxLength="128" AutomationProperties.Name="確認新管理者密碼"/></StackPanel>
+  </WrapPanel>
+  <Button Content="儲存管理者帳密" Click="ChangeAdminCredentials" Style="{StaticResource Primary}" HorizontalAlignment="Left"/>
+ </StackPanel></Border>
+ <Border Style="{StaticResource Card}"><StackPanel>
   <TextBlock Text="程式啟動" FontSize="20" FontWeight="SemiBold"/>
   <CheckBox Content="登入 Windows 後自動啟動程式" IsChecked="{Binding AutoStartEnabled}" Click="ToggleAutoStart" Style="{StaticResource PillSwitch}" Margin="0,10,0,4"/>
   <TextBlock Text="電腦重開機並登入目前使用者後，程式會自動啟動並顯示提醒。" Style="{StaticResource Muted}" TextWrapping="Wrap"/>

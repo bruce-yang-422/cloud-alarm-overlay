@@ -7,10 +7,4 @@
    </StackPanel><StackPanel><TextBlock Text="目前管理者密碼"/><PasswordBox x:Name="AdminPassword" Width="160" Margin="0,4,0,8" ToolTip="目前管理者密碼" AutomationProperties.Name="驗證管理者密碼"/>
   </StackPanel></WrapPanel>
   <WrapPanel><Button Content="建立備份" Click="ExportBackup"/><Button Content="匯入備份" Click="ImportBackup"/></WrapPanel>
-  <Expander Header="變更管理者密碼" Margin="0,16,0,0"><StackPanel>
-   <TextBlock Text="使用上方目前帳號與密碼驗證；新密碼需 8–128 字。" TextWrapping="Wrap"/>
-   <PasswordBox x:Name="NewPassword" Margin="0,4,0,8" MaxLength="128" AutomationProperties.Name="新管理者密碼"/>
-   <PasswordBox x:Name="ConfirmPassword" Margin="0,4,0,8" MaxLength="128" AutomationProperties.Name="再次輸入新密碼"/>
-   <Button Content="變更密碼" Click="ChangePassword" HorizontalAlignment="Left"/>
-  </StackPanel></Expander>
 <TextBlock Text="{Binding Message}" TextWrapping="Wrap" Margin="0,12,0,0"/></StackPanel></ScrollViewer></UserControl>

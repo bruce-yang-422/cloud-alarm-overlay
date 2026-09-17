@@ -6,4 +6,5 @@ public interface IAuthenticationService
     Task CreateInitialAsync(string username,string password,CancellationToken ct=default);
     Task<bool> AuthenticateAsync(string username,string password,CancellationToken cancellationToken=default);
     Task ChangePasswordAsync(string username,string currentPassword,string newPassword,CancellationToken cancellationToken=default);
+    Task ChangeCredentialsAsync(string currentPassword,string newUsername,string newPassword,CancellationToken cancellationToken=default);
 }

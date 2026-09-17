@@ -39,6 +39,26 @@ public sealed class MilestoneTwoTests:IDisposable
         Assert.Null(await Get<IUserRepository>().GetByUsernameAsync("admin"));
         Assert.True(await Get<IAuthenticationService>().AuthenticateAsync("it-admin","Testing-1234"));
     }
+    [Fact] public async Task Administrator_can_change_username_and_password_without_resetting_other_data()
+    {
+        await Login();
+        var auth=Get<IAuthenticationService>();
+        await Assert.ThrowsAsync<UnauthorizedAccessException>(()=>auth.ChangeCredentialsAsync("wrong","ops-admin","NewPass-1234"));
+        Assert.NotNull(await Get<IUserRepository>().GetByUsernameAsync("it-admin"));
+        await auth.ChangeCredentialsAsync("Testing-1234","ops-admin","NewPass-1234");
+        Assert.False(Get<AdminSession>().IsAuthenticated);
+        Assert.Null(await Get<IUserRepository>().GetByUsernameAsync("it-admin"));
+        Assert.False(await auth.AuthenticateAsync("it-admin","Testing-1234"));
+        Assert.False(await auth.AuthenticateAsync("ops-admin","Testing-1234"));
+        Assert.True(await auth.AuthenticateAsync("ops-admin","NewPass-1234"));
+        await auth.ChangeCredentialsAsync("NewPass-1234","team-admin","");
+        Assert.True(await auth.AuthenticateAsync("team-admin","NewPass-1234"));
+        await auth.EnsureDefaultAdministratorAsync();
+        Assert.Null(await Get<IUserRepository>().GetByUsernameAsync("admin"));
+        var entries=await Get<IAuditLogRepository>().GetRangeAsync(DateTime.Today,DateTime.Now.AddSeconds(1));
+        Assert.Contains(entries,e=>e.Action=="更新管理者帳號"&&e.OldValue=="it-admin"&&e.NewValue=="ops-admin");
+        Assert.DoesNotContain(entries,e=>(e.OldValue??"").Contains("NewPass-1234")||(e.NewValue??"").Contains("NewPass-1234"));
+    }
     private async Task Login()
     {
         await Get<IAuthenticationService>().CreateInitialAsync("it-admin","Testing-1234");

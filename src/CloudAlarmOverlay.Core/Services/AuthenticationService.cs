@@ -15,6 +15,24 @@ internal sealed class AuthenticationService(IUserRepository users,IAuditService 
         await users.SaveAsync(user with {Salt=Convert.ToBase64String(salt),PasswordHash=$"PBKDF2-SHA256:{Iterations}:{Convert.ToBase64String(hash)}"},cancellationToken);
         session.SignOut();
     }
+    public async Task ChangeCredentialsAsync(string currentPassword,string newUsername,string newPassword,CancellationToken cancellationToken=default)
+    {
+        var currentUsername=session.RequireAdmin();
+        newUsername=newUsername.Trim();
+        if(newUsername.Length is <1 or >50)throw new ArgumentException("管理者帳號需為 1–50 字。");
+        if(newPassword.Length is >0 and (<8 or >128))throw new ArgumentException("新密碼需為 8–128 字；留空則保留目前密碼。");
+        if(newUsername==currentUsername&&newPassword.Length==0)throw new ArgumentException("請修改帳號或輸入新密碼。");
+        if(!await AuthenticateAsync(currentUsername,currentPassword,cancellationToken))throw new UnauthorizedAccessException("目前管理者密碼錯誤。");
+        var user=(await users.GetByUsernameAsync(currentUsername,cancellationToken))!;
+        if(newPassword.Length>0)
+        {
+            var salt=RandomNumberGenerator.GetBytes(32);
+            var hash=await Task.Run(()=>Rfc2898DeriveBytes.Pbkdf2(newPassword,salt,Iterations,HashAlgorithmName.SHA256,32),cancellationToken);
+            user=user with {Salt=Convert.ToBase64String(salt),PasswordHash=$"PBKDF2-SHA256:{Iterations}:{Convert.ToBase64String(hash)}"};
+        }
+        await users.SaveAsync(user with {Username=newUsername},cancellationToken);
+        session.SignOut();
+    }
     public async Task EnsureDefaultAdministratorAsync(CancellationToken ct=default)
     {
         if(await users.AnyAsync(ct))return;

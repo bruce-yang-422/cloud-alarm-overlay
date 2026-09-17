@@ -146,6 +146,8 @@ public sealed class MilestoneTwoTests
                     }
                     if(i==1)
                     {
+                        Assert.Contains(Descendants<TextBlock>(window),t=>Equals(t.Text,"管理者帳號與密碼")&&t.IsVisible);
+                        Assert.Contains(Descendants<Button>(window),b=>Equals(b.Content,"儲存管理者帳密")&&b.IsVisible);
                         Assert.Contains(Descendants<CheckBox>(window),c=>Equals(c.Content,"登入 Windows 後自動啟動程式")&&c.IsVisible);
                         Assert.Contains(Descendants<TextBlock>(window),t=>Equals(t.Text,"結束程式密碼保護")&&t.IsVisible);
                         Assert.Contains(Descendants<Button>(window),b=>Equals(b.Content,"設定／重設專用密碼")&&b.IsVisible);

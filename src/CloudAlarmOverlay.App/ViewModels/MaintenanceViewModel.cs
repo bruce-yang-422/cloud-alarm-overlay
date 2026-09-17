@@ -6,10 +6,9 @@ using CloudAlarmOverlay.Core.Services;
 using CloudAlarmOverlay.App.Styles;
 namespace CloudAlarmOverlay.App.ViewModels;
 
-public partial class MaintenanceViewModel(IBackupRestoreService backups, IUpdateCheckService updates, ISettingsRepository settings, IThemeService theme, AdminSession session,IAuthenticationService authentication) : ObservableObject
+public partial class MaintenanceViewModel(IBackupRestoreService backups, IUpdateCheckService updates, ISettingsRepository settings, IThemeService theme, AdminSession session) : ObservableObject
 {
     public void RequireAdministrator()=>session.RequireAdmin();
-    public Task ChangePasswordAsync(string username,string current,string password)=>authentication.ChangePasswordAsync(username,current,password);
     public IBackupRestoreService Backups {get;}=backups;
     public bool CanEditUpdateUrl=>session.IsAuthenticated;
     public async Task AdminSessionChangedAsync()

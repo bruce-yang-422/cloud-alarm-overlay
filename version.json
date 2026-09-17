@@ -1,6 +1,6 @@
 {
   "latestVersion": "1.0.0",
   "downloadUrl": "https://github.com/bruce-yang-422/cloud-alarm-overlay/releases/download/v1.0.0/CloudAlarmOverlay-v1.0.0-Setup-x64.exe",
-  "sha256": "7a0c3506759c4534d8b10e693697d9088d9f526f28c56fce30b8b9d5a90b5e3f",
+  "sha256": "b30e485bd22d933a561414dd3cad01ffca8038c7703ddf65857bf1ac4bcde449",
   "releaseNote": "Cloud Alarm Overlay 1.0.0 正式版：支援四種提醒模式、Google Sheets 任務同步、番茄鐘、歷史紀錄，以及本機備份與還原。"
 }
