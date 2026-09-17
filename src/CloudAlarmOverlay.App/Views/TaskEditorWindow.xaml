@@ -250,7 +250,7 @@
     <StackPanel x:Name="ScheduleColumn" Grid.Column="2">
      <Border Style="{StaticResource Section}">
       <StackPanel>
-       <TextBlock Text="提醒時間" FontSize="16" FontWeight="SemiBold"/>
+       <TextBlock Text="{Binding ScheduleHeading}" FontSize="16" FontWeight="SemiBold"/>
        <ToggleButton x:Name="DateToggle" Style="{StaticResource DateButton}" Margin="0,16,0,20" AutomationProperties.Name="選擇日期">
         <Grid>
          <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
@@ -264,15 +264,22 @@
          <Calendar Style="{StaticResource EditorCalendar}" SelectedDate="{Binding Date,Mode=TwoWay}" SelectedDatesChanged="OnDateSelected"/>
         </Border>
        </Popup>
-       <UniformGrid Columns="3"><TextBlock Text="時" HorizontalAlignment="Center" Foreground="{adaptive:AdaptiveBrush #7184A0}"/><TextBlock Text="分" HorizontalAlignment="Center" Foreground="{adaptive:AdaptiveBrush #7184A0}"/><TextBlock Text="秒" HorizontalAlignment="Center" Foreground="{adaptive:AdaptiveBrush #7184A0}"/></UniformGrid>
+       <TextBlock Text="{Binding NextReminderPreview}" TextWrapping="Wrap" Margin="0,8,0,8" Foreground="{adaptive:AdaptiveBrush #576C8B}"/>
+       <UniformGrid Columns="2"><TextBlock Text="時" HorizontalAlignment="Center" Foreground="{adaptive:AdaptiveBrush #7184A0}"/><TextBlock Text="分" HorizontalAlignment="Center" Foreground="{adaptive:AdaptiveBrush #7184A0}"/></UniformGrid>
        <Grid Margin="0,8,0,8">
         <Border Height="38" VerticalAlignment="Center" Background="{adaptive:AdaptiveBrush #E8F1FF}" CornerRadius="10"/>
-        <UniformGrid Columns="3">
+        <UniformGrid Columns="2">
          <controls:TimeWheel x:Name="HourWheel" Maximum="23" Value="{Binding SelectedHour,Mode=TwoWay}" AutomationProperties.Name="小時"/>
          <controls:TimeWheel x:Name="MinuteWheel" Value="{Binding SelectedMinute,Mode=TwoWay}" AutomationProperties.Name="分鐘"/>
-         <controls:TimeWheel x:Name="SecondWheel" Value="{Binding SelectedSecond,Mode=TwoWay}" AutomationProperties.Name="秒鐘"/>
         </UniformGrid>
        </Grid>
+       <StackPanel Visibility="{Binding IsMonthly,Converter={StaticResource BoolVisibility}}" Margin="0,10,0,8">
+        <TextBlock Text="提醒月份（可複選）" Margin="0,0,0,8"/>
+        <ItemsControl ItemsSource="{Binding Months}">
+         <ItemsControl.ItemsPanel><ItemsPanelTemplate><UniformGrid Columns="4"/></ItemsPanelTemplate></ItemsControl.ItemsPanel>
+         <ItemsControl.ItemTemplate><DataTemplate><CheckBox Content="{Binding Label}" IsChecked="{Binding IsSelected,Mode=TwoWay}" Style="{StaticResource DayCheck}"/></DataTemplate></ItemsControl.ItemTemplate>
+        </ItemsControl>
+       </StackPanel>
        <TextBlock Text="可直接輸入或按 ＋ / − · 滾輪輔助調整" Foreground="{adaptive:AdaptiveBrush #7184A0}" FontSize="11" HorizontalAlignment="Center"/>
       </StackPanel>
      </Border>

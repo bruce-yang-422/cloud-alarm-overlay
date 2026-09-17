@@ -108,12 +108,12 @@ dotnet test CloudAlarmOverlay.sln --no-restore `
 
 ## 6. 產生免安裝版本
 
-v1.0.0 已發布且有電腦安裝；以下一版 `1.0.1` 為例。每次正式更新都必須使用比 `version.json` 目前版本更高的新版本號，已發布的 GitHub Release 標籤與安裝檔不可覆蓋。若資料庫結構需要變更，新增遷移版本，不要改寫已安裝版本使用的 `V1.sql`。
+v1.0.0 已發布且有電腦安裝；以下一版 `1.1.0` 為例。每次正式更新都必須使用比 `version.json` 目前版本更高的新版本號，已發布的 GitHub Release 標籤與安裝檔不可覆蓋。若資料庫結構需要變更，新增遷移版本，不要改寫已安裝版本使用的 `V1.sql`。
 
 建立 win-x64 self-contained 發布資料夾：
 
 ```powershell
-.\scripts\publish.ps1 -Version 1.0.1
+.\scripts\publish.ps1 -Version 1.1.0
 ```
 
 輸出位置：
@@ -129,34 +129,43 @@ artifacts\publish\
 自動執行發布、尋找 Inno Setup 7／6，並建立安裝包：
 
 ```powershell
-.\installer\build-installer.ps1 -Version 1.0.1
+.\installer\build-installer.ps1 -Version 1.1.0
 ```
 
 輸出位置：
 
 ```text
-artifacts\installer\CloudAlarmOverlay-v1.0.1-Setup-x64.exe
+artifacts\installer\CloudAlarmOverlay-v1.1.0-Setup-x64.exe
 ```
 
 如果 `artifacts\publish` 已是同一版本，可略過重新發布：
 
 ```powershell
-.\installer\build-installer.ps1 -Version 1.0.1 -SkipPublish
+.\installer\build-installer.ps1 -Version 1.1.0 -SkipPublish
 ```
 
 如果自動搜尋不到 Inno Setup，可指定 ISCC：
 
 ```powershell
-.\installer\build-installer.ps1 -Version 1.0.1 `
+.\installer\build-installer.ps1 -Version 1.1.0 `
   -Iscc 'C:\Program Files\Inno Setup 7\ISCC.exe'
 ```
 
 打包腳本會拒絕小於或等於 `version.json` 已發布版本的號碼，也會檢查發布資料夾中的程式版本，避免 `-SkipPublish` 混用舊檔。先完成打包與上傳，驗證安裝檔後再更新 `version.json`。
 
+本機若使用 Inno Setup 7 遇到 `EndUpdateResource failed (110)`，此次已驗證可使用 `artifacts/tools/InnoSetup6` 內的可攜式 Inno Setup 6.7.3（含繁體中文語系檔）完成封裝：
+
+```powershell
+.\installer\build-installer.ps1 -Version 1.1.0 `
+  -Iscc '.\artifacts\tools\InnoSetup6\ISCC.exe'
+```
+
+此工具目錄只保留在本機，不納入 Git；其他電腦請指定自己安裝的編譯器路徑。
+
 例如：
 
 ```powershell
-.\installer\build-installer.ps1 -Version 1.0.1
+.\installer\build-installer.ps1 -Version 1.1.0
 ```
 
 ## 8. 核對安裝包
@@ -164,7 +173,7 @@ artifacts\installer\CloudAlarmOverlay-v1.0.1-Setup-x64.exe
 查看檔案大小與版本：
 
 ```powershell
-$installer = Get-Item '.\artifacts\installer\CloudAlarmOverlay-v1.0.1-Setup-x64.exe'
+$installer = Get-Item '.\artifacts\installer\CloudAlarmOverlay-v1.1.0-Setup-x64.exe'
 $version = [System.Diagnostics.FileVersionInfo]::GetVersionInfo($installer.FullName)
 $installer | Select-Object FullName, Length, LastWriteTime
 $version | Select-Object FileVersion, ProductVersion
@@ -174,23 +183,23 @@ $version | Select-Object FileVersion, ProductVersion
 
 ```powershell
 Get-FileHash `
-  '.\artifacts\installer\CloudAlarmOverlay-v1.0.1-Setup-x64.exe' `
+  '.\artifacts\installer\CloudAlarmOverlay-v1.1.0-Setup-x64.exe' `
   -Algorithm SHA256
 ```
 
 啟動安裝程式：
 
 ```powershell
-Start-Process '.\artifacts\installer\CloudAlarmOverlay-v1.0.1-Setup-x64.exe'
+Start-Process '.\artifacts\installer\CloudAlarmOverlay-v1.1.0-Setup-x64.exe'
 ```
 
 ### 發布 GitHub 版本資訊
 
-在 GitHub Releases 建立新標籤（例如 `v1.0.1`），上傳 `artifacts/installer/` 中對應的 EXE，不覆蓋 `v1.0.0`。驗證下載檔的 SHA-256 後，更新專案根目錄的 `version.json`：`latestVersion`、`downloadUrl`、`sha256` 與發布說明都要對應這次的新版本。
+在 GitHub Releases 建立新標籤（例如 `v1.1.0`），上傳 `artifacts/installer/` 中對應的 EXE，不覆蓋 `v1.0.0`。驗證下載檔的 SHA-256 後，更新專案根目錄的 `version.json`：`latestVersion`、`downloadUrl`、`sha256` 與發布說明都要對應這次的新版本。
 
 ```powershell
 Get-Content .\version.json | ConvertFrom-Json | Select-Object latestVersion, downloadUrl
-Get-FileHash .\artifacts\installer\CloudAlarmOverlay-v1.0.1-Setup-x64.exe -Algorithm SHA256
+Get-FileHash .\artifacts\installer\CloudAlarmOverlay-v1.1.0-Setup-x64.exe -Algorithm SHA256
 ```
 
 將 `version.json` 提交並推送到 `main` 後，程式使用的更新資訊網址不變：
@@ -231,8 +240,8 @@ dotnet run --project src/CloudAlarmOverlay.App --no-build
 
 ```powershell
 dotnet test CloudAlarmOverlay.sln --no-restore
-.\installer\build-installer.ps1 -Version 1.0.1
+.\installer\build-installer.ps1 -Version 1.1.0
 Get-FileHash `
-  '.\artifacts\installer\CloudAlarmOverlay-v1.0.1-Setup-x64.exe' `
+  '.\artifacts\installer\CloudAlarmOverlay-v1.1.0-Setup-x64.exe' `
   -Algorithm SHA256
 ```

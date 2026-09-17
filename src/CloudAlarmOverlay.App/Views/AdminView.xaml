@@ -142,8 +142,10 @@
  <TabItem Header="系統紀錄"><Grid><Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/></Grid.RowDefinitions>
  <TextBlock Text="{Binding Admin.Version,StringFormat=目前程式版本：{0}}" Style="{StaticResource Muted}" Margin="0,0,0,12"/>
  <TabControl Grid.Row="1" Style="{StaticResource SegmentedTabs}"><TabItem Header="同步紀錄"><DockPanel>
- <Border DockPanel.Dock="Top" Padding="0,0,0,10"><Button Content="匯出同步紀錄 CSV" Command="{Binding Admin.ExportCommand}" CommandParameter="SyncLog" HorizontalAlignment="Right" Margin="0"/></Border>
+ <WrapPanel DockPanel.Dock="Top" Margin="0,0,0,10" HorizontalAlignment="Right"><Button Content="清理舊成功紀錄" Command="{Binding Admin.PruneSyncLogsCommand}"/><Button Content="匯出同步紀錄 CSV" Command="{Binding Admin.ExportCommand}" CommandParameter="SyncLog"/></WrapPanel>
  <DataGrid ItemsSource="{Binding Admin.Logs}"><DataGrid.Columns>
+ <DataGridTextColumn Header="次數" Binding="{Binding RepeatCount}" Width="55"/>
+ <DataGridTextColumn Header="最後發生" Binding="{Binding LastSeenAt,StringFormat=MM/dd HH:mm:ss}" Width="125"/>
  <DataGridTextColumn Header="時間" Binding="{Binding Time,StringFormat=yyyy-MM-dd HH:mm:ss}" Width="155"/>
  <DataGridTextColumn Header="來源" Binding="{Binding Source}" Width="180"/><DataGridTextColumn Header="狀態" Binding="{Binding Status}" Width="70"/>
  <DataGridTextColumn Header="訊息" Binding="{Binding Message}" Width="*"/>

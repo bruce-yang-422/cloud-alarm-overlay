@@ -15,27 +15,28 @@ public sealed class DatabaseInitializerTests : IDisposable
         { "Tasks", "Id ExternalId Title Description ScheduledAt Source Level Enabled IsTriggered RequireAcknowledgement TargetDeviceOrName ExcludeDeviceOrName Recurrence SkipOnHoliday CreatedAt UpdatedAt Note" },
         { "Holidays", "Id Date Type Note Source" },
         { "LunarCalendar", "Id Date LunarDate LunarDay SolarTerm" },
-        { "AcknowledgementLogs", "Id TaskId DeviceId DisplayName TriggeredAt AcknowledgedAt DurationSeconds Result SyncedAt SyncStatus TaskName ScheduledAt Source" },
+        { "AcknowledgementLogs", "Id TaskId DeviceId DisplayName TriggeredAt AcknowledgedAt DurationSeconds Result SyncedAt SyncStatus TaskName ScheduledAt Source TaskSnapshotJson" },
         { "Devices", "Id DeviceId DisplayName LastSeen Version" },
         { "Users", "Id Username DisplayName PasswordHash Salt Enabled" },
         { "Employees", "Id DeviceId Name Department MaxAllowedLevel RequireAckOverride" },
         { "Settings", "Key Value Locked" },
         { "PomodoroSettings", "Key Value" },
         { "PomodoroLog", "Id Type StartedAt CompletedAt Result EndedAt PlannedMinutes IsActive" },
-        { "SyncLogs", "Id Time Status Message RecordCount Source" },
+        { "SyncLogs", "Id Time Status Message RecordCount Source LastSeenAt RepeatCount EventKind" },
         { "AuditLogs", "Id UserId Action OldValue NewValue CreatedAt" },
         { "Occurrences", "Id TaskId ScheduledAt State TriggeredAt" },
+        { "SyncStates", "Source Fingerprint ConfigFingerprint Status Message LastCheckedAt LastSuccessAt ActiveLogId" },
         { "SystemEvents", "Id Time EventType Message" }
     };
 
     [Fact]
-    public async Task Fresh_database_has_baseline_schema_and_exactly_fourteen_empty_business_tables()
+    public async Task Fresh_database_has_baseline_schema_and_exactly_fifteen_empty_business_tables()
     {
         Assert.False(File.Exists(_paths.DatabasePath));
         await Initializer.InitializeAsync();
         Assert.True(File.Exists(_paths.DatabasePath));
-        Assert.Equal(1L, await ScalarAsync("PRAGMA user_version;"));
-        Assert.Equal(14L, await ScalarAsync(
+        Assert.Equal(2L, await ScalarAsync("PRAGMA user_version;"));
+        Assert.Equal(15L, await ScalarAsync(
             "SELECT COUNT(*) FROM sqlite_master WHERE type = 'table' AND name NOT LIKE 'sqlite_%';"));
         foreach (var row in TableColumns)
             Assert.Equal(0L, await ScalarAsync($"SELECT COUNT(*) FROM [{row[0]}];"));
@@ -142,7 +143,7 @@ public sealed class DatabaseInitializerTests : IDisposable
         await Initializer.InitializeAsync();
         await ExecuteAsync("ALTER TABLE Employees DROP COLUMN Department;");
         await Assert.ThrowsAsync<SqliteException>(() => Initializer.InitializeAsync());
-        Assert.Equal(1L, await ScalarAsync("PRAGMA user_version;"));
+        Assert.Equal(2L, await ScalarAsync("PRAGMA user_version;"));
     }
 
     [Fact]
@@ -160,7 +161,7 @@ public sealed class DatabaseInitializerTests : IDisposable
     {
         await Task.WhenAll(Enumerable.Range(0, 4)
             .Select(_ => Task.Run(() => new DatabaseInitializer(Factory).InitializeAsync())));
-        Assert.Equal(1L, await ScalarAsync("PRAGMA user_version;"));
+        Assert.Equal(2L, await ScalarAsync("PRAGMA user_version;"));
         Assert.Equal("ok", await ScalarAsync("PRAGMA integrity_check;"));
     }
 
@@ -199,7 +200,37 @@ public sealed class DatabaseInitializerTests : IDisposable
             "SELECT COUNT(*) FROM sqlite_master WHERE name NOT LIKE 'sqlite_%';"));
         // A clean retry must succeed without repairing partial DDL.
         await Initializer.InitializeAsync();
-        Assert.Equal(1L, await ScalarAsync("PRAGMA user_version;"));
+        Assert.Equal(2L, await ScalarAsync("PRAGMA user_version;"));
+    }
+
+    [Fact]
+    public async Task Released_v1_database_upgrades_in_place_preserving_identity_tasks_credentials_and_history()
+    {
+        using var stream = typeof(DatabaseInitializer).Assembly.GetManifestResourceStream("CloudAlarmOverlay.Data.Migrations.V1.sql")!;
+        using var reader = new StreamReader(stream);
+        await ExecuteAsync(await reader.ReadToEndAsync());
+        await ExecuteAsync("""
+            PRAGMA user_version=1;
+            INSERT INTO Tasks(Id,Title,ScheduledAt,Source,Level,CreatedAt,UpdatedAt)
+            VALUES('keep','既有任務','2026-09-17T09:00:00','本機','一般提醒','2026-09-17T08:00:00','2026-09-17T08:00:00');
+            INSERT INTO Devices(DeviceId,DisplayName) VALUES('TEST-KEEP','既有使用者');
+            INSERT INTO Users(Username,PasswordHash,Salt) VALUES('keep-admin','hash-keep','salt-keep');
+            INSERT INTO Settings(Key,Value) VALUES('ThemeMode','深色');
+            INSERT INTO AcknowledgementLogs(Id,TaskId,DeviceId,TriggeredAt,Result)
+            VALUES('old-history','keep','TEST-KEEP','2026-09-17T09:00:00','Acknowledged');
+            INSERT INTO SyncLogs(Time,Status,Message,Source) VALUES('2026-09-17T09:00:00','成功','既有同步','SheetB/Tasks');
+            """);
+        await Initializer.InitializeAsync();
+        await Initializer.InitializeAsync();
+        Assert.Equal(2L, await ScalarAsync("PRAGMA user_version;"));
+        Assert.Equal("既有任務", await ScalarAsync("SELECT Title FROM Tasks;"));
+        Assert.Equal("TEST-KEEP", await ScalarAsync("SELECT DeviceId FROM Devices;"));
+        Assert.Equal("hash-keep", await ScalarAsync("SELECT PasswordHash FROM Users;"));
+        Assert.Equal("深色", await ScalarAsync("SELECT Value FROM Settings;"));
+        Assert.Equal("Acknowledged", await ScalarAsync("SELECT Result FROM AcknowledgementLogs;"));
+        Assert.Equal(DBNull.Value, await ScalarAsync("SELECT TaskSnapshotJson FROM AcknowledgementLogs;"));
+        Assert.Equal("Legacy", await ScalarAsync("SELECT EventKind FROM SyncLogs;"));
+        Assert.Equal("ok", await ScalarAsync("PRAGMA integrity_check;"));
     }
 
     private sealed class ShadowingFactory(ISqliteConnectionFactory inner) : ISqliteConnectionFactory

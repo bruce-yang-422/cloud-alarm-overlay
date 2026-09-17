@@ -4,6 +4,57 @@
       <ResourceDictionary.MergedDictionaries>
         <ResourceDictionary Source="../Styles/LightTheme.xaml" />
       </ResourceDictionary.MergedDictionaries>
+                <DataTemplate x:Key="NavigationItemTemplate">
+                  <Button Click="Navigate" AutomationProperties.Name="{Binding Title}" HorizontalContentAlignment="Stretch">
+                    <Button.Style>
+                      <Style TargetType="Button">
+                        <Setter Property="Padding" Value="12,9"/>
+                        <Setter Property="Margin" Value="0,0,0,8"/>
+                        <Setter Property="FontSize" Value="14"/>
+                        <Setter Property="FontWeight" Value="Normal"/>
+                        <Setter Property="Foreground" Value="{adaptive:AdaptiveBrush #697C99}"/>
+                        <Setter Property="Background" Value="Transparent"/>
+                        <Setter Property="Cursor" Value="Hand"/>
+                        <Setter Property="Template">
+                          <Setter.Value>
+                            <ControlTemplate TargetType="Button">
+                              <Border x:Name="Nav" Padding="{TemplateBinding Padding}" CornerRadius="7" Background="{TemplateBinding Background}">
+                                <ContentPresenter/>
+                              </Border>
+                              <ControlTemplate.Triggers>
+                                <Trigger Property="IsMouseOver" Value="True"><Setter TargetName="Nav" Property="Opacity" Value=".8"/></Trigger>
+                                <Trigger Property="IsKeyboardFocused" Value="True"><Setter TargetName="Nav" Property="BorderBrush" Value="{adaptive:AdaptiveBrush #0766FF}"/><Setter TargetName="Nav" Property="BorderThickness" Value="1"/></Trigger>
+                              </ControlTemplate.Triggers>
+                            </ControlTemplate>
+                          </Setter.Value>
+                        </Setter>
+                        <Style.Triggers>
+                          <DataTrigger Binding="{Binding IsSelected}" Value="True">
+                            <Setter Property="Background" Value="{adaptive:AdaptiveBrush #E6F0FF}"/>
+                            <Setter Property="Foreground" Value="{adaptive:AdaptiveBrush #0766FF}"/>
+                            <Setter Property="FontWeight" Value="SemiBold"/>
+                          </DataTrigger>
+                        </Style.Triggers>
+                      </Style>
+                    </Button.Style>
+                    <Grid>
+                      <Grid.ColumnDefinitions><ColumnDefinition Width="30"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                      <TextBlock Text="{Binding Icon}" FontFamily="Segoe MDL2 Assets" FontSize="20" Foreground="{Binding Foreground,RelativeSource={RelativeSource AncestorType=Button}}"/>
+                      <TextBlock Grid.Column="1" Text="{Binding Title}" VerticalAlignment="Center" Foreground="{Binding Foreground,RelativeSource={RelativeSource AncestorType=Button}}"/>
+                    </Grid>
+                  </Button>
+                </DataTemplate>
+      <DataTemplate x:Key="HealthIndicator">
+       <StackPanel Orientation="Horizontal" ToolTip="{Binding Detail}">
+        <TextBlock x:Name="StateIcon" Text="…" FontWeight="Bold" Margin="0,0,4,0" Foreground="{adaptive:AdaptiveBrush #64748B}"/>
+        <TextBlock Text="{Binding Label}" FontSize="12"/>
+       </StackPanel>
+       <DataTemplate.Triggers>
+        <DataTrigger Binding="{Binding Severity}" Value="Healthy"><Setter TargetName="StateIcon" Property="Text" Value="✓"/><Setter TargetName="StateIcon" Property="Foreground" Value="{adaptive:AdaptiveBrush #18964A}"/></DataTrigger>
+        <DataTrigger Binding="{Binding Severity}" Value="Error"><Setter TargetName="StateIcon" Property="Text" Value="!"/><Setter TargetName="StateIcon" Property="Foreground" Value="{adaptive:AdaptiveBrush #BA3D45}"/></DataTrigger>
+        <DataTrigger Binding="{Binding Severity}" Value="Stopped"><Setter TargetName="StateIcon" Property="Text" Value="×"/></DataTrigger>
+       </DataTemplate.Triggers>
+      </DataTemplate>
     </ResourceDictionary>
   </Window.Resources>
   <Grid Background="{adaptive:AdaptiveBrush #F7FAFE}">
@@ -27,9 +78,12 @@
           <TextBlock Text="工作空間" Foreground="{adaptive:AdaptiveBrush #697C99}" FontSize="12" />
         </StackPanel>
         <StackPanel DockPanel.Dock="Bottom">
+          <ContentControl x:Name="TaskBuilderNavigation" Content="{Binding TaskBuilderNavigationItem}" ContentTemplate="{StaticResource NavigationItemTemplate}" Margin="0,16,0,12"/>
           <Border Background="{adaptive:AdaptiveBrush #EAF4FF}" Padding="12" CornerRadius="8">
             <StackPanel>
-              <TextBlock Text="●  本機排程運作中" Foreground="{adaptive:AdaptiveBrush #18964A}" FontSize="12" />
+              <StackPanel Orientation="Horizontal"><TextBlock Text="本機排程：" FontSize="12"/><ContentControl Content="{Binding LocalScheduleHealth}" ContentTemplate="{StaticResource HealthIndicator}"/></StackPanel>
+              <StackPanel Orientation="Horizontal" Margin="0,5,0,0"><TextBlock Text="Sheet A：" FontSize="12"/><ContentControl Content="{Binding SheetAHealth}" ContentTemplate="{StaticResource HealthIndicator}"/></StackPanel>
+              <StackPanel Orientation="Horizontal" Margin="0,5,0,0"><TextBlock Text="Sheet B：" FontSize="12"/><ContentControl Content="{Binding SheetBHealth}" ContentTemplate="{StaticResource HealthIndicator}"/></StackPanel>
               <TextBlock Text="{Binding DeviceLabel}" TextWrapping="Wrap" Style="{StaticResource Muted}" Margin="0,6,0,0" />
             </StackPanel>
           </Border>
@@ -38,81 +92,7 @@
         </StackPanel>
         <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
           <StackPanel xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation">
-            <ListBox x:Name="PrimaryNavigation" ItemsSource="{Binding Pages}" SelectedIndex="{Binding NavigationIndex}" Background="Transparent" BorderThickness="0" Foreground="{adaptive:AdaptiveBrush #697C99}">
-              <ListBox.ItemTemplate>
-                <DataTemplate>
-                  <Grid>
-                    <Grid.ColumnDefinitions>
-                      <ColumnDefinition Width="30" />
-                      <ColumnDefinition Width="*" />
-                    </Grid.ColumnDefinitions>
-                    <TextBlock x:Name="NavIcon" Text="" FontFamily="Segoe MDL2 Assets" FontSize="20" Foreground="{Binding Foreground,RelativeSource={RelativeSource AncestorType=ListBoxItem}}" />
-                    <TextBlock Grid.Column="1" Text="{Binding}" Foreground="{Binding Foreground,RelativeSource={RelativeSource AncestorType=ListBoxItem}}" />
-                  </Grid>
-                  <DataTemplate.Triggers>
-                    <DataTrigger Binding="{Binding}" Value="我的任務">
-                      <Setter TargetName="NavIcon" Property="Text" Value="" />
-                    </DataTrigger>
-                    <DataTrigger Binding="{Binding}" Value="歷史紀錄">
-                      <Setter TargetName="NavIcon" Property="Text" Value="" />
-                    </DataTrigger>
-                    <DataTrigger Binding="{Binding}" Value="番茄鐘"><Setter TargetName="NavIcon" Property="Text" Value="&#xE916;"/></DataTrigger>
-                    <DataTrigger Binding="{Binding}" Value="設定">
-                      <Setter TargetName="NavIcon" Property="Text" Value="" />
-                    </DataTrigger>
-                    <DataTrigger Binding="{Binding}" Value="管理者專區">
-                      <Setter TargetName="NavIcon" Property="Text" Value="&#xE72E;" />
-                    </DataTrigger>
-                  </DataTemplate.Triggers>
-                </DataTemplate>
-              </ListBox.ItemTemplate>
-              <ListBox.ItemContainerStyle>
-                <Style TargetType="ListBoxItem">
-                  <Setter Property="Padding" Value="12,9" />
-                  <Setter Property="Margin" Value="0,0,0,8" />
-                  <Setter Property="FontSize" Value="14" />
-                  <Setter Property="Cursor" Value="Hand" />
-                  <Setter Property="Template">
-                    <Setter.Value>
-                      <ControlTemplate TargetType="ListBoxItem">
-                        <Border x:Name="Nav" Padding="{TemplateBinding Padding}" CornerRadius="7" Background="Transparent">
-                          <ContentPresenter />
-                        </Border>
-                        <ControlTemplate.Triggers>
-                          <Trigger Property="IsSelected" Value="True">
-                            <Setter TargetName="Nav" Property="Background" Value="{adaptive:AdaptiveBrush #E6F0FF}" />
-                            <Setter Property="Foreground" Value="{adaptive:AdaptiveBrush #0766FF}" />
-                            <Setter Property="FontWeight" Value="SemiBold" />
-                          </Trigger>
-                          <Trigger Property="IsMouseOver" Value="True">
-                            <Setter TargetName="Nav" Property="Opacity" Value=".8" />
-                          </Trigger>
-                        </ControlTemplate.Triggers>
-                      </ControlTemplate>
-                    </Setter.Value>
-                  </Setter>
-                </Style>
-              </ListBox.ItemContainerStyle>
-            </ListBox>
-            <Border x:Name="TaskBuilderNavItem" Padding="12,9" Margin="0,-8,0,8" CornerRadius="7" Background="Transparent" Cursor="Hand" MouseLeftButtonUp="OpenTaskBuilder">
-              <Border.Style>
-                <Style TargetType="Border">
-                  <Style.Triggers>
-                    <Trigger Property="IsMouseOver" Value="True">
-                      <Setter Property="Opacity" Value=".8" />
-                    </Trigger>
-                  </Style.Triggers>
-                </Style>
-              </Border.Style>
-              <Grid>
-                <Grid.ColumnDefinitions>
-                  <ColumnDefinition Width="30" />
-                  <ColumnDefinition Width="*" />
-                </Grid.ColumnDefinitions>
-                <TextBlock Text="&#xE943;" FontFamily="Segoe MDL2 Assets" FontSize="20" Foreground="{adaptive:AdaptiveBrush #697C99}" />
-                <TextBlock Grid.Column="1" Text="任務產生器" FontSize="14" Foreground="{adaptive:AdaptiveBrush #697C99}" />
-              </Grid>
-            </Border>
+            <ItemsControl x:Name="PrimaryNavigation" ItemsSource="{Binding NavigationItems}" ItemTemplate="{StaticResource NavigationItemTemplate}"/>
           </StackPanel>
         </ScrollViewer>
       </DockPanel>
@@ -310,7 +290,11 @@
                   <DataGrid ItemsSource="{Binding Upcoming}" MaxHeight="300" ColumnHeaderHeight="34" RowHeight="36">
                     <DataGrid.Columns>
                       <DataGridTextColumn Header="時間" Binding="{Binding NextTime}" Width="120" />
-                      <DataGridTextColumn Header="任務標題" Binding="{Binding Title}" Width="*" />
+                      <DataGridTemplateColumn Header="任務標題" Width="*">
+                        <DataGridTemplateColumn.CellTemplate><DataTemplate>
+                          <TextBlock Text="{Binding Title}" Background="Transparent" Padding="5" Cursor="Hand" ToolTip="連按兩下查看詳細訊息" MouseLeftButtonDown="TaskTitleDoubleClick"/>
+                        </DataTemplate></DataGridTemplateColumn.CellTemplate>
+                      </DataGridTemplateColumn>
                       <DataGridTemplateColumn Header="來源" CellTemplate="{StaticResource SourceBadge}" Width="110" />
                       <DataGridTemplateColumn Header="提醒等級" CellTemplate="{StaticResource LevelBadge}" Width="110" />
                       <DataGridTextColumn Header="狀態" Binding="{Binding UpcomingState}" Width="90" />
@@ -389,7 +373,9 @@
   </TextBlock>
  </DataTemplate></DataGridTemplateColumn.CellTemplate>
 </DataGridTemplateColumn>
-                <DataGridTextColumn Header="任務名稱" Binding="{Binding Title}" Width="*" MinWidth="180" />
+                <DataGridTemplateColumn Header="任務名稱" Width="*" MinWidth="180"><DataGridTemplateColumn.CellTemplate><DataTemplate>
+                 <TextBlock Text="{Binding Title}" Background="Transparent" Padding="5" Cursor="Hand" ToolTip="連按兩下查看詳細訊息" MouseLeftButtonDown="TaskTitleDoubleClick"/>
+                </DataTemplate></DataGridTemplateColumn.CellTemplate></DataGridTemplateColumn>
                 <DataGridTextColumn Header="日期 / 時間" Binding="{Binding Time}" Width="145" MinWidth="140" />
                 <DataGridTemplateColumn Header="等級" CellTemplate="{StaticResource LevelBadge}" Width="SizeToCells" MinWidth="110" />
                 <DataGridTextColumn Header="重複" Binding="{Binding Recurrence}" Width="130" MinWidth="110" />

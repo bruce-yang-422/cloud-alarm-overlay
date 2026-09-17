@@ -8,12 +8,13 @@ namespace CloudAlarmOverlay.BackgroundServices;
 
 public sealed class AlarmWorker(ITaskRepository tasks, ITaskSchedulingService schedule, IRuntimeStore runtime,
     IDeviceIdentityService identity, IAlarmService alarms, ISettingsRepository settings, ChangeSignal signal,
-    RuntimeState state, ILogger<AlarmWorker> logger) : BackgroundService
+    RuntimeState state, IAlarmHeartbeat heartbeat, ILogger<AlarmWorker> logger) : BackgroundService
 {
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
         var pending = new List<Task>();
-        await runtime.RecoverAsync(stoppingToken);
+        try {await runtime.RecoverAsync(stoppingToken);}
+        catch(Exception ex){heartbeat.Fail(ex.Message);throw;}
         var previous = (await settings.GetAsync("AlarmCheckpoint", stoppingToken))?.Value;
         var cursor = DateTime.TryParse(previous, CultureInfo.InvariantCulture, DateTimeStyles.RoundtripKind, out var saved) ? saved : DateTime.Now;
         bool startup = true;
@@ -51,18 +52,20 @@ public sealed class AlarmWorker(ITaskRepository tasks, ITaskSchedulingService sc
                     }
                     pending.RemoveAll(t => t.IsCompleted);
                     cursor = now; startup = false;
+                    heartbeat.Tick();
                     var delay = next - DateTime.Now;
                     await signal.WaitAsync(delay > TimeSpan.Zero ? delay : TimeSpan.Zero, stoppingToken);
                 }
                 catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested) { break; }
                 catch (Exception ex)
                 {
+                    heartbeat.Fail(ex.Message);
                     logger.LogError(ex, "排程計算失敗，30 秒後重試");
                     await Task.Delay(TimeSpan.FromSeconds(30), stoppingToken);
                 }
             }
         }
-        finally { await Task.WhenAll(pending); }
+        finally { heartbeat.Stop(); await Task.WhenAll(pending); }
     }
     private async Task DispatchAsync(AlarmTask task, CancellationToken ct)
     {

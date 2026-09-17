@@ -38,6 +38,7 @@ public static class CompositionRoot
         services.AddSingleton<IUserDialogs, UserDialogs>();
         services.AddSingleton<IAutoStartService, AutoStartService>();
         services.AddSingleton<TaskBuilderHostService>();
+        services.AddSingleton<IBrowserLauncher, BrowserLauncher>();
         services.AddSingleton<ILoggerProvider, LocalFileLoggerProvider>();
         services.AddSingleton<PreferencesViewModel>();
         services.AddSingleton<MaintenanceViewModel>();

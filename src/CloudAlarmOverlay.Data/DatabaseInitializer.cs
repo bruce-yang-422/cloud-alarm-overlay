@@ -5,7 +5,7 @@ namespace CloudAlarmOverlay.Data;
 
 public sealed class DatabaseInitializer(ISqliteConnectionFactory connections) : IDatabaseInitializer
 {
-    public const int CurrentSchemaVersion = 1;
+    public const int CurrentSchemaVersion = 2;
 
     public async Task InitializeAsync(CancellationToken cancellationToken = default)
     {
@@ -35,8 +35,16 @@ public sealed class DatabaseInitializer(ISqliteConnectionFactory connections) : 
             using var reader = new StreamReader(stream);
             var sql = await reader.ReadToEndAsync(cancellationToken).ConfigureAwait(false);
             await ExecuteNonQueryAsync(connection, transaction, sql, cancellationToken).ConfigureAwait(false);
-            await ExecuteNonQueryAsync(connection, transaction, $"PRAGMA user_version = {CurrentSchemaVersion};",
+            await ExecuteNonQueryAsync(connection, transaction, "PRAGMA user_version = 1;",
                 cancellationToken).ConfigureAwait(false);
+        }
+        if(version<2)
+        {
+            using var upgrade=typeof(DatabaseInitializer).Assembly.GetManifestResourceStream("CloudAlarmOverlay.Data.Migrations.V2.sql")
+                ?? throw new InvalidOperationException("Embedded schema V2.sql was not found.");
+            using var reader=new StreamReader(upgrade);
+            await ExecuteNonQueryAsync(connection,transaction,await reader.ReadToEndAsync(cancellationToken),cancellationToken);
+            await ExecuteNonQueryAsync(connection,transaction,"PRAGMA user_version = 2;",cancellationToken);
         }
         // Fail before displaying the main window if an expected table/column is missing.
         using (var validation = connection.CreateCommand())
@@ -76,7 +84,7 @@ public sealed class DatabaseInitializer(ISqliteConnectionFactory connections) : 
         SELECT Id, Date, Type, Note, Source FROM Holidays LIMIT 0;
         SELECT Id, Date, LunarDate, LunarDay, SolarTerm FROM LunarCalendar LIMIT 0;
         SELECT Id, TaskId, DeviceId, DisplayName, TriggeredAt, AcknowledgedAt,
-            DurationSeconds, Result, SyncedAt, SyncStatus, TaskName, ScheduledAt, Source FROM AcknowledgementLogs LIMIT 0;
+            DurationSeconds, Result, SyncedAt, SyncStatus, TaskName, ScheduledAt, Source, TaskSnapshotJson FROM AcknowledgementLogs LIMIT 0;
         SELECT Id, TaskId, ScheduledAt, State, TriggeredAt FROM Occurrences LIMIT 0;
         SELECT Id, DeviceId, DisplayName, LastSeen, Version FROM Devices LIMIT 0;
         SELECT Id, Username, DisplayName, PasswordHash, Salt, Enabled FROM Users LIMIT 0;
@@ -84,7 +92,8 @@ public sealed class DatabaseInitializer(ISqliteConnectionFactory connections) : 
         SELECT Key, Value, Locked FROM Settings LIMIT 0;
         SELECT Key, Value FROM PomodoroSettings LIMIT 0;
         SELECT Id, Type, StartedAt, CompletedAt, EndedAt, PlannedMinutes, IsActive, Result FROM PomodoroLog LIMIT 0;
-        SELECT Id, Time, Status, Message, RecordCount, Source FROM SyncLogs LIMIT 0;
+        SELECT Source, Fingerprint, ConfigFingerprint, Status, Message, LastCheckedAt, LastSuccessAt, ActiveLogId FROM SyncStates LIMIT 0;
+        SELECT Id, Time, Status, Message, RecordCount, Source, LastSeenAt, RepeatCount, EventKind FROM SyncLogs LIMIT 0;
         SELECT Id, UserId, Action, OldValue, NewValue, CreatedAt FROM AuditLogs LIMIT 0;
         SELECT Id, Time, EventType, Message FROM SystemEvents LIMIT 0;
         """;

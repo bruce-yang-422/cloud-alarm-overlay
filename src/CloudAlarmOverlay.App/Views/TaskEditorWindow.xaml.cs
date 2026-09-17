@@ -19,7 +19,7 @@ public partial class TaskEditorWindow : Window
             if(e.Key == Key.S && Keyboard.Modifiers == ModifierKeys.Control)
             {
                 e.Handled=true;
-                HourWheel.CommitInput(); MinuteWheel.CommitInput(); SecondWheel.CommitInput();
+                HourWheel.CommitInput(); MinuteWheel.CommitInput();
                 if(DataContext is TaskEditorViewModel vm && vm.SaveCommand.CanExecute(null))
                     await vm.SaveCommand.ExecuteAsync(null);
             }

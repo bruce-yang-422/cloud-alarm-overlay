@@ -12,11 +12,13 @@ Cloud Alarm Overlay 是常駐 Windows 系統匣的桌面提醒程式。你可以
 
 ## 主要功能
 
-- **任務提醒**：建立一次性或重複的本機任務，支援工作日、假日略過與農曆日期規則。
+- **任務提醒**：建立一次性或重複的本機任務，支援工作日、假日略過、農曆日期，以及指定月份複選；重複任務以「下一次提醒」計算。
 - **分級通知**：一般提醒、重要提醒、緊急提醒、強制通知各有不同的通知效果；強制通知需要輸入畫面上的數字確認碼。
 - **Google Sheets 同步**：讀取 Sheet A 的任務、假日、人員與農曆對照，以及 Sheet B 的團隊任務。雲端任務在程式內唯讀，可複製成本機任務再修改。
 - **番茄鐘**：專注與休息計時、音效設定，以及每日進度和歷史紀錄。
-- **查詢與匯出**：查詢任務提醒、簽收與番茄鐘紀錄，並匯出 CSV。
+- **查詢與匯出**：查詢任務提醒、確認與番茄鐘紀錄，並匯出 CSV；雙擊任務名稱可查看唯讀詳細內容及歷史快照。
+- **任務產生器**：從側邊欄底部、狀態區上方或系統匣開啟表單，選擇通知對象、產生 Sheet 資料列或匯出 Excel；已設定 Sheet B 時，也會開啟對應的任務分頁。
+- **外觀與狀態**：先選淺色、暗色或跟隨系統，再選預設、粉紅或若竹色彩；側邊欄分開顯示本機排程與各雲端來源的正常／異常／中斷狀態。
 - **管理者專區**：設定同步來源、通知政策、開機啟動與結束程式密碼保護，查看系統／稽核紀錄，執行備份與還原。
 - **系統匣常駐**：關閉主視窗後仍持續執行提醒；從系統匣選單可重新開啟或結束程式。
 
@@ -25,6 +27,8 @@ Cloud Alarm Overlay 是常駐 Windows 系統匣的桌面提醒程式。你可以
 - 執行環境：Windows。專案提供 **win-x64** 安裝包建置腳本。
 - 從原始碼執行：安裝 [.NET SDK 10.0.401](https://dotnet.microsoft.com/download/dotnet/10.0)；版本由 [global.json](global.json) 固定。
 - 自行製作安裝包：另外安裝 Inno Setup 6 或 7。安裝包採 self-contained 發布，使用者電腦不需要 .NET SDK。
+
+原始碼目前為 **v1.1.0**；新增功能隨新版安裝包提供，正式下載版本以 GitHub Releases 為準。
 
 ## 下載與安裝
 
@@ -57,6 +61,10 @@ dotnet run --project src/CloudAlarmOverlay.App
 
 同步間隔可設為 30–60 秒，預設 45 秒。網路中斷時，已快取的雲端任務仍可排程；本機任務不受影響。程式**不會將任務、簽收或其他本機資料回寫到 Google Sheets**。
 
+### 指定月份的重複規則
+
+`Monthly:10` 代表每個月 10 日；`Monthly:10:1,3,5,7,9,11` 代表奇數月 10 日。時分取自 `Time`，不存在的日期略過該月。CSV 中含逗號的規則需以雙引號包住。新格式須在接收任務的電腦升級到 v1.1.0 後使用；舊版不支援指定月份。
+
 ## 軟體更新
 
 管理者登入後，到「設定」→「外觀與資料」，將「公開 version.json 連結」設為以下網址，再按「儲存更新來源」：
@@ -65,7 +73,7 @@ dotnet run --project src/CloudAlarmOverlay.App
 https://raw.githubusercontent.com/bruce-yang-422/cloud-alarm-overlay/main/version.json
 ```
 
-程式會讀取 GitHub 上的 [version.json](version.json) 比對版本；有新版時，「開啟下載頁」會前往對應的 GitHub Release 安裝檔。更新資訊與安裝檔都由 GitHub 提供。
+程式會讀取 GitHub 上的 [version.json](version.json) 比對版本；「檢查更新」比較是否有新版；「下載新版安裝檔」無論版本是否相同，都會交由瀏覽器開啟資訊檔提供的安裝檔下載連結。更新資訊與安裝檔都由 GitHub 提供。
 
 ## 本機資料與備份
 
@@ -83,8 +91,8 @@ https://raw.githubusercontent.com/bruce-yang-422/cloud-alarm-overlay/main/versio
 ```powershell
 dotnet build CloudAlarmOverlay.sln
 dotnet test CloudAlarmOverlay.sln --no-build
-.\scripts\publish.ps1 -Version 1.0.1
-.\installer\build-installer.ps1 -Version 1.0.1
+.\scripts\publish.ps1 -Version 1.1.0
+.\installer\build-installer.ps1 -Version 1.1.0
 ```
 
 v1.0.0 已發布並安裝於多台電腦。後續更新須使用更高版本號；請勿覆蓋既有版本的 GitHub Release 安裝檔。確認新安裝檔後，再更新 `version.json` 的版本、下載連結與 SHA-256。

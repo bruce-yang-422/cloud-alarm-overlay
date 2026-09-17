@@ -2,9 +2,11 @@
  <UserControl.Resources><ResourceDictionary><ResourceDictionary.MergedDictionaries><ResourceDictionary Source="../Styles/LightTheme.xaml"/></ResourceDictionary.MergedDictionaries></ResourceDictionary></UserControl.Resources>
  <StackPanel>
   <TextBlock Text="外觀與資料" FontSize="20" FontWeight="SemiBold"/>
-  <TextBlock Text="程式主題" Margin="0,12,0,6"/>
+  <TextBlock Text="明暗模式" Margin="0,12,0,6"/>
   <ListBox Style="{StaticResource SegmentedSelector}" ItemsSource="{Binding Themes}" SelectedItem="{Binding ThemeChoice}" HorizontalAlignment="Left"/>
-  <TextBlock Text="跟隨系統會即時套用 Windows 深淺色設定。" Margin="0,6,0,12"/>
+  <TextBlock Text="色彩風格" Margin="0,12,0,6"/>
+  <ListBox Style="{StaticResource SegmentedSelector}" ItemsSource="{Binding ThemeColors}" SelectedItem="{Binding ThemeColorChoice}" HorizontalAlignment="Left"/>
+  <TextBlock Text="跟隨系統會隨 Windows 切換明暗，並保留選擇的色彩風格。" Margin="0,6,0,12" TextWrapping="Wrap"/>
   <Border Style="{StaticResource Card}" Margin="0,0,0,14">
    <StackPanel>
     <TextBlock Text="視窗行為" FontSize="18" FontWeight="SemiBold" Margin="0,0,0,10"/>
@@ -18,7 +20,7 @@
   <TextBlock Text="{Binding VersionLabel}"/>
   <TextBlock Text="公開 version.json 連結（管理者可設定）" Margin="0,12,0,0"/>
   <TextBox Text="{Binding UpdateUrl,UpdateSourceTrigger=PropertyChanged}" IsEnabled="{Binding CanEditUpdateUrl}" AutomationProperties.Name="更新資訊 HTTPS 連結" ToolTip="只有登入管理員後才能修改公開更新網址"/>
-  <WrapPanel><Button Content="儲存更新來源" Command="{Binding SaveUpdateUrlCommand}"/><Button Content="檢查更新" Command="{Binding CheckUpdateCommand}"/><Button Content="開啟下載頁" Command="{Binding OpenDownloadCommand}"/></WrapPanel>
+  <WrapPanel><Button Content="儲存更新來源" Command="{Binding SaveUpdateUrlCommand}"/><Button Content="檢查更新" Command="{Binding CheckUpdateCommand}"/><Button Content="下載新版安裝檔" Command="{Binding OpenDownloadCommand}"/></WrapPanel>
   <Border Style="{StaticResource Card}" Margin="0,16,0,0">
    <StackPanel>
     <TextBlock Text="恢復初始狀態" FontSize="18" FontWeight="SemiBold"/>

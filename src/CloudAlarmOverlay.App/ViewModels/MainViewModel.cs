@@ -9,13 +9,18 @@ using CloudAlarmOverlay.Core.Services;
 namespace CloudAlarmOverlay.App.ViewModels;
 public partial class MainViewModel(ITaskRepository tasks,ITaskService taskService,ITaskSchedulingService scheduling,
     IAckLogRepository history,ISyncLogRepository syncLogs,ISyncService sync,SyncConfiguration configuration,
-    IDeviceIdentityService identity,IAlarmPresenter presenter,IUserDialogs dialogs,ILunarCalendarRepository lunar,AdminViewModel admin,PreferencesViewModel preferences,PomodoroViewModel pomodoro):ObservableObject
+    IDeviceIdentityService identity,IAlarmPresenter presenter,IUserDialogs dialogs,ILunarCalendarRepository lunar,AdminViewModel admin,PreferencesViewModel preferences,PomodoroViewModel pomodoro,IAlarmHeartbeat heartbeat):ObservableObject
 {
     public PomodoroViewModel Pomodoro=>pomodoro;
     [ObservableProperty] private int historyTabIndex;
     public AdminViewModel Admin=>admin;
     public PreferencesViewModel Preferences=>preferences;
-    partial void OnPageIndexChanged(int value){if(value==5&&!Admin.Session.IsAuthenticated){PageIndex=0;return;}NavigationIndex=value;}
+    partial void OnPageIndexChanged(int value)
+    {
+        if(value==5&&!Admin.Session.IsAuthenticated){PageIndex=0;return;}
+        NavigationIndex=value;
+        foreach(var item in NavigationItems)item.IsSelected=item.PageIndex==value;
+    }
     [ObservableProperty] private int navigationIndex;
     partial void OnNavigationIndexChanged(int value)
     {
@@ -30,29 +35,37 @@ public partial class MainViewModel(ITaskRepository tasks,ITaskService taskServic
     }
     public string Title=>"Cloud Alarm Overlay";
     public string[] Pages {get;}=["首頁","我的任務","歷史紀錄","番茄鐘","設定","管理者專區"];
+    public NavigationItem TaskBuilderNavigationItem {get;} = new("任務產生器", "\uE943", -1);
+    public NavigationItem[] NavigationItems {get;} =
+    [
+        new("首頁", "\uE80F", 0), new("我的任務", "\uE8FD", 1),
+        new("歷史紀錄", "\uE81C", 2), new("番茄鐘", "\uE916", 3),
+        new("設定", "\uE713", 4),
+        new("管理者專區", "\uE72E", 5)
+    ];
         [ObservableProperty] private string solarDate="";
     [ObservableProperty] private string lunarToday="";
     [ObservableProperty] private string currentClock="";
-    [ObservableProperty] private string currentSolarTerm="尚無節氣資料";
+    [ObservableProperty] private string currentSolarTerm="-";
     private DateOnly? calendarDate;
     public void UpdateClock(DateTime now)
     {
         SolarDate=now.ToString("yyyy/MM/dd ddd",CultureInfo.GetCultureInfo("zh-TW"));
         CurrentClock=now.ToString("HH:mm:ss");
+        LocalScheduleHealth=heartbeat.GetStatus(now);
         if(calendarDate!=DateOnly.FromDateTime(now))_ = RefreshCalendarAsync(now);
     }
     public async Task RefreshCalendarAsync(DateTime now)
     {
         var date=DateOnly.FromDateTime(now);calendarDate=date;
         SolarDate=now.ToString("yyyy/MM/dd ddd",CultureInfo.GetCultureInfo("zh-TW"));CurrentClock=now.ToString("HH:mm:ss");
-        LunarToday=LocalLunarDate(now);CurrentSolarTerm="尚無節氣資料";
+        LunarToday=LocalLunarDate(now);CurrentSolarTerm="-";
         try
         {
             var entry=await lunar.GetByDateAsync(date);
             if(calendarDate!=date)return;
             if(!string.IsNullOrWhiteSpace(entry?.LunarDate))LunarToday=entry.LunarDate;
-            var term=string.IsNullOrWhiteSpace(entry?.SolarTerm)?(await lunar.GetAllAsync()).Where(x=>x.Date<=date&&x.Date>=date.AddDays(-30)&&!string.IsNullOrWhiteSpace(x.SolarTerm)).OrderByDescending(x=>x.Date).FirstOrDefault()?.SolarTerm:entry.SolarTerm;
-            if(calendarDate==date)CurrentSolarTerm=term??"尚無節氣資料";
+            if(calendarDate==date)CurrentSolarTerm=string.IsNullOrWhiteSpace(entry?.SolarTerm)?"-":entry.SolarTerm;
         }
         catch{if(calendarDate==date)CurrentSolarTerm="節氣資料暫不可用";}
     }
@@ -193,6 +206,7 @@ public partial class MainViewModel(ITaskRepository tasks,ITaskService taskServic
     {
         try
         {
+            await RefreshHealthAsync();
             await RefreshCalendarAsync(DateTime.Now);
             allTasks=await tasks.GetAllAsync();FilterTasks();
             CalendarWarning=allTasks.Any(t=>t.Enabled&&t.Recurrence.StartsWith("LunarDay:",StringComparison.Ordinal))
@@ -225,18 +239,28 @@ public partial class MainViewModel(ITaskRepository tasks,ITaskService taskServic
             OverdueCount=allHistory.Count(h=>h.ScheduledAt?.Date==now.Date&&h.Result is "NotLaunched" or "Overdue_Unacked");
             var logs=await syncLogs.GetRangeAsync(now.AddDays(-7),now);
             SyncLogs.Clear();foreach(var log in logs.Take(30))SyncLogs.Add(log);
-            SheetAStatus=SyncStatus("SheetA",SheetAId,logs);SheetBStatus=SyncStatus("SheetB",SheetBId,logs);
             OnPropertyChanged(nameof(IsUpcomingEmpty));
         }
         catch(Exception ex){Status=ex.Message;}
     }
-    private static string SyncStatus(string source,string id,IReadOnlyList<SyncLogEntry> logs)
+    [ObservableProperty] private HealthStatus localScheduleHealth=new("等待啟動","尚未檢查","Pending");
+    [ObservableProperty] private HealthStatus sheetAHealth=new("未設定","尚未檢查","Pending");
+    [ObservableProperty] private HealthStatus sheetBHealth=new("未設定","尚未檢查","Pending");
+    public async Task RefreshHealthAsync()
     {
-        if(id=="")return "尚未設定";
-        var latest=logs.Where(l=>l.Source?.StartsWith(source,StringComparison.Ordinal)==true).GroupBy(l=>l.Source).Select(g=>g.OrderByDescending(l=>l.Time).First()).ToArray();
-        if(latest.Length==0)return "等待同步";
-        var failed=latest.FirstOrDefault(l=>l.Status=="失敗");
-        return failed is null?$"已同步 · {latest.Max(l=>l.Time):HH:mm:ss}":$"同步失敗 · {failed.Source}\n{failed.Message}";
+        var now=DateTime.Now;
+        LocalScheduleHealth=heartbeat.GetStatus(now);
+        try
+        {
+            var options=await configuration.LoadAsync();
+            var device=await identity.GetLocalAsync();
+            var states=await syncLogs.GetStatesAsync();
+            SheetAHealth=SyncHealth.ForSheet("SheetA",options,device,states,now);
+            SheetBHealth=SyncHealth.ForSheet("SheetB",options,device,states,now);
+        }
+        catch(Exception ex){SheetAHealth=SheetBHealth=new("異常","無法讀取同步狀態："+ex.Message,"Error");}
+        SheetAStatus=SheetAHealth.Label+" · "+SheetAHealth.Detail;
+        SheetBStatus=SheetBHealth.Label+" · "+SheetBHealth.Detail;
     }
     private void FilterTasks()
     {
@@ -351,7 +375,7 @@ public sealed record TaskRow(AlarmTask Task,DateTime? NextAt=null)
     public string NextTime=>NextAt?.ToString("MM/dd HH:mm")??"—";
     public string State=>Task.Enabled?"已啟用":"已停用";
     public string StateOrigin=>IsLocal?"本機可調整":$"依 {Source} 設定";
-    public string Recurrence=>Task.Recurrence switch{"None"=>"不重複","Daily"=>"每天","Weekly:1,2,3,4,5"=>"每個工作日",var r=>r.Replace("Weekly:","每週 ").Replace("Monthly:","每月 ").Replace("LunarDay:","農曆 ")};
+    public string Recurrence=>CloudAlarmOverlay.Core.Recurrence.RecurrenceRule.Describe(Task.Recurrence);
     public bool IsLocal=>Task.Source==TaskSources.Local;
 }
 public sealed record HistoryRow(AcknowledgementLog Entry)

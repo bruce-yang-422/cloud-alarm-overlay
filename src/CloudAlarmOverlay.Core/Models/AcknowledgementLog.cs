@@ -4,6 +4,7 @@ public sealed record AcknowledgementLog
 {
     public required string Id { get; init; }
     public required string TaskId { get; init; }
+    public string? TaskSnapshotJson { get; init; }
     public string? TaskName { get; init; }
     public DateTime? ScheduledAt { get; init; }
     public string? Source { get; init; }

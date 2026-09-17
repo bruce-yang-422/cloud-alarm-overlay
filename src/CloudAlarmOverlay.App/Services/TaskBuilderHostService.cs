@@ -1,6 +1,7 @@
-using System.Diagnostics;
 using System.IO;
 using System.Net;
+using System.Text.Json;
+using CloudAlarmOverlay.Core.Repositories;
 using CloudAlarmOverlay.Core.Services;
 using Microsoft.Extensions.Logging;
 namespace CloudAlarmOverlay.App.Services;
@@ -11,13 +12,13 @@ namespace CloudAlarmOverlay.App.Services;
 // 2. Sheet 資料代理：Sheet 的 SpreadsheetId／GID 屬於公司內部設定（管理者頁 → 同步來源），
 //    不寫死在 HTML 裡、不外流；頁面改為呼叫本機 /api/... 端點，由本程式讀取管理者已設定好的
 //    SyncOptions 並代為向 Google 要 CSV，回傳純資料給頁面。
-public sealed class TaskBuilderHostService(ILogger<TaskBuilderHostService> logger,SyncConfiguration syncConfiguration,ISheetCsvClient csvClient)
+public sealed class TaskBuilderHostService(ILogger<TaskBuilderHostService> logger,SyncConfiguration syncConfiguration,ISheetCsvClient csvClient, ITaskRepository tasks, IBrowserLauncher browser) : IDisposable
 {
     private const string FileName = "task_builder_tailwind.html";
     private HttpListener? listener;
     private int port;
 
-    public void OpenInBrowser()
+    public async Task OpenInBrowserAsync()
     {
         try
         {
@@ -30,16 +31,47 @@ public sealed class TaskBuilderHostService(ILogger<TaskBuilderHostService> logge
                 return;
             }
 
-            EnsureListenerStarted(path);
-            Process.Start(new ProcessStartInfo($"http://localhost:{port}/{FileName}") { UseShellExecute = true });
+            var address = Start();
+            browser.Open(address);
         }
         catch (Exception ex)
         {
             logger.LogError(ex, "開啟任務產生器失敗");
             System.Windows.MessageBox.Show($"無法開啟任務產生器：\n{ex.Message}", "Cloud Alarm Overlay",
-                System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
+                    System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
+            return;
+        }
+
+        // Read the current saved destination on each launch, including its Tasks tab.
+        try
+        {
+            var options = await syncConfiguration.LoadAsync();
+            if (string.IsNullOrWhiteSpace(options.SheetBId)) return;
+            var sheetUrl = $"https://docs.google.com/spreadsheets/d/{Uri.EscapeDataString(options.SheetBId)}/edit";
+            if (!string.IsNullOrWhiteSpace(options.TasksBGid))
+            {
+                var gid = Uri.EscapeDataString(options.TasksBGid);
+                sheetUrl += $"?gid={gid}#gid={gid}";
+            }
+            browser.Open(new Uri(sheetUrl));
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "任務產生器已開啟，但無法開啟 Sheet B 任務表");
+            System.Windows.MessageBox.Show($"任務產生器已開啟，但無法開啟 Sheet B 任務表：\n{ex.Message}", "Cloud Alarm Overlay",
+                System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Warning);
         }
     }
+
+    public Uri Start()
+    {
+        var path = Path.Combine(AppContext.BaseDirectory, FileName);
+        if (!File.Exists(path)) throw new FileNotFoundException("找不到任務產生器頁面。", path);
+        EnsureListenerStarted(path);
+        return new Uri($"http://localhost:{port}/{FileName}");
+    }
+
+    public void Dispose() { listener?.Close(); listener = null; }
 
     private void EnsureListenerStarted(string filePath)
     {
@@ -48,9 +80,9 @@ public sealed class TaskBuilderHostService(ILogger<TaskBuilderHostService> logge
         Exception? lastError = null;
         foreach (var candidate in new[] { 8843, 8844, 8845, 0 })
         {
+            var trial = new HttpListener();
             try
             {
-                var trial = new HttpListener();
                 var usedPort = candidate == 0 ? GetFreeTcpPort() : candidate;
                 trial.Prefixes.Add($"http://localhost:{usedPort}/");
                 trial.Start();
@@ -59,11 +91,12 @@ public sealed class TaskBuilderHostService(ILogger<TaskBuilderHostService> logge
                 lastError = null;
                 break;
             }
-            catch (Exception ex) { lastError = ex; }
+            catch (Exception ex) { trial.Close(); lastError = ex; }
         }
         if (listener is null) throw lastError ?? new InvalidOperationException("無法啟動本機伺服器");
 
-        _ = Task.Run(() => AcceptLoopAsync(listener, filePath));
+        var server = listener;
+        _ = Task.Run(() => AcceptLoopAsync(server, filePath));
     }
 
     private static int GetFreeTcpPort()
@@ -93,9 +126,26 @@ public sealed class TaskBuilderHostService(ILogger<TaskBuilderHostService> logge
 
     private async Task RouteAsync(HttpListenerContext context, string filePath)
     {
+        context.Response.Headers["Cache-Control"] = "no-store";
+        if (context.Request.HttpMethod != "GET") { context.Response.StatusCode=405; context.Response.Close(); return; }
+        var origin = context.Request.Headers["Origin"];
+        if (origin is not null && origin != $"http://localhost:{port}") { context.Response.StatusCode=403; context.Response.Close(); return; }
         var path = context.Request.Url?.AbsolutePath ?? "/";
+        if (path == "/api/task-ids")
+        {
+            try
+            {
+                var all = await tasks.GetAllAsync();
+                var ids = all.SelectMany(t => new[] { t.Id, t.ExternalId }).Where(id => !string.IsNullOrEmpty(id)).Distinct();
+                context.Response.ContentType="application/json; charset=utf-8";
+                await WriteTextAsync(context.Response, JsonSerializer.Serialize(ids));
+            }
+            finally { context.Response.Close(); }
+            return;
+        }
         if (path == "/api/tasks-csv") { await ServeCsvAsync(context, sheetB: true); return; }
         if (path == "/api/employees-csv") { await ServeCsvAsync(context, sheetB: false); return; }
+        if (path != "/" && path != "/"+FileName) { context.Response.StatusCode=404; context.Response.Close(); return; }
         await ServeFileAsync(context, filePath);
     }
 
@@ -121,7 +171,7 @@ public sealed class TaskBuilderHostService(ILogger<TaskBuilderHostService> logge
         {
             logger.LogError(ex, "任務產生器讀取 Sheet 資料失敗");
             response.StatusCode = 502;
-            await WriteTextAsync(response, "讀取雲端資料失敗：" + ex.Message);
+            await WriteTextAsync(response, "讀取雲端資料失敗，請確認網路及管理者的同步來源設定後重試。");
         }
         finally { response.Close(); }
     }

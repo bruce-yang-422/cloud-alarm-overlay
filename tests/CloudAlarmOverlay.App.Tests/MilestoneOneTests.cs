@@ -94,7 +94,7 @@ public sealed class MilestoneOneTests
                 window.StartTray(host.Services.GetRequiredService<ChangeSignal>(), () => Task.CompletedTask);
                 window.Close(); Assert.False(window.IsVisible);
                 window.Open(); Assert.True(window.IsVisible);
-                var editorVm = new TaskEditorViewModel(service, null, false) { TaskTitle = "編輯器儲存驗證", Repeat = "每月", MonthDay = 20, Date = DateTime.Today.AddDays(1), SelectedHour = 23, SelectedMinute = 7, SelectedSecond = 9 };
+                var editorVm = new TaskEditorViewModel(service, null, false) { TaskTitle = "編輯器儲存驗證", Repeat = "每月", MonthDay = 20, Date = DateTime.Today.AddDays(1), SelectedHour = 23, SelectedMinute = 7 };
                 var editor = new TaskEditorWindow { DataContext = editorVm, Owner = window };
                 editor.Show(); editor.UpdateLayout();
                 await Dispatcher.Yield(DispatcherPriority.ApplicationIdle);
@@ -130,9 +130,9 @@ public sealed class MilestoneOneTests
                 await editorVm.SaveCommand.ExecuteAsync(null);
                 var edited = (await host.Services.GetRequiredService<ITaskRepository>().GetAllAsync()).Single(t => t.Title == "編輯器儲存驗證");
                 Assert.Equal("Weekly:2,3,4,5,7", edited.Recurrence);
-                Assert.Equal(new TimeSpan(23, 7, 9), edited.ScheduledAt.TimeOfDay);
+                Assert.Equal(new TimeSpan(23, 7, 0), edited.ScheduledAt.TimeOfDay);
                 var reopened = new TaskEditorViewModel(service, edited, false);
-                Assert.Equal(23, reopened.SelectedHour); Assert.Equal(7, reopened.SelectedMinute); Assert.Equal(9, reopened.SelectedSecond);
+                Assert.Equal(23, reopened.SelectedHour); Assert.Equal(7, reopened.SelectedMinute);
                 Assert.Equal(new[] { 2, 3, 4, 5, 7 }, reopened.Weekdays.Where(d => d.IsSelected).Select(d => d.Value));
                 editor.UpdateLayout();
                 if (screenshotDirectory is not null)

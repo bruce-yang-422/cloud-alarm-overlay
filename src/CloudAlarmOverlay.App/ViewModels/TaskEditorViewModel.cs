@@ -8,6 +8,29 @@ public partial class TaskEditorViewModel : ObservableObject
 {
     private readonly ITaskService service;
     private readonly AlarmTask original;
+    private readonly ITaskSchedulingService? scheduling;
+    private bool ready;
+    private int previewRevision;
+    [ObservableProperty] private string nextReminderPreview="";
+    public DayChoice[] Months {get;}=Enumerable.Range(1,12).Select(i=>new DayChoice(i,$"{i} 月"){IsSelected=true}).ToArray();
+    protected override void OnPropertyChanged(System.ComponentModel.PropertyChangedEventArgs e)
+    {
+        base.OnPropertyChanged(e);
+        if(ready && e.PropertyName is nameof(Date) or nameof(SelectedHour) or nameof(SelectedMinute) or nameof(Repeat) or nameof(RepeatDays) or nameof(SkipOnHoliday) or nameof(Enabled))
+            _=RefreshNextReminderAsync();
+    }
+    public async Task RefreshNextReminderAsync()
+    {
+        var revision=++previewRevision;
+        if(scheduling is null)return;
+        try
+        {
+            var task=Draft();
+            var next=await scheduling.GetNextOccurrenceAsync(task,DateTime.Now);
+            if(revision==previewRevision)NextReminderPreview=!Enabled?"提醒已停用":next is {} at?$"下一次提醒：{at:yyyy/MM/dd HH:mm}":"目前找不到下一次提醒，請檢查日期或農曆資料。";
+        }
+        catch(Exception ex){if(revision==previewRevision)NextReminderPreview=ex.Message;}
+    }
     public event Action? Saved;
     public System.Collections.Generic.IEnumerable<string> Emojis { get; init; } = CloudAlarmOverlay.App.Services.EmojiLibrary.Defaults.Split('\n');
     public string Heading {get;}
@@ -17,9 +40,8 @@ public partial class TaskEditorViewModel : ObservableObject
     [ObservableProperty] private DateTime? date=DateTime.Today;
     [ObservableProperty] private int selectedHour = 9;
     [ObservableProperty] private int selectedMinute;
-    [ObservableProperty] private int selectedSecond;
     public int[] Hours { get; } = Enumerable.Range(0, 24).ToArray();
-    public int[] MinutesAndSeconds { get; } = Enumerable.Range(0, 60).ToArray();
+    public int[] Minutes { get; } = Enumerable.Range(0, 60).ToArray();
     [ObservableProperty] private string level=AlarmLevels.Low;
     [ObservableProperty] private bool enabled=true;
     [ObservableProperty] private bool skipOnHoliday;
@@ -28,6 +50,7 @@ public partial class TaskEditorViewModel : ObservableObject
     [ObservableProperty] private string error="";
     public string[] Levels {get;}=[AlarmLevels.Low,AlarmLevels.Mid,AlarmLevels.High];
     public string[] Repeats {get;}=["不重複","每天","每個工作日","每週","每月","農曆"];
+    public string ScheduleHeading=>Repeat=="不重複"?"提醒時間":"開始日期與提醒時間";
     public bool RequiresDays=>Repeat is "每週" or "每月" or "農曆";
     public bool IsWeekly=>Repeat=="每週";
     public bool IsMonthly=>Repeat=="每月";
@@ -58,11 +81,12 @@ public partial class TaskEditorViewModel : ObservableObject
     {
         RepeatDays=value=="每月"?(Date??DateTime.Today).Day.ToString(CultureInfo.InvariantCulture):value=="農曆"?"1,15":"1,2,3,4,5";
         OnRepeatDaysChanged(RepeatDays);
-        OnPropertyChanged(nameof(RequiresDays));OnPropertyChanged(nameof(IsWeekly));OnPropertyChanged(nameof(IsMonthly));OnPropertyChanged(nameof(IsLunar));
+        OnPropertyChanged(nameof(ScheduleHeading));OnPropertyChanged(nameof(RequiresDays));OnPropertyChanged(nameof(IsWeekly));OnPropertyChanged(nameof(IsMonthly));OnPropertyChanged(nameof(IsLunar));
     }
-    public TaskEditorViewModel(ITaskService service,AlarmTask? task,bool copy)
+    public TaskEditorViewModel(ITaskService service,AlarmTask? task,bool copy,ITaskSchedulingService? scheduling=null)
     {
-        this.service=service;
+        this.service=service; this.scheduling=scheduling;
+        foreach(var month in Months)month.PropertyChanged+=(_,e)=>{if(ready&&e.PropertyName==nameof(DayChoice.IsSelected))_=RefreshNextReminderAsync();};
         foreach(var choice in Weekdays.Concat(LunarDays))
             choice.PropertyChanged+=(_,args)=>
             {
@@ -72,30 +96,40 @@ public partial class TaskEditorViewModel : ObservableObject
         Heading=task is null?"新增本機任務":copy?"複製為本機任務":"編輯本機任務";
         var at=DateTime.Now.AddMinutes(5);
         original=task is null?new AlarmTask{Id=Guid.NewGuid().ToString("N"),Level=AlarmLevels.Low,Title="",ScheduledAt=at,CreatedAt=DateTime.Now,UpdatedAt=DateTime.Now}:
-            copy?task with{Id=Guid.NewGuid().ToString("N"),ExternalId=null,Source=TaskSources.Local,IsTriggered=false,CreatedAt=DateTime.Now,ScheduledAt=task.ScheduledAt>at?task.ScheduledAt:at}:task;
+            copy?task with{Id=Guid.NewGuid().ToString("N"),ExternalId=null,Source=TaskSources.Local,IsTriggered=false,CreatedAt=DateTime.Now,ScheduledAt=task.Recurrence!="None"||task.ScheduledAt>at?task.ScheduledAt:at}:task;
         TaskTitle=original.Title;Description=original.Description??"";Note=original.Note??"";Date=original.ScheduledAt.Date;
-        SelectedHour=original.ScheduledAt.Hour;SelectedMinute=original.ScheduledAt.Minute;SelectedSecond=original.ScheduledAt.Second;Level=original.Level;Enabled=original.Enabled;SkipOnHoliday=original.SkipOnHoliday;
+        SelectedHour=original.ScheduledAt.Hour;SelectedMinute=original.ScheduledAt.Minute;Level=original.Level;Enabled=original.Enabled;SkipOnHoliday=original.SkipOnHoliday;
         if(Level==AlarmLevels.Max)Level=AlarmLevels.High;
         var parts=original.Recurrence.Split(':');RepeatDays=parts.Length>1?parts[1]:"1,2,3,4,5";
         Repeat=parts[0] switch{"Daily"=>"每天","Weekly"=>parts[1]=="1,2,3,4,5"?"每個工作日":"每週","Monthly"=>"每月","LunarDay"=>"農曆",_=>"不重複"};
         if(parts.Length>1)RepeatDays=parts[1];
+        if(parts[0]=="Monthly"&&parts.Length==3)
+            foreach(var month in Months)month.IsSelected=parts[2].Split(',').Contains(month.Value.ToString(CultureInfo.InvariantCulture));
+        ready=true;
+        _=RefreshNextReminderAsync();
+    }
+    private AlarmTask Draft()
+    {
+        if(RequiresDays&&string.IsNullOrWhiteSpace(RepeatDays))throw new ArgumentException("請至少勾選一天。");
+        if(Date is null)throw new ArgumentException("請選擇提醒日期。");
+        if(SelectedHour is <0 or >23 || SelectedMinute is <0 or >59)throw new ArgumentException("請選擇有效的提醒時間。");
+        var months=Months.Where(m=>m.IsSelected).Select(m=>m.Value).ToArray();
+        if(IsMonthly&&months.Length==0)throw new ArgumentException("請至少選擇一個月份。");
+        var recurrence=Repeat switch
+        {
+            "每天"=>"Daily", "每個工作日"=>"Weekly:1,2,3,4,5", "每週"=>"Weekly:"+RepeatDays.Replace(" ",""),
+            "每月"=>"Monthly:"+RepeatDays.Trim()+(months.Length==12?"":":"+string.Join(",",months)),
+            "農曆"=>"LunarDay:"+RepeatDays.Replace(" ",""), _=>"None"
+        };
+        CloudAlarmOverlay.Core.Recurrence.RecurrenceRule.Validate(recurrence);
+        return original with {Title=TaskTitle.Trim(),Description=Description,Note=Note,
+            ScheduledAt=Date.Value.Date+new TimeSpan(SelectedHour,SelectedMinute,0),
+            Level=Level,Enabled=Enabled,SkipOnHoliday=SkipOnHoliday,Recurrence=recurrence};
     }
     [RelayCommand]
     private async Task SaveAsync()
     {
-        try
-        {
-            if(RequiresDays&&string.IsNullOrWhiteSpace(RepeatDays))throw new ArgumentException("請至少勾選一天。");
-            if (Date is null) throw new ArgumentException("請選擇提醒日期。");
-            if (SelectedHour is < 0 or > 23 || SelectedMinute is < 0 or > 59 || SelectedSecond is < 0 or > 59)
-                throw new ArgumentException("請選擇有效的提醒時間。");
-            var clock = new TimeSpan(SelectedHour, SelectedMinute, SelectedSecond);
-            var recurrence=Repeat switch{"每天"=>"Daily","每個工作日"=>"Weekly:1,2,3,4,5","每週"=>"Weekly:"+RepeatDays.Replace(" ",""),
-                "每月"=>"Monthly:"+RepeatDays.Trim(),"農曆"=>"LunarDay:"+RepeatDays.Replace(" ",""),_=>"None"};
-            await service.SaveLocalAsync(original with{Title=TaskTitle.Trim(),Description=Description,Note=Note,ScheduledAt=Date.Value.Date+clock,
-                Level=Level,Enabled=Enabled,SkipOnHoliday=SkipOnHoliday,Recurrence=recurrence});
-            Saved?.Invoke();
-        }
+        try {await service.SaveLocalAsync(Draft()); Error=""; Saved?.Invoke();}
         catch(Exception ex){Error=ex.Message;}
     }
 }

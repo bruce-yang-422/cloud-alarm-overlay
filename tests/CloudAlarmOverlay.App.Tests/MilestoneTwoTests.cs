@@ -40,9 +40,19 @@ public sealed class MilestoneTwoTests
                 vm.Admin.LoginRequested-=RequestLogin;
                 window=host.Services.GetRequiredService<MainWindow>();window.Show();window.UpdateLayout();
                 vm.PageIndex=5;Assert.Equal(0,vm.PageIndex);Assert.True(vm.Admin.IsSignedOut);
-                var navigation=(ListBox)window.FindName("PrimaryNavigation");
-                Assert.Equal(6,navigation.Items.Count);
-                Assert.Equal("管理者專區",navigation.Items[5]);
+                var navigation=(ItemsControl)window.FindName("PrimaryNavigation");
+                Assert.Equal(new[]{"首頁","我的任務","歷史紀錄","番茄鐘","設定","管理者專區"},navigation.Items.Cast<NavigationItem>().Select(item=>item.Title));
+                var navButtons=Descendants<Button>(navigation).ToArray();
+                Assert.Equal(6,navButtons.Length);
+                var builderNavigation=(ContentControl)window.FindName("TaskBuilderNavigation");
+                var builderButton=Assert.Single(Descendants<Button>(builderNavigation));
+                Assert.Equal(FontWeights.Normal,builderButton.FontWeight);
+                Assert.All(navButtons.Skip(1),button=>Assert.Equal(FontWeights.Normal,button.FontWeight));
+                var settingsButton=navButtons.Single(button=>((NavigationItem)button.DataContext).Title=="設定");
+                settingsButton.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+                Assert.Equal(4,vm.PageIndex);
+                Assert.Equal(FontWeights.SemiBold,settingsButton.FontWeight);
+                vm.PageIndex=0;
                 Assert.DoesNotContain(Descendants<Button>(window),b=>Equals(b.Content,"🔒 管理者登入")&&b.IsVisible);
                 login=new AdminLoginWindow(host.Services.GetRequiredService<IAuthenticationService>()){Owner=window};
                 Exception? loginFailure=null;
@@ -125,14 +135,14 @@ public sealed class MilestoneTwoTests
                 vm.OpenAdminCommand.Execute("0");
                 window.UpdateLayout();
                 Assert.Equal(5,vm.PageIndex);
-                Assert.Equal(5,navigation.SelectedIndex);
+                Assert.Equal(5,Assert.Single(vm.NavigationItems,item=>item.IsSelected).PageIndex);
                 Assert.DoesNotContain(Descendants<Button>(window),b=>b.IsVisible&&b.Content is string label&&new[]{"同步來源","本機設定","系統紀錄","操作稽核","備份與還原"}.Contains(label));
                 Assert.Contains(Descendants<Button>(window),b=>Equals(b.Content,"登出管理者")&&b.IsVisible);
                 for(var i=0;i<5;i++)
                 {
                     vm.Admin.SelectedTab=i;window.UpdateLayout();await Dispatcher.Yield(DispatcherPriority.ApplicationIdle);
                     Assert.True(Descendants<AdminView>(window).Single().IsVisible);
-                    Assert.Equal(5,navigation.SelectedIndex);
+                    Assert.Equal(5,Assert.Single(vm.NavigationItems,item=>item.IsSelected).PageIndex);
                     Assert.Equal(i is 2 or 3,vm.Admin.ShowsLogFilter);
                     if(i==0)
                     {

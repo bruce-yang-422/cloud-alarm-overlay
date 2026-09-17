@@ -227,7 +227,7 @@ public sealed class MilestoneOneTests : IDisposable
         var runs=await Task.WhenAll(first,second).WaitAsync(TimeSpan.FromSeconds(10));
         Assert.Single(runs[0].Entries);
         Assert.Single(runs[1].Entries);
-        Assert.Equal(2,(await Get<ISyncLogRepository>().GetRangeAsync(DateTime.Today,DateTime.Now.AddSeconds(1))).Count(l=>l.Source=="SheetB/Tasks"));
+        Assert.Equal(1,(await Get<ISyncLogRepository>().GetRangeAsync(DateTime.Today,DateTime.Now.AddSeconds(1))).Count(l=>l.Source=="SheetB/Tasks"));
     }
     public void Dispose() { services.Dispose(); Directory.Delete(paths.DataDirectory, true); }
     private sealed class Paths : IAppPaths

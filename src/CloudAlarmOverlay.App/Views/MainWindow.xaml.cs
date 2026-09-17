@@ -45,6 +45,12 @@ public partial class MainWindow:Window
         Closing+=(_,e)=>{if(tray is not null&&!allowClose){e.Cancel=true;Hide();}};
         Closed+=(_,_)=>{idleTimer.Stop();InputManager.Current.PreProcessInput-=OnInput;vm.Admin.LoginRequested-=Login;vm.Admin.Session.Changed-=SessionChanged;refreshTimer.Stop();countdownTimer.Stop();if(signal is not null)signal.Changed-=OnDataChanged;tray?.Dispose();};
     }
+    private void TaskTitleDoubleClick(object sender,MouseButtonEventArgs e)
+    {
+        if(e.ClickCount!=2 || (sender as FrameworkElement)?.DataContext is not TaskRow row)return;
+        e.Handled=true;
+        new TaskPreviewWindow(new(row.Task)){Owner=this}.ShowDialog();
+    }
     public void StartTray(ChangeSignal changes,Func<Task> exit)
     {
         signal=changes;signal.Changed+=OnDataChanged;
@@ -58,7 +64,7 @@ public partial class MainWindow:Window
         menu.Items.Add(new Separator());
         Add("立即同步",()=>vm.SyncCommand.Execute(null));
         Add("新增任務",()=>{Open();vm.NewTaskCommand.Execute(null);});
-        Add("開啟任務產生器",()=>taskBuilderHost.OpenInBrowser());
+        Add("開啟任務產生器",async()=>await taskBuilderHost.OpenInBrowserAsync());
         var previews=new MenuItem{Header="測試通知"};
         foreach(var level in new[]{AlarmLevels.Low,AlarmLevels.Mid,AlarmLevels.High,AlarmLevels.Max})
         {var item=new MenuItem{Header=CloudAlarmOverlay.App.Styles.AlarmLevelLabelConverter.Label(level),Command=vm.PreviewCommand,CommandParameter=level};previews.Items.Add(item);}
@@ -157,7 +163,12 @@ public partial class MainWindow:Window
     }
     private void SelectAllTasks(object sender,RoutedEventArgs e)=>TaskGrid.SelectAll();
     private void ClearTaskSelection(object sender,RoutedEventArgs e)=>TaskGrid.UnselectAll();
-    private void OpenTaskBuilder(object sender,MouseButtonEventArgs e)=>taskBuilderHost.OpenInBrowser();
+    private async void Navigate(object sender,RoutedEventArgs e)
+    {
+        if(sender is not Button { DataContext: NavigationItem item })return;
+        if(item.PageIndex<0)await taskBuilderHost.OpenInBrowserAsync();
+        else vm.NavigationIndex=item.PageIndex;
+    }
     private void Login()
     {
         if(loginOpen)return;

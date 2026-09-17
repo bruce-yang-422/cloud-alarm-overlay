@@ -3,7 +3,7 @@
   #define PublishDir "..\artifacts\publish"
 #endif
 #ifndef AppVersion
-  #define AppVersion "1.0.0"
+  #define AppVersion "1.1.0"
 #endif
 #define AppName "Cloud Alarm Overlay"
 #define AppExeName "CloudAlarmOverlay.App.exe"

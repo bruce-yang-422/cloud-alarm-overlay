@@ -20,7 +20,9 @@
 </StackPanel></ScrollViewer>
 <Grid Grid.Row="1">
 <DataGrid ItemsSource="{Binding History}"><DataGrid.Columns>
-<DataGridTextColumn Header="任務名稱" Binding="{Binding Title}" Width="*" MinWidth="130"/>
+<DataGridTemplateColumn Header="任務名稱" Width="*" MinWidth="130"><DataGridTemplateColumn.CellTemplate><DataTemplate>
+<TextBlock Text="{Binding Title}" Padding="5" Background="Transparent" Cursor="Hand" ToolTip="連按兩下查看當次提醒" MouseLeftButtonDown="HistoryTitleDoubleClick"/>
+</DataTemplate></DataGridTemplateColumn.CellTemplate></DataGridTemplateColumn>
 <DataGridTextColumn Header="來源" Binding="{Binding Source}" Width="70"/>
 <DataGridTextColumn Header="預定時間" Binding="{Binding Scheduled}" Width="155"/>
 <DataGridTextColumn Header="觸發時間" Binding="{Binding Triggered}" Width="155"/>

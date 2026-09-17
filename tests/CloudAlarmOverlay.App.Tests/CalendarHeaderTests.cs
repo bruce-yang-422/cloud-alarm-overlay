@@ -20,15 +20,17 @@ public sealed class CalendarHeaderTests
             Assert.Equal("正月二十",MainViewModel.LocalLunarDate(new(2024,2,29)));
             await vm.RefreshCalendarAsync(new(2024,2,10,23,59,59));
             Assert.Equal("正月初一",vm.LunarToday);Assert.Equal("23:59:59",vm.CurrentClock);
-            Assert.Equal("尚無節氣資料",vm.CurrentSolarTerm);
+            Assert.Equal("-",vm.CurrentSolarTerm);
             await host.Services.GetRequiredService<ILunarCalendarRepository>().ReplaceCacheAsync([
                 new(){Date=new(2024,2,4),LunarDay=25,SolarTerm="立春"},
                 new(){Date=new(2024,2,11),LunarDay=2,LunarDate="正月初二"}]);
+            await vm.RefreshCalendarAsync(new(2024,2,4));
+            Assert.Equal("立春",vm.CurrentSolarTerm);
             await vm.RefreshCalendarAsync(new(2024,2,11));
             Assert.Equal("正月初二",vm.LunarToday);Assert.Equal("00:00:00",vm.CurrentClock);
-            Assert.StartsWith("2024/02/11",vm.SolarDate);Assert.Equal("立春",vm.CurrentSolarTerm);
+            Assert.StartsWith("2024/02/11",vm.SolarDate);Assert.Equal("-",vm.CurrentSolarTerm);
             vm.UpdateClock(new(2024,2,11,0,0,1));Assert.Equal("00:00:01",vm.CurrentClock);
-            await vm.RefreshCalendarAsync(new(2024,4,1));Assert.Equal("尚無節氣資料",vm.CurrentSolarTerm);
+            await vm.RefreshCalendarAsync(new(2024,4,1));Assert.Equal("-",vm.CurrentSolarTerm);
         }
         finally{Microsoft.Data.Sqlite.SqliteConnection.ClearAllPools();if(Directory.Exists(paths.DataDirectory))Directory.Delete(paths.DataDirectory,true);}
     }

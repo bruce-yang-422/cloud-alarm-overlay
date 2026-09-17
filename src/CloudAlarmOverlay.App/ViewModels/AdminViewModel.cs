@@ -237,6 +237,19 @@ public partial class AdminViewModel(AdminSession session,IAdminSettingsStore sto
         else {SheetBTestState="失敗";SheetBTestedAt=time;SheetBTasksStatus="失敗 · "+error;}
     }
     private sealed record ConnectionTestResult(string Name,bool Success,int? Count,string Error);
+    [RelayCommand] private async Task PruneSyncLogsAsync()
+    {
+        try
+        {
+            session.RequireAdmin();
+            if(!dialogs.Confirm("清理 30 天前的舊版成功輪詢紀錄？舊版未記錄異動明細，建議先匯出備查。失敗紀錄、新版異動事件及任務確認紀錄會保留。"))return;
+            session.RequireAdmin();
+            var count=await syncLogs.PruneLegacySuccessAsync(DateTime.Now.AddDays(-30));
+            await RefreshLogsAsync();
+            Message=$"已清理 {count} 筆舊版成功輪詢紀錄。";
+        }
+        catch(Exception ex){Message=ex.Message;}
+    }
     [RelayCommand] private async Task ExportAsync(string kind)
     {
         await RefreshLogsAsync();
@@ -248,7 +261,7 @@ public partial class AdminViewModel(AdminSession session,IAdminSettingsStore sto
                 "AuditLog"=>CsvExport.Build(["CreatedAt","UserId","Action","OldValue","NewValue"],
                     Audit.Select(r=>new[]{CsvExport.Date(r.CreatedAt),r.UserId,r.Action,r.OldValue,r.NewValue})),
                 "SystemEvent"=>CsvExport.Build(["Time","EventType","Message"],Events.Select(r=>new[]{CsvExport.Date(r.Time),r.EventType,r.Message})),
-                _=>CsvExport.Build(["Time","Source","Status","Message","RecordCount"],Logs.Select(r=>new[]{CsvExport.Date(r.Time),r.Source,r.Status,r.Message,r.RecordCount?.ToString()}))};
+                _=>CsvExport.Build(["Time","Source","Status","Message","RecordCount","LastSeenAt","RepeatCount","EventKind"],Logs.Select(r=>new[]{CsvExport.Date(r.Time),r.Source,r.Status,r.Message,r.RecordCount?.ToString(),r.LastSeenAt is {} at?CsvExport.Date(at):"",r.RepeatCount.ToString(),r.EventKind}))};
             dialogs.ExportNamed(csv,$"{kind}_{From:yyyyMMdd}_{To:yyyyMMdd}.csv");
             Message="匯出對話框已開啟。";
         }

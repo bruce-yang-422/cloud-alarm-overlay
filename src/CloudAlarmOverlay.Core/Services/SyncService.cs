@@ -32,24 +32,29 @@ internal sealed class SyncService(SyncConfiguration config,ISheetCsvClient clien
             async Task Tab<T>(string source,Func<string,IReadOnlyList<T>> parse,Func<IReadOnlyList<T>,Task<int>> save)
             {
                 SyncLogEntry entry;
+                string? fingerprint=null;
                 try
                 {
-                    var rows=parse(await requests[source]);
+                    var csv=await requests[source];
+                    var rows=parse(csv);
                     var cached=await save(rows);
                     if(source.EndsWith("/Tasks",StringComparison.Ordinal))
                     {
                         downloadedTaskCount+=rows.Count;
                         includedTaskCount+=cached;
                     }
+                    var effective=source.EndsWith("/Tasks",StringComparison.Ordinal)
+                        ?string.Join("|",(await tasks.GetAllAsync(cancellationToken)).Where(t=>source==t.Source+"/Tasks").Select(t=>t.Id).Order(StringComparer.Ordinal)):"";
+                    fingerprint=SyncFingerprint.Hash(csv.Replace("\r\n","\n").Trim()+"\n"+effective);
                     entry=new SyncLogEntry{Time=DateTime.Now,Source=source,Status="成功",RecordCount=rows.Count,
                         Message=source.EndsWith("/Tasks",StringComparison.Ordinal)?$"已下載 {rows.Count} 筆，符合本機 {cached} 筆。":"已更新本機快取"};
                 }
                 catch(OperationCanceledException) when(cancellationToken.IsCancellationRequested){throw;}
                 catch(Exception ex)
                 {
-                    entry=new SyncLogEntry{Time=DateTime.Now,Source=source,Status="失敗",Message=ex.Message};
+                    entry=new SyncLogEntry{Time=DateTime.Now,Source=source,Status="失敗",Message=ex switch{HttpRequestException h=>$"下載失敗（HTTP {h.StatusCode?.ToString()??"連線錯誤"}），請檢查來源權限與網路。",OperationCanceledException=>"下載逾時，將於下次同步重試。",FormatException=>"CSV 格式錯誤："+ShortReason(ex.Message),_=>$"同步失敗（{ex.GetType().Name}）：{ShortReason(ex.Message)}"}};
                 }
-                await logs.AppendAsync(entry,cancellationToken);
+                await logs.RecordAsync(entry,fingerprint,SyncFingerprint.Configuration(source,options,device),cancellationToken);
                 results.Add(entry);
             }
             if(options.SheetAId!="")
@@ -76,5 +81,6 @@ internal sealed class SyncService(SyncConfiguration config,ISheetCsvClient clien
             gate.Release();
         }
     }
+    private static string ShortReason(string message) => new(message.Replace('\r',' ').Replace('\n',' ').Take(300).ToArray());
     public void Dispose()=>gate.Dispose();
 }

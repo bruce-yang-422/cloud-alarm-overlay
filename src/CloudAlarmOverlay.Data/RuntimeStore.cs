@@ -19,6 +19,7 @@ public sealed class RuntimeStore(Database db) : IRuntimeStore
             TaskId = task.Id,
             TaskName = task.Title,
             task.Source,
+            TaskSnapshotJson=System.Text.Json.JsonSerializer.Serialize(task),
             scheduledAt,
             device.DeviceId,
             device.DisplayName,
@@ -27,8 +28,8 @@ public sealed class RuntimeStore(Database db) : IRuntimeStore
         await c.ExecuteAsync(new CommandDefinition("""
             UPDATE Occurrences SET State='Displayed',TriggeredAt=@now WHERE Id=@id;
             UPDATE Tasks SET IsTriggered=1 WHERE Id=@TaskId;
-            INSERT INTO AcknowledgementLogs(Id,TaskId,TaskName,Source,ScheduledAt,DeviceId,DisplayName,TriggeredAt,Result)
-            VALUES(@id,@TaskId,@TaskName,@Source,@scheduledAt,@DeviceId,@DisplayName,@now,'Pending');
+            INSERT INTO AcknowledgementLogs(Id,TaskId,TaskName,Source,ScheduledAt,DeviceId,DisplayName,TriggeredAt,Result,TaskSnapshotJson)
+            VALUES(@id,@TaskId,@TaskName,@Source,@scheduledAt,@DeviceId,@DisplayName,@now,'Pending',@TaskSnapshotJson);
             """, args, tx, cancellationToken: ct));
         tx.Commit();
     }
@@ -51,8 +52,8 @@ public sealed class RuntimeStore(Database db) : IRuntimeStore
         await using var c = await db.OpenAsync(ct);
         using var tx = c.BeginTransaction();
         await c.ExecuteAsync(new CommandDefinition("""
-            INSERT OR IGNORE INTO AcknowledgementLogs(Id,TaskId,TaskName,Source,ScheduledAt,DeviceId,DisplayName,TriggeredAt,Result)
-            VALUES(@id,@TaskId,@TaskName,@Source,@scheduledAt,@DeviceId,@DisplayName,@scheduledAt,@result);
+            INSERT OR IGNORE INTO AcknowledgementLogs(Id,TaskId,TaskName,Source,ScheduledAt,DeviceId,DisplayName,TriggeredAt,Result,TaskSnapshotJson)
+            VALUES(@id,@TaskId,@TaskName,@Source,@scheduledAt,@DeviceId,@DisplayName,@scheduledAt,@result,@TaskSnapshotJson);
             UPDATE Occurrences SET State='Missed' WHERE Id=@id;
             """, Database.Parameters(new
         {
@@ -60,6 +61,7 @@ public sealed class RuntimeStore(Database db) : IRuntimeStore
             TaskId = task.Id,
             TaskName = task.Title,
             task.Source,
+            TaskSnapshotJson=System.Text.Json.JsonSerializer.Serialize(task),
             scheduledAt,
             device.DeviceId,
             device.DisplayName,

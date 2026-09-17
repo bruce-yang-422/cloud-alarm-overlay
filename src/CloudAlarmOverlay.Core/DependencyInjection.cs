@@ -13,6 +13,7 @@ public static class DependencyInjection
         services.AddSingleton<ChangeSignal>();
         services.AddSingleton<SyncConfiguration>();
         services.AddSingleton<RuntimeState>();
+        services.AddSingleton<IAlarmHeartbeat, AlarmHeartbeat>();
         services.AddSingleton<IAlarmService, AlarmService>();
         services.AddSingleton<ITaskService, TaskService>();
         services.AddSingleton<ITaskSchedulingService, TaskSchedulingService>();

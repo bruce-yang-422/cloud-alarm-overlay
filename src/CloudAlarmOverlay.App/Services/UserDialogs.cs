@@ -14,13 +14,13 @@ public interface IUserDialogs
     void Export(string contents);
     void ExportNamed(string contents,string filename)=>Export(contents);
 }
-public sealed class UserDialogs(ITaskService tasks,EmojiLibrary emojis):IUserDialogs
+public sealed class UserDialogs(ITaskService tasks,EmojiLibrary emojis,ITaskSchedulingService scheduling):IUserDialogs
 {
     public bool Confirm(string message)=>MessageBox.Show(message,"Cloud Alarm Overlay",MessageBoxButton.YesNo,MessageBoxImage.Question)==MessageBoxResult.Yes;
     public async void Edit(AlarmTask? task,bool copy)
     {
         try { await emojis.LoadAsync(); } catch(Exception ex) { MessageBox.Show(ex.Message,"無法讀取常用 emoji"); return; }
-        var vm=new TaskEditorViewModel(tasks,task,copy) { Emojis = emojis.Items };
+        var vm=new TaskEditorViewModel(tasks,task,copy,scheduling) { Emojis = emojis.Items };
         var window=new TaskEditorWindow{DataContext=vm,Owner=Application.Current.MainWindow};
         vm.Saved+=()=>window.DialogResult=true;
         window.ShowDialog();

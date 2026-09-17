@@ -69,15 +69,15 @@
     </Setter>
   </Style>
   <Style x:Key="Primary" TargetType="Button" BasedOn="{StaticResource {x:Type Button}}">
-    <Setter Property="Background" Value="#2563EB" />
-    <Setter Property="Foreground" Value="White" />
+    <Setter Property="Background" Value="{adaptive:AdaptiveBrush Accent}" />
+    <Setter Property="Foreground" Value="{adaptive:AdaptiveBrush AccentText}" />
   </Style>
   <Style x:Key="SoundPreviewButton" TargetType="Button" BasedOn="{StaticResource {x:Type Button}}">
     <Style.Triggers>
       <DataTrigger Binding="{Binding IsPreviewing}" Value="True">
-        <Setter Property="Background" Value="#2563EB"/>
-        <Setter Property="Foreground" Value="White"/>
-        <Setter Property="BorderBrush" Value="#2563EB"/>
+        <Setter Property="Background" Value="{adaptive:AdaptiveBrush Accent}"/>
+        <Setter Property="Foreground" Value="{adaptive:AdaptiveBrush AccentText}"/>
+        <Setter Property="BorderBrush" Value="{adaptive:AdaptiveBrush Accent}"/>
         <DataTrigger.EnterActions>
           <BeginStoryboard Name="SoundPreviewPulse"><Storyboard>
             <DoubleAnimation Storyboard.TargetProperty="Opacity" From="1" To="0.65" Duration="0:0:0.4" AutoReverse="True" RepeatBehavior="Forever"/>

@@ -9,6 +9,24 @@ namespace CloudAlarmOverlay.Data.Tests;
 
 public sealed class MaintenanceTests : IDisposable
 {
+    [Theory]
+    [InlineData("淺色","粉紅色")]
+    [InlineData("暗色","若竹色")]
+    [InlineData("跟隨系統","粉紅色")]
+    public async Task Backup_restores_brightness_and_color_style_independently(string mode,string color)
+    {
+        await Get<IDeviceIdentityService>().SetInitialIdentityAsync("THEME","測試");
+        var settings=Get<ISettingsRepository>();
+        await settings.SaveAsync(new(){Key="ThemeMode",Value=mode});
+        await settings.SaveAsync(new(){Key="ThemeColorStyle",Value=color});
+        var file=Path.Combine(paths.DataDirectory,"theme.calbak");
+        await Get<IBackupRestoreService>().CreateBackupAsync(file);
+        await settings.SaveAsync(new(){Key="ThemeMode",Value="淺色"});
+        await settings.SaveAsync(new(){Key="ThemeColorStyle",Value="預設"});
+        await Get<IBackupRestoreService>().RestoreAsync(file);
+        Assert.Equal(mode,(await settings.GetAsync("ThemeMode"))!.Value);
+        Assert.Equal(color,(await settings.GetAsync("ThemeColorStyle"))!.Value);
+    }
     private sealed class Paths : IAppPaths
     {
         public string DataDirectory {get;}=Path.Combine(Path.GetTempPath(),"CloudAlarmMaintenance",Guid.NewGuid().ToString("N"));
@@ -136,6 +154,10 @@ public sealed class MaintenanceTests : IDisposable
         var update=new UpdateCheckService(Get<ISettingsRepository>(),client);
         handler.Content="{\"latestVersion\":\"1.0.0\",\"downloadUrl\":\"https://example.test/setup\"}";
         Assert.Null(await update.CheckAsync());
+        Assert.Equal("https://example.test/setup", (await update.GetManifestAsync()).DownloadUrl.AbsoluteUri);
+        handler.Content="{\"latestVersion\":\"1.1.0\",\"downloadUrl\":\"https://example.test/current\"}";
+        Assert.Null(await update.CheckAsync());
+        Assert.Equal("https://example.test/current", (await update.GetManifestAsync()).DownloadUrl.AbsoluteUri);
         handler.Content="{\"latestVersion\":\"9.0.0\",\"downloadUrl\":\"https://example.test/setup\",\"releaseNote\":\"修正\"}";
         Assert.Equal(new Version(9,0,0),(await update.CheckAsync())!.LatestVersion);
         handler.Content="{\"latestVersion\":\"9.0.0\",\"downloadUrl\":\"file:///C:/setup.exe\"}";
