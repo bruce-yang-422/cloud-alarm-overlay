@@ -290,7 +290,7 @@
         <a href="#preview">介面預覽</a>
         <a href="#getting-started">如何開始</a>
       </nav>
-      <a class="header-download" data-download-link href="https://github.com/bruce-yang-422/cloud-alarm-overlay/releases/download/v1.0.0/CloudAlarmOverlay-v1.0.0-Setup-x64.exe"><span class="download-text-long">下載 Windows 版</span><span class="download-text-short">下載</span><span aria-hidden="true">↗</span></a>
+      <a class="header-download" data-download-link href="https://github.com/bruce-yang-422/cloud-alarm-overlay/releases/latest"><span class="download-text-long">下載 Windows 版</span><span class="download-text-short">下載</span><span aria-hidden="true">↗</span></a>
     </div>
   </header>
 
@@ -302,11 +302,11 @@
           <h1 id="hero-title">重要的事，<br><span>準時看見。</span></h1>
           <p class="hero-lead">把個人待辦與團隊任務放在同一個地方。Cloud Alarm Overlay 會在指定時間提醒，讓你確認提醒內容，也讓你留一段時間好好專注。</p>
           <div class="hero-actions">
-            <a class="button button-primary" data-download-link href="https://github.com/bruce-yang-422/cloud-alarm-overlay/releases/download/v1.0.0/CloudAlarmOverlay-v1.0.0-Setup-x64.exe">下載 Windows 安裝檔 <span aria-hidden="true">↓</span></a>
+            <a class="button button-primary" data-download-link href="https://github.com/bruce-yang-422/cloud-alarm-overlay/releases/latest">下載 Windows 安裝檔 <span aria-hidden="true">↓</span></a>
             <a class="button button-secondary" href="https://github.com/bruce-yang-422/cloud-alarm-overlay">查看 GitHub 專案 <span aria-hidden="true">↗</span></a>
           </div>
           <div class="hero-meta" aria-label="程式資訊">
-            <span>Windows x64</span><span data-version-label>v1.0.0</span><span>MIT 開放原始碼</span>
+            <span>Windows x64</span><span>MIT 開放原始碼</span>
           </div>
         </div>
         <div class="hero-visual">
@@ -372,7 +372,7 @@
         <div class="section-heading">
           <p class="section-kicker">TAKE A LOOK</p>
           <h2 id="preview-title">看看每天會用到的畫面。</h2>
-          <p>下方是目前版本的淺色介面截圖；點擊圖片可查看完整大小。</p>
+          <p>下方是程式的淺色介面截圖；點擊圖片可查看完整大小。</p>
         </div>
         <div class="preview-grid">
           <article class="preview-card">
@@ -399,19 +399,17 @@
     </section>
 
     <section class="final-cta" aria-labelledby="download-title">
-      <div class="container"><h2 id="download-title">開始讓提醒跟得上你的工作。</h2><p>下載 Windows x64 安裝檔，安裝後即可建立自己的第一個提醒。</p><a class="button button-primary" data-download-link href="https://github.com/bruce-yang-422/cloud-alarm-overlay/releases/download/v1.0.0/CloudAlarmOverlay-v1.0.0-Setup-x64.exe">下載 Cloud Alarm Overlay <span data-version-label>v1.0.0</span> <span aria-hidden="true">↓</span></a></div>
+      <div class="container"><h2 id="download-title">開始讓提醒跟得上你的工作。</h2><p>下載 Windows x64 安裝檔，安裝後即可建立自己的第一個提醒。</p><a class="button button-primary" data-download-link href="https://github.com/bruce-yang-422/cloud-alarm-overlay/releases/latest">下載 Cloud Alarm Overlay <span aria-hidden="true">↓</span></a></div>
     </section>
   </main>
 
-  <footer class="site-footer"><div class="container footer-inner"><span>© 2026 Cloud Alarm Overlay · MIT License</span><div class="footer-links"><a href="https://github.com/bruce-yang-422/cloud-alarm-overlay#readme">使用與安裝說明</a><a href="https://github.com/bruce-yang-422/cloud-alarm-overlay/releases">所有版本</a><a href="https://github.com/bruce-yang-422/cloud-alarm-overlay">GitHub</a><a href="https://github.com/bruce-yang-422/cloud-alarm-overlay/blob/main/LICENSE">授權條款</a></div></div></footer>
+  <footer class="site-footer"><div class="container footer-inner"><span>© 2026 Cloud Alarm Overlay · MIT License</span><div class="footer-links"><a href="https://github.com/bruce-yang-422/cloud-alarm-overlay#readme">使用與安裝說明</a><a href="https://github.com/bruce-yang-422/cloud-alarm-overlay/releases">歷次發布</a><a href="https://github.com/bruce-yang-422/cloud-alarm-overlay">GitHub</a><a href="https://github.com/bruce-yang-422/cloud-alarm-overlay/blob/main/LICENSE">授權條款</a></div></div></footer>
   <script>
     fetch("version.json", { cache: "no-store" })
       .then(response => response.ok ? response.json() : Promise.reject())
-      .then(({ latestVersion, downloadUrl }) => {
-        if (typeof latestVersion !== "string" || !/^\d+\.\d+\.\d+(?:[-+][\w.-]+)?$/.test(latestVersion)) return;
+      .then(({ downloadUrl }) => {
         if (typeof downloadUrl !== "string" || !downloadUrl.startsWith("https://github.com/bruce-yang-422/cloud-alarm-overlay/releases/download/")) return;
         document.querySelectorAll("[data-download-link]").forEach(link => { link.href = downloadUrl; });
-        document.querySelectorAll("[data-version-label]").forEach(label => { label.textContent = `v${latestVersion}`; });
       })
       .catch(() => {});
   </script>
