@@ -86,6 +86,8 @@ scripts/_gid_output.json
 !/Sheet範例/SheetA_Tasks.csv
 !/Sheet範例/SheetA_Employees.csv
 !/Sheet範例/SheetB_Tasks.csv
+# 正式版 Sheet 資料僅保留本機，不上傳 Git
+/Sheet範例/*_正式版.csv
 
 # OS and temporary output
 Thumbs.db

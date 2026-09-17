@@ -9,7 +9,7 @@ public sealed class DatabaseInitializerTests : IDisposable
     private SqliteConnectionFactory Factory => new(_paths);
     private DatabaseInitializer Initializer => new(Factory);
 
-    // Independent inventory from AI_PLAN §3.1 / main plan §21, not extracted from migration SQL.
+    // Independent inventory for schema regression checks, not extracted from migration SQL.
     public static TheoryData<string, string> TableColumns => new()
     {
         { "Tasks", "Id ExternalId Title Description ScheduledAt Source Level Enabled IsTriggered RequireAcknowledgement TargetDeviceOrName ExcludeDeviceOrName Recurrence SkipOnHoliday CreatedAt UpdatedAt Note" },

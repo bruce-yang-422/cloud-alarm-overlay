@@ -83,9 +83,11 @@ https://raw.githubusercontent.com/bruce-yang-422/cloud-alarm-overlay/main/versio
 ```powershell
 dotnet build CloudAlarmOverlay.sln
 dotnet test CloudAlarmOverlay.sln --no-build
-.\scripts\publish.ps1 -Version 1.0.0
-.\installer\build-installer.ps1 -Version 1.0.0
+.\scripts\publish.ps1 -Version 1.0.1
+.\installer\build-installer.ps1 -Version 1.0.1
 ```
+
+v1.0.0 已發布並安裝於多台電腦。後續更新須使用更高版本號；請勿覆蓋既有版本的 GitHub Release 安裝檔。確認新安裝檔後，再更新 `version.json` 的版本、下載連結與 SHA-256。
 
 發布檔輸出至 `artifacts/publish/`，安裝包輸出至 `artifacts/installer/`。若建置時 DLL 被占用，先從系統匣結束正在執行的程式。更多指令見 [常用 CLI 指令](常用CLI指令.md)。
 
