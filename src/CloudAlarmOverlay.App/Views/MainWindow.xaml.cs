@@ -8,6 +8,7 @@ using System.Windows.Interop;
 using System.Runtime.InteropServices;
 using CommunityToolkit.Mvvm.Input;
 using CloudAlarmOverlay.App.ViewModels;
+using CloudAlarmOverlay.App.Services;
 using CloudAlarmOverlay.Core.Services;
 using CloudAlarmOverlay.Core.Models;
 using Hardcodet.Wpf.TaskbarNotification;
@@ -21,10 +22,11 @@ public partial class MainWindow:Window
     private readonly DispatcherTimer refreshTimer=new(){Interval=TimeSpan.FromSeconds(30)};
     private readonly DispatcherTimer countdownTimer=new(){Interval=TimeSpan.FromSeconds(1)};
     private readonly IAuthenticationService authentication;
+    private readonly TaskBuilderHostService taskBuilderHost;
     private readonly DispatcherTimer idleTimer=new(){Interval=TimeSpan.FromSeconds(1)};
-    public MainWindow(MainViewModel viewModel,IAuthenticationService authentication)
+    public MainWindow(MainViewModel viewModel,IAuthenticationService authentication,TaskBuilderHostService taskBuilderHost)
     {
-        InitializeComponent();DataContext=vm=viewModel;this.authentication=authentication;
+        InitializeComponent();DataContext=vm=viewModel;this.authentication=authentication;this.taskBuilderHost=taskBuilderHost;
         vm.TaskSelectionRestored+=RestoreTaskSelection;
         Closed+=(_,_)=>vm.TaskSelectionRestored-=RestoreTaskSelection;
         SourceInitialized+=(_,_)=>HwndSource.FromHwnd(new WindowInteropHelper(this).Handle)?.AddHook(WindowSizing);
@@ -56,6 +58,7 @@ public partial class MainWindow:Window
         menu.Items.Add(new Separator());
         Add("立即同步",()=>vm.SyncCommand.Execute(null));
         Add("新增任務",()=>{Open();vm.NewTaskCommand.Execute(null);});
+        Add("開啟任務產生器",()=>taskBuilderHost.OpenInBrowser());
         var previews=new MenuItem{Header="測試通知"};
         foreach(var level in new[]{AlarmLevels.Low,AlarmLevels.Mid,AlarmLevels.High,AlarmLevels.Max})
         {var item=new MenuItem{Header=CloudAlarmOverlay.App.Styles.AlarmLevelLabelConverter.Label(level),Command=vm.PreviewCommand,CommandParameter=level};previews.Items.Add(item);}
@@ -154,6 +157,7 @@ public partial class MainWindow:Window
     }
     private void SelectAllTasks(object sender,RoutedEventArgs e)=>TaskGrid.SelectAll();
     private void ClearTaskSelection(object sender,RoutedEventArgs e)=>TaskGrid.UnselectAll();
+    private void OpenTaskBuilder(object sender,MouseButtonEventArgs e)=>taskBuilderHost.OpenInBrowser();
     private void Login()
     {
         if(loginOpen)return;

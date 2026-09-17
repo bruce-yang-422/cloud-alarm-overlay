@@ -1,0 +1,1667 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>雲端廣播排程小工具 - Tailwind UI 風格</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <!-- SheetJS for client-side xlsx export -->
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700&family=JetBrains+Mono:wght@400;500;600&family=Noto+Sans+TC:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['"Noto Sans TC"', '"Plus Jakarta Sans"', 'sans-serif'],
+            mono: ['"JetBrains Mono"', 'monospace'],
+          },
+          colors: {
+            brand: {
+              50: '#f0fdf4',
+              100: '#dcfce7',
+              500: '#22c55e',
+              600: '#16a34a',
+              700: '#15803d',
+              800: '#166534',
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    /* Custom subtle scrollbar */
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: #f1f5f9; }
+    ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 9999px; }
+    ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+  </style>
+</head>
+<body class="bg-slate-50 text-slate-900 font-sans min-h-screen antialiased">
+
+  <!-- Top Navigation / Brand Header -->
+  <header class="bg-white border-b border-slate-200 sticky top-0 z-30 shadow-xs">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+      <div class="flex items-center space-x-3">
+        <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-emerald-600 to-teal-500 flex items-center justify-center text-white shadow-md shadow-emerald-500/20">
+          <i data-lucide="bell-ring" class="w-5 h-5"></i>
+        </div>
+        <div>
+          <div class="flex items-center gap-2">
+            <h1 class="text-base font-bold text-slate-900 leading-none">雲端廣播排程表單工具</h1>
+            <span class="px-2 py-0.5 text-xs font-semibold font-mono bg-emerald-100 text-emerald-800 rounded-full">Tailwind UI</span>
+          </div>
+          <p class="text-xs text-slate-500 mt-1">選取元件即時生成排程資料，一鍵複製純資料列直接貼上 Google Sheets</p>
+        </div>
+      </div>
+
+      <div class="flex items-center gap-2.5">
+        <button id="btn-sync-cloud" onclick="syncAllCloudData()" class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-sky-700 bg-sky-50 border border-sky-200 rounded-lg hover:bg-sky-100 transition-colors shadow-xs">
+          <i data-lucide="cloud-download" class="w-3.5 h-3.5"></i>
+          <span id="btn-sync-cloud-label">同步雲端資料（任務＋員工名單）</span>
+        </button>
+        <button onclick="loadSampleData()" class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-slate-700 bg-white border border-slate-300 rounded-lg hover:bg-slate-50 hover:text-slate-900 transition-colors shadow-xs">
+          <i data-lucide="sparkles" class="w-3.5 h-3.5 text-amber-500"></i>
+          載入範例
+        </button>
+        <button onclick="clearAllTasks()" class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-slate-600 hover:text-rose-600 px-2 transition-colors">
+          <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+          清空
+        </button>
+        <div class="h-4 w-px bg-slate-200"></div>
+        <button onclick="copyDataOnlyTSV()" class="inline-flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-semibold text-slate-800 bg-emerald-50 border border-emerald-300 rounded-lg hover:bg-emerald-100 transition-colors shadow-xs">
+          <i data-lucide="clipboard-copy" class="w-3.5 h-3.5 text-emerald-600"></i>
+          複製純資料 (不含標題)
+        </button>
+        <button onclick="exportToExcel()" class="inline-flex items-center gap-2 px-4 py-1.5 text-xs font-semibold text-white bg-emerald-600 rounded-lg hover:bg-emerald-700 active:bg-emerald-800 transition-all shadow-sm shadow-emerald-600/20">
+          <i data-lucide="file-spreadsheet" class="w-4 h-4"></i>
+          匯出 Excel (.xlsx)
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Container -->
+  <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-4">
+
+    <!-- Cloud Sync Status Strip -->
+    <div id="cloud-status" class="hidden items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-medium border">
+      <i id="cloud-status-icon" data-lucide="info" class="w-4 h-4 shrink-0"></i>
+      <span id="cloud-status-text"></span>
+    </div>
+
+    <!-- Field Cheat Sheet -->
+    <details class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden group">
+      <summary class="px-5 py-3 cursor-pointer select-none flex items-center gap-2 text-xs font-bold text-slate-700 hover:bg-slate-50/70">
+        <i data-lucide="book-open-check" class="w-4 h-4 text-emerald-600"></i>
+        欄位小抄（不確定填什麼時展開看看）
+        <i data-lucide="chevron-down" class="w-3.5 h-3.5 ml-auto text-slate-400 transition-transform group-open:rotate-180"></i>
+      </summary>
+      <div class="px-5 pb-4 pt-1 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 text-[11px] text-slate-600 border-t border-slate-100">
+        <div class="pt-3">
+          <h4 class="text-xs font-semibold text-slate-800 mb-1">等級 Level</h4>
+          一般提醒／重要提醒／緊急提醒／強制通知。強制通知會全螢幕強制打斷，啟用前請先確認公司政策核准。
+        </div>
+        <div class="pt-3">
+          <h4 class="text-xs font-semibold text-slate-800 mb-1">重複規則 Recurrence</h4>
+          單次 <code class="bg-slate-100 px-1 py-0.5 rounded font-mono">ONCE</code>、每天 <code class="bg-slate-100 px-1 py-0.5 rounded font-mono">DAILY</code>、工作日（週一至五＋補班日）、每週指定星期、每月 <code class="bg-slate-100 px-1 py-0.5 rounded font-mono">MONTHLY</code>、農曆日期 <code class="bg-slate-100 px-1 py-0.5 rounded font-mono">LunarDay:1,15</code>。
+        </div>
+        <div class="pt-3">
+          <h4 class="text-xs font-semibold text-slate-800 mb-1">目標／排除對象</h4>
+          可填「部門」「姓名」或「裝置代碼（如 YC-003）」，多個用分號 <code class="bg-slate-100 px-1 py-0.5 rounded font-mono">;</code> 分隔。留空＝全公司。排除欄位會從目標範圍中再剔除指定的人。
+        </div>
+        <div class="pt-3">
+          <h4 class="text-xs font-semibold text-slate-800 mb-1">國定假日略過</h4>
+          開啟後，若當天在 Holidays 分頁被標記為假日，這筆任務當天不會觸發。
+        </div>
+      </div>
+    </details>
+
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+
+      <!-- LEFT COLUMN: Form Input Card (5 cols) -->
+      <div class="lg:col-span-5 space-y-4">
+        <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+
+          <!-- Card Title & Mode Indicator -->
+          <div class="px-5 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
+            <div class="flex items-center gap-2">
+              <span class="p-1.5 bg-emerald-100 text-emerald-700 rounded-lg">
+                <i data-lucide="plus-circle" id="form-icon" class="w-4 h-4"></i>
+              </span>
+              <h2 id="form-mode-title" class="font-bold text-slate-800 text-sm">新增排程任務</h2>
+            </div>
+            <button id="btn-cancel-edit" onclick="resetForm()" class="hidden text-xs text-slate-500 hover:text-slate-800 underline">
+              放棄修改
+            </button>
+          </div>
+
+          <!-- Form Body -->
+          <form id="task-form" onsubmit="handleFormSubmit(event)" class="p-5 space-y-5">
+            <input type="hidden" id="edit-index" value="-1">
+
+            <!-- Row 1: Id, Date, Clock directly in 3 columns without nested clipping -->
+            <div class="grid grid-cols-12 gap-2.5">
+              <!-- Id: 3 cols is plenty for TB-001 -->
+              <div class="col-span-3">
+                <label class="block text-xs font-semibold text-slate-700 mb-1.5">編號 <span class="font-mono text-[10px] text-slate-400">Id</span></label>
+                <input type="text" id="field-id" required
+                  class="w-full px-2 py-2 text-xs font-mono font-medium rounded-lg border border-slate-200 bg-slate-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all text-center"
+                  placeholder="TB-001">
+              </div>
+
+              <!-- Date: 5 cols gives full room for YYYY/MM/DD + calendar icon -->
+              <div class="col-span-5">
+                <label class="block text-xs font-semibold text-slate-700 mb-1.5">日期 <span class="font-mono text-[10px] text-slate-400">Date</span></label>
+                <input type="date" id="field-date" required
+                  class="w-full px-2.5 py-2 text-xs font-mono rounded-lg border border-slate-200 bg-slate-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all">
+              </div>
+
+              <!-- Time: 4 cols gives ample space for 上午/下午 hh:mm + clock icon -->
+              <div class="col-span-4">
+                <label class="block text-xs font-semibold text-slate-700 mb-1.5">時間 <span class="font-mono text-[10px] text-slate-400">Time</span></label>
+                <input type="time" id="field-clock" required list="clock-presets"
+                  class="w-full px-2 py-2 text-xs font-mono rounded-lg border border-slate-200 bg-slate-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all">
+                <datalist id="clock-presets">
+                  <option value="08:30"></option>
+                  <option value="09:00"></option>
+                  <option value="12:00"></option>
+                  <option value="13:30"></option>
+                  <option value="17:00"></option>
+                  <option value="18:00"></option>
+                </datalist>
+              </div>
+            </div>
+
+            <!-- Row 2: Title -->
+            <div>
+              <label class="block text-xs font-semibold text-slate-700 mb-1.5">廣播標題 <span class="font-mono text-[10px] text-slate-400">Title</span></label>
+              <input type="text" id="field-title" required
+                class="w-full px-3 py-2 text-xs rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all placeholder:text-slate-400"
+                placeholder="例如：下班門窗關閉提醒、中秋節祝福">
+            </div>
+
+            <!-- Row 3: Description -->
+            <div>
+              <label class="block text-xs font-semibold text-slate-700 mb-1.5">詳細說明內容 <span class="font-mono text-[10px] text-slate-400">Description</span></label>
+              <textarea id="field-desc" rows="2"
+                class="w-full px-3 py-2 text-xs rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all placeholder:text-slate-400 resize-none"
+                placeholder="跳出視窗中顯示的完整文字內容..."></textarea>
+            </div>
+
+            <!-- Row 4: Level Segmented Pills -->
+            <div>
+              <label class="block text-xs font-semibold text-slate-700 mb-1.5">提醒等級 <span class="font-mono text-[10px] text-slate-400">Level</span></label>
+              <div class="grid grid-cols-4 gap-1.5 p-1 bg-slate-100 rounded-xl">
+                <label class="cursor-pointer select-none">
+                  <input type="radio" name="level" value="一般提醒" checked class="peer sr-only">
+                  <div class="text-center py-1.5 px-2 text-xs font-medium rounded-lg text-slate-600 peer-checked:bg-white peer-checked:text-emerald-700 peer-checked:shadow-xs peer-checked:font-semibold transition-all">
+                    一般提醒
+                  </div>
+                </label>
+                <label class="cursor-pointer select-none">
+                  <input type="radio" name="level" value="重要提醒" class="peer sr-only">
+                  <div class="text-center py-1.5 px-2 text-xs font-medium rounded-lg text-slate-600 peer-checked:bg-white peer-checked:text-amber-700 peer-checked:shadow-xs peer-checked:font-semibold transition-all">
+                    重要提醒
+                  </div>
+                </label>
+                <label class="cursor-pointer select-none">
+                  <input type="radio" name="level" value="緊急提醒" class="peer sr-only">
+                  <div class="text-center py-1.5 px-2 text-xs font-medium rounded-lg text-slate-600 peer-checked:bg-white peer-checked:text-rose-700 peer-checked:shadow-xs peer-checked:font-semibold transition-all">
+                    緊急提醒
+                  </div>
+                </label>
+                <label class="cursor-pointer select-none">
+                  <input type="radio" name="level" value="強制通知" class="peer sr-only">
+                  <div class="text-center py-1.5 px-2 text-xs font-medium rounded-lg text-slate-600 peer-checked:bg-white peer-checked:text-purple-700 peer-checked:shadow-xs peer-checked:font-semibold transition-all">
+                    強制通知
+                  </div>
+                </label>
+              </div>
+            </div>
+
+            <!-- Row 5: Recurrence Type Segmented & Subpanels -->
+            <div class="space-y-2">
+              <div class="flex items-center justify-between">
+                <label class="block text-xs font-semibold text-slate-700">重複規則 <span class="font-mono text-[10px] text-slate-400">Recurrence</span></label>
+                <span id="workday-hint" class="hidden text-[10px] text-emerald-700 font-medium bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200">
+                  ✨ 依行事曆判定：週一至五＋補班日（自動跳過國定假日與停班）
+                </span>
+              </div>
+              <div class="grid grid-cols-6 gap-1 p-1 bg-slate-100 rounded-xl text-center">
+                <label class="cursor-pointer">
+                  <input type="radio" name="rec_type" value="ONCE" checked onchange="updateRecurrenceTabs()" class="peer sr-only">
+                  <div class="py-1.5 text-[11px] font-medium rounded-lg text-slate-600 peer-checked:bg-white peer-checked:text-slate-900 peer-checked:shadow-xs peer-checked:font-semibold transition-all">
+                    單次
+                  </div>
+                </label>
+                <label class="cursor-pointer">
+                  <input type="radio" name="rec_type" value="DAILY" onchange="updateRecurrenceTabs()" class="peer sr-only">
+                  <div class="py-1.5 text-[11px] font-medium rounded-lg text-slate-600 peer-checked:bg-white peer-checked:text-slate-900 peer-checked:shadow-xs peer-checked:font-semibold transition-all">
+                    每日
+                  </div>
+                </label>
+                <label class="cursor-pointer">
+                  <input type="radio" name="rec_type" value="WORKDAY" onchange="updateRecurrenceTabs()" class="peer sr-only">
+                  <div class="py-1.5 text-[11px] font-medium rounded-lg text-slate-600 peer-checked:bg-white peer-checked:text-emerald-700 peer-checked:shadow-xs peer-checked:font-semibold transition-all">
+                    工作日
+                  </div>
+                </label>
+                <label class="cursor-pointer">
+                  <input type="radio" name="rec_type" value="WEEKLY" onchange="updateRecurrenceTabs()" class="peer sr-only">
+                  <div class="py-1.5 text-[11px] font-medium rounded-lg text-slate-600 peer-checked:bg-white peer-checked:text-slate-900 peer-checked:shadow-xs peer-checked:font-semibold transition-all">
+                    每週
+                  </div>
+                </label>
+                <label class="cursor-pointer">
+                  <input type="radio" name="rec_type" value="MONTHLY" onchange="updateRecurrenceTabs()" class="peer sr-only">
+                  <div class="py-1.5 text-[11px] font-medium rounded-lg text-slate-600 peer-checked:bg-white peer-checked:text-slate-900 peer-checked:shadow-xs peer-checked:font-semibold transition-all">
+                    每月
+                  </div>
+                </label>
+                <label class="cursor-pointer">
+                  <input type="radio" name="rec_type" value="LUNAR" onchange="updateRecurrenceTabs()" class="peer sr-only">
+                  <div class="py-1.5 text-[11px] font-medium rounded-lg text-slate-600 peer-checked:bg-white peer-checked:text-slate-900 peer-checked:shadow-xs peer-checked:font-semibold transition-all">
+                    農曆日
+                  </div>
+                </label>
+              </div>
+
+              <!-- Weekly Subpanel -->
+              <div id="panel-weekly" class="hidden p-3 bg-emerald-50/60 border border-emerald-100 rounded-xl space-y-2">
+                <div class="text-[11px] font-semibold text-emerald-900 flex items-center justify-between">
+                  <span>選擇執行星期：</span>
+                  <button type="button" onclick="selectWorkdays()" class="text-emerald-700 underline text-[10px]">選工作日(一至五)</button>
+                </div>
+                <div class="grid grid-cols-7 gap-1">
+                  <label class="cursor-pointer">
+                    <input type="checkbox" name="week_day" value="1" checked class="peer sr-only">
+                    <div class="text-center py-1 text-xs font-mono font-medium rounded border border-slate-200 bg-white text-slate-600 peer-checked:bg-emerald-600 peer-checked:text-white peer-checked:border-emerald-600 transition-all">一</div>
+                  </label>
+                  <label class="cursor-pointer">
+                    <input type="checkbox" name="week_day" value="2" checked class="peer sr-only">
+                    <div class="text-center py-1 text-xs font-mono font-medium rounded border border-slate-200 bg-white text-slate-600 peer-checked:bg-emerald-600 peer-checked:text-white peer-checked:border-emerald-600 transition-all">二</div>
+                  </label>
+                  <label class="cursor-pointer">
+                    <input type="checkbox" name="week_day" value="3" checked class="peer sr-only">
+                    <div class="text-center py-1 text-xs font-mono font-medium rounded border border-slate-200 bg-white text-slate-600 peer-checked:bg-emerald-600 peer-checked:text-white peer-checked:border-emerald-600 transition-all">三</div>
+                  </label>
+                  <label class="cursor-pointer">
+                    <input type="checkbox" name="week_day" value="4" checked class="peer sr-only">
+                    <div class="text-center py-1 text-xs font-mono font-medium rounded border border-slate-200 bg-white text-slate-600 peer-checked:bg-emerald-600 peer-checked:text-white peer-checked:border-emerald-600 transition-all">四</div>
+                  </label>
+                  <label class="cursor-pointer">
+                    <input type="checkbox" name="week_day" value="5" checked class="peer sr-only">
+                    <div class="text-center py-1 text-xs font-mono font-medium rounded border border-slate-200 bg-white text-slate-600 peer-checked:bg-emerald-600 peer-checked:text-white peer-checked:border-emerald-600 transition-all">五</div>
+                  </label>
+                  <label class="cursor-pointer">
+                    <input type="checkbox" name="week_day" value="6" class="peer sr-only">
+                    <div class="text-center py-1 text-xs font-mono font-medium rounded border border-slate-200 bg-white text-slate-600 peer-checked:bg-emerald-600 peer-checked:text-white peer-checked:border-emerald-600 transition-all">六</div>
+                  </label>
+                  <label class="cursor-pointer">
+                    <input type="checkbox" name="week_day" value="0" class="peer sr-only">
+                    <div class="text-center py-1 text-xs font-mono font-medium rounded border border-slate-200 bg-white text-slate-600 peer-checked:bg-emerald-600 peer-checked:text-white peer-checked:border-emerald-600 transition-all">日</div>
+                  </label>
+                </div>
+              </div>
+
+              <!-- Lunar Subpanel with full 1~30 calendar expanded -->
+              <div id="panel-lunar" class="hidden p-3 bg-amber-50/60 border border-amber-200/80 rounded-xl space-y-2.5">
+                <div class="flex items-center justify-between">
+                  <span class="text-xs font-semibold text-amber-900 flex items-center gap-1">
+                    <i data-lucide="calendar" class="w-3.5 h-3.5 text-amber-600"></i>
+                    農曆日點選 (初一至三十，可多選)：
+                  </span>
+                  <div class="flex items-center gap-1.5 text-[11px]">
+                    <button type="button" onclick="selectLunarPreset([1,15])" class="px-1.5 py-0.5 rounded bg-amber-100/80 text-amber-800 hover:bg-amber-200 font-medium transition-colors">初一/十五</button>
+                    <button type="button" onclick="selectLunarPreset([2,16])" class="px-1.5 py-0.5 rounded bg-amber-100/80 text-amber-800 hover:bg-amber-200 font-medium transition-colors">初二/十六</button>
+                    <button type="button" onclick="selectLunarPreset([])" class="px-1.5 py-0.5 rounded bg-amber-100/80 text-amber-800 hover:bg-amber-200 font-medium transition-colors">清空</button>
+                  </div>
+                </div>
+
+                <!-- 1 to 30 Grid (6 columns x 5 rows) -->
+                <div class="grid grid-cols-6 gap-1">
+                  <label class="cursor-pointer">
+                    <input type="checkbox" name="lunar_day" value="1" class="peer sr-only">
+                    <div class="py-1 px-0.5 text-center rounded border border-amber-200/80 bg-white text-amber-950 font-medium peer-checked:bg-amber-600 peer-checked:text-white peer-checked:border-amber-600 hover:border-amber-400 transition-all text-[11px] select-none">
+                      <div class="leading-none text-[10px] scale-95 font-semibold">初一</div>
+                      <div class="text-[9px] opacity-75 font-mono leading-tight">1</div>
+                    </div>
+                  </label>
+                  <label class="cursor-pointer">
+                    <input type="checkbox" name="lunar_day" value="2" class="peer sr-only">
+                    <div class="py-1 px-0.5 text-center rounded border border-amber-200/80 bg-white text-amber-950 font-medium peer-checked:bg-amber-600 peer-checked:text-white peer-checked:border-amber-600 hover:border-amber-400 transition-all text-[11px] select-none">
+                      <div class="leading-none text-[10px] scale-95 font-semibold">初二</div>
+                      <div class="text-[9px] opacity-75 font-mono leading-tight">2</div>
+                    </div>
+                  </label>
+                  <label class="cursor-pointer">
+                    <input type="checkbox" name="lunar_day" value="3" class="peer sr-only">
+                    <div class="py-1 px-0.5 text-center rounded border border-amber-200/80 bg-white text-amber-950 font-medium peer-checked:bg-amber-600 peer-checked:text-white peer-checked:border-amber-600 hover:border-amber-400 transition-all text-[11px] select-none">
+                      <div class="leading-none text-[10px] scale-95 font-semibold">初三</div>
+                      <div class="text-[9px] opacity-75 font-mono leading-tight">3</div>
+                    </div>
+                  </label>
+                  <label class="cursor-pointer">
+                    <input type="checkbox" name="lunar_day" value="4" class="peer sr-only">
+                    <div class="py-1 px-0.5 text-center rounded border border-amber-200/80 bg-white text-amber-950 font-medium peer-checked:bg-amber-600 peer-checked:text-white peer-checked:border-amber-600 hover:border-amber-400 transition-all text-[11px] select-none">
+                      <div class="leading-none text-[10px] scale-95 font-semibold">初四</div>
+                      <div class="text-[9px] opacity-75 font-mono leading-tight">4</div>
+                    </div>
+                  </label>
+                  <label class="cursor-pointer">
+                    <input type="checkbox" name="lunar_day" value="5" class="peer sr-only">
+                    <div class="py-1 px-0.5 text-center rounded border border-amber-200/80 bg-white text-amber-950 font-medium peer-checked:bg-amber-600 peer-checked:text-white peer-checked:border-amber-600 hover:border-amber-400 transition-all text-[11px] select-none">
+                      <div class="leading-none text-[10px] scale-95 font-semibold">初五</div>
+                      <div class="text-[9px] opacity-75 font-mono leading-tight">5</div>
+                    </div>
+                  </label>
+                  <label class="cursor-pointer">
+                    <input type="checkbox" name="lunar_day" value="6" class="peer sr-only">
+                    <div class="py-1 px-0.5 text-center rounded border border-amber-200/80 bg-white text-amber-950 font-medium peer-checked:bg-amber-600 peer-checked:text-white peer-checked:border-amber-600 hover:border-amber-400 transition-all text-[11px] select-none">
+                      <div class="leading-none text-[10px] scale-95 font-semibold">初六</div>
+                      <div class="text-[9px] opacity-75 font-mono leading-tight">6</div>
+                    </div>
+                  </label>
+                  <label class="cursor-pointer">
+                    <input type="checkbox" name="lunar_day" value="7" class="peer sr-only">
+                    <div class="py-1 px-0.5 text-center rounded border border-amber-200/80 bg-white text-amber-950 font-medium peer-checked:bg-amber-600 peer-checked:text-white peer-checked:border-amber-600 hover:border-amber-400 transition-all text-[11px] select-none">
+                      <div class="leading-none text-[10px] scale-95 font-semibold">初七</div>
+                      <div class="text-[9px] opacity-75 font-mono leading-tight">7</div>
+                    </div>
+                  </label>
+                  <label class="cursor-pointer">
+                    <input type="checkbox" name="lunar_day" value="8" class="peer sr-only">
+                    <div class="py-1 px-0.5 text-center rounded border border-amber-200/80 bg-white text-amber-950 font-medium peer-checked:bg-amber-600 peer-checked:text-white peer-checked:border-amber-600 hover:border-amber-400 transition-all text-[11px] select-none">
+                      <div class="leading-none text-[10px] scale-95 font-semibold">初八</div>
+                      <div class="text-[9px] opacity-75 font-mono leading-tight">8</div>
+                    </div>
+                  </label>
+                  <label class="cursor-pointer">
+                    <input type="checkbox" name="lunar_day" value="9" class="peer sr-only">
+                    <div class="py-1 px-0.5 text-center rounded border border-amber-200/80 bg-white text-amber-950 font-medium peer-checked:bg-amber-600 peer-checked:text-white peer-checked:border-amber-600 hover:border-amber-400 transition-all text-[11px] select-none">
+                      <div class="leading-none text-[10px] scale-95 font-semibold">初九</div>
+                      <div class="text-[9px] opacity-75 font-mono leading-tight">9</div>
+                    </div>
+                  </label>
+                  <label class="cursor-pointer">
+                    <input type="checkbox" name="lunar_day" value="10" class="peer sr-only">
+                    <div class="py-1 px-0.5 text-center rounded border border-amber-200/80 bg-white text-amber-950 font-medium peer-checked:bg-amber-600 peer-checked:text-white peer-checked:border-amber-600 hover:border-amber-400 transition-all text-[11px] select-none">
+                      <div class="leading-none text-[10px] scale-95 font-semibold">初十</div>
+                      <div class="text-[9px] opacity-75 font-mono leading-tight">10</div>
+                    </div>
+                  </label>
+                  <label class="cursor-pointer">
+                    <input type="checkbox" name="lunar_day" value="11" class="peer sr-only">
+                    <div class="py-1 px-0.5 text-center rounded border border-amber-200/80 bg-white text-amber-950 font-medium peer-checked:bg-amber-600 peer-checked:text-white peer-checked:border-amber-600 hover:border-amber-400 transition-all text-[11px] select-none">
+                      <div class="leading-none text-[10px] scale-95 font-semibold">十一</div>
+                      <div class="text-[9px] opacity-75 font-mono leading-tight">11</div>
+                    </div>
+                  </label>
+                  <label class="cursor-pointer">
+                    <input type="checkbox" name="lunar_day" value="12" class="peer sr-only">
+                    <div class="py-1 px-0.5 text-center rounded border border-amber-200/80 bg-white text-amber-950 font-medium peer-checked:bg-amber-600 peer-checked:text-white peer-checked:border-amber-600 hover:border-amber-400 transition-all text-[11px] select-none">
+                      <div class="leading-none text-[10px] scale-95 font-semibold">十二</div>
+                      <div class="text-[9px] opacity-75 font-mono leading-tight">12</div>
+                    </div>
+                  </label>
+                  <label class="cursor-pointer">
+                    <input type="checkbox" name="lunar_day" value="13" class="peer sr-only">
+                    <div class="py-1 px-0.5 text-center rounded border border-amber-200/80 bg-white text-amber-950 font-medium peer-checked:bg-amber-600 peer-checked:text-white peer-checked:border-amber-600 hover:border-amber-400 transition-all text-[11px] select-none">
+                      <div class="leading-none text-[10px] scale-95 font-semibold">十三</div>
+                      <div class="text-[9px] opacity-75 font-mono leading-tight">13</div>
+                    </div>
+                  </label>
+                  <label class="cursor-pointer">
+                    <input type="checkbox" name="lunar_day" value="14" class="peer sr-only">
+                    <div class="py-1 px-0.5 text-center rounded border border-amber-200/80 bg-white text-amber-950 font-medium peer-checked:bg-amber-600 peer-checked:text-white peer-checked:border-amber-600 hover:border-amber-400 transition-all text-[11px] select-none">
+                      <div class="leading-none text-[10px] scale-95 font-semibold">十四</div>
+                      <div class="text-[9px] opacity-75 font-mono leading-tight">14</div>
+                    </div>
+                  </label>
+                  <label class="cursor-pointer">
+                    <input type="checkbox" name="lunar_day" value="15" class="peer sr-only">
+                    <div class="py-1 px-0.5 text-center rounded border border-amber-200/80 bg-white text-amber-950 font-medium peer-checked:bg-amber-600 peer-checked:text-white peer-checked:border-amber-600 hover:border-amber-400 transition-all text-[11px] select-none">
+                      <div class="leading-none text-[10px] scale-95 font-semibold">十五</div>
+                      <div class="text-[9px] opacity-75 font-mono leading-tight">15</div>
+                    </div>
+                  </label>
+                  <label class="cursor-pointer">
+                    <input type="checkbox" name="lunar_day" value="16" class="peer sr-only">
+                    <div class="py-1 px-0.5 text-center rounded border border-amber-200/80 bg-white text-amber-950 font-medium peer-checked:bg-amber-600 peer-checked:text-white peer-checked:border-amber-600 hover:border-amber-400 transition-all text-[11px] select-none">
+                      <div class="leading-none text-[10px] scale-95 font-semibold">十六</div>
+                      <div class="text-[9px] opacity-75 font-mono leading-tight">16</div>
+                    </div>
+                  </label>
+                  <label class="cursor-pointer">
+                    <input type="checkbox" name="lunar_day" value="17" class="peer sr-only">
+                    <div class="py-1 px-0.5 text-center rounded border border-amber-200/80 bg-white text-amber-950 font-medium peer-checked:bg-amber-600 peer-checked:text-white peer-checked:border-amber-600 hover:border-amber-400 transition-all text-[11px] select-none">
+                      <div class="leading-none text-[10px] scale-95 font-semibold">十七</div>
+                      <div class="text-[9px] opacity-75 font-mono leading-tight">17</div>
+                    </div>
+                  </label>
+                  <label class="cursor-pointer">
+                    <input type="checkbox" name="lunar_day" value="18" class="peer sr-only">
+                    <div class="py-1 px-0.5 text-center rounded border border-amber-200/80 bg-white text-amber-950 font-medium peer-checked:bg-amber-600 peer-checked:text-white peer-checked:border-amber-600 hover:border-amber-400 transition-all text-[11px] select-none">
+                      <div class="leading-none text-[10px] scale-95 font-semibold">十八</div>
+                      <div class="text-[9px] opacity-75 font-mono leading-tight">18</div>
+                    </div>
+                  </label>
+                  <label class="cursor-pointer">
+                    <input type="checkbox" name="lunar_day" value="19" class="peer sr-only">
+                    <div class="py-1 px-0.5 text-center rounded border border-amber-200/80 bg-white text-amber-950 font-medium peer-checked:bg-amber-600 peer-checked:text-white peer-checked:border-amber-600 hover:border-amber-400 transition-all text-[11px] select-none">
+                      <div class="leading-none text-[10px] scale-95 font-semibold">十九</div>
+                      <div class="text-[9px] opacity-75 font-mono leading-tight">19</div>
+                    </div>
+                  </label>
+                  <label class="cursor-pointer">
+                    <input type="checkbox" name="lunar_day" value="20" class="peer sr-only">
+                    <div class="py-1 px-0.5 text-center rounded border border-amber-200/80 bg-white text-amber-950 font-medium peer-checked:bg-amber-600 peer-checked:text-white peer-checked:border-amber-600 hover:border-amber-400 transition-all text-[11px] select-none">
+                      <div class="leading-none text-[10px] scale-95 font-semibold">二十</div>
+                      <div class="text-[9px] opacity-75 font-mono leading-tight">20</div>
+                    </div>
+                  </label>
+                  <label class="cursor-pointer">
+                    <input type="checkbox" name="lunar_day" value="21" class="peer sr-only">
+                    <div class="py-1 px-0.5 text-center rounded border border-amber-200/80 bg-white text-amber-950 font-medium peer-checked:bg-amber-600 peer-checked:text-white peer-checked:border-amber-600 hover:border-amber-400 transition-all text-[11px] select-none">
+                      <div class="leading-none text-[10px] scale-95 font-semibold">廿一</div>
+                      <div class="text-[9px] opacity-75 font-mono leading-tight">21</div>
+                    </div>
+                  </label>
+                  <label class="cursor-pointer">
+                    <input type="checkbox" name="lunar_day" value="22" class="peer sr-only">
+                    <div class="py-1 px-0.5 text-center rounded border border-amber-200/80 bg-white text-amber-950 font-medium peer-checked:bg-amber-600 peer-checked:text-white peer-checked:border-amber-600 hover:border-amber-400 transition-all text-[11px] select-none">
+                      <div class="leading-none text-[10px] scale-95 font-semibold">廿二</div>
+                      <div class="text-[9px] opacity-75 font-mono leading-tight">22</div>
+                    </div>
+                  </label>
+                  <label class="cursor-pointer">
+                    <input type="checkbox" name="lunar_day" value="23" class="peer sr-only">
+                    <div class="py-1 px-0.5 text-center rounded border border-amber-200/80 bg-white text-amber-950 font-medium peer-checked:bg-amber-600 peer-checked:text-white peer-checked:border-amber-600 hover:border-amber-400 transition-all text-[11px] select-none">
+                      <div class="leading-none text-[10px] scale-95 font-semibold">廿三</div>
+                      <div class="text-[9px] opacity-75 font-mono leading-tight">23</div>
+                    </div>
+                  </label>
+                  <label class="cursor-pointer">
+                    <input type="checkbox" name="lunar_day" value="24" class="peer sr-only">
+                    <div class="py-1 px-0.5 text-center rounded border border-amber-200/80 bg-white text-amber-950 font-medium peer-checked:bg-amber-600 peer-checked:text-white peer-checked:border-amber-600 hover:border-amber-400 transition-all text-[11px] select-none">
+                      <div class="leading-none text-[10px] scale-95 font-semibold">廿四</div>
+                      <div class="text-[9px] opacity-75 font-mono leading-tight">24</div>
+                    </div>
+                  </label>
+                  <label class="cursor-pointer">
+                    <input type="checkbox" name="lunar_day" value="25" class="peer sr-only">
+                    <div class="py-1 px-0.5 text-center rounded border border-amber-200/80 bg-white text-amber-950 font-medium peer-checked:bg-amber-600 peer-checked:text-white peer-checked:border-amber-600 hover:border-amber-400 transition-all text-[11px] select-none">
+                      <div class="leading-none text-[10px] scale-95 font-semibold">廿五</div>
+                      <div class="text-[9px] opacity-75 font-mono leading-tight">25</div>
+                    </div>
+                  </label>
+                  <label class="cursor-pointer">
+                    <input type="checkbox" name="lunar_day" value="26" class="peer sr-only">
+                    <div class="py-1 px-0.5 text-center rounded border border-amber-200/80 bg-white text-amber-950 font-medium peer-checked:bg-amber-600 peer-checked:text-white peer-checked:border-amber-600 hover:border-amber-400 transition-all text-[11px] select-none">
+                      <div class="leading-none text-[10px] scale-95 font-semibold">廿六</div>
+                      <div class="text-[9px] opacity-75 font-mono leading-tight">26</div>
+                    </div>
+                  </label>
+                  <label class="cursor-pointer">
+                    <input type="checkbox" name="lunar_day" value="27" class="peer sr-only">
+                    <div class="py-1 px-0.5 text-center rounded border border-amber-200/80 bg-white text-amber-950 font-medium peer-checked:bg-amber-600 peer-checked:text-white peer-checked:border-amber-600 hover:border-amber-400 transition-all text-[11px] select-none">
+                      <div class="leading-none text-[10px] scale-95 font-semibold">廿七</div>
+                      <div class="text-[9px] opacity-75 font-mono leading-tight">27</div>
+                    </div>
+                  </label>
+                  <label class="cursor-pointer">
+                    <input type="checkbox" name="lunar_day" value="28" class="peer sr-only">
+                    <div class="py-1 px-0.5 text-center rounded border border-amber-200/80 bg-white text-amber-950 font-medium peer-checked:bg-amber-600 peer-checked:text-white peer-checked:border-amber-600 hover:border-amber-400 transition-all text-[11px] select-none">
+                      <div class="leading-none text-[10px] scale-95 font-semibold">廿八</div>
+                      <div class="text-[9px] opacity-75 font-mono leading-tight">28</div>
+                    </div>
+                  </label>
+                  <label class="cursor-pointer">
+                    <input type="checkbox" name="lunar_day" value="29" class="peer sr-only">
+                    <div class="py-1 px-0.5 text-center rounded border border-amber-200/80 bg-white text-amber-950 font-medium peer-checked:bg-amber-600 peer-checked:text-white peer-checked:border-amber-600 hover:border-amber-400 transition-all text-[11px] select-none">
+                      <div class="leading-none text-[10px] scale-95 font-semibold">廿九</div>
+                      <div class="text-[9px] opacity-75 font-mono leading-tight">29</div>
+                    </div>
+                  </label>
+                  <label class="cursor-pointer">
+                    <input type="checkbox" name="lunar_day" value="30" class="peer sr-only">
+                    <div class="py-1 px-0.5 text-center rounded border border-amber-200/80 bg-white text-amber-950 font-medium peer-checked:bg-amber-600 peer-checked:text-white peer-checked:border-amber-600 hover:border-amber-400 transition-all text-[11px] select-none">
+                      <div class="leading-none text-[10px] scale-95 font-semibold">三十</div>
+                      <div class="text-[9px] opacity-75 font-mono leading-tight">30</div>
+                    </div>
+                  </label>
+                </div>
+              </div>
+            </div>
+
+            <!-- Row 6: Target & Exclude, backed by Employees sheet picker -->
+            <div class="space-y-3 pt-1">
+              <span class="text-[10px] text-slate-400">目標／排除對象可從公司員工名單挑選，避免手動輸入打錯部門或姓名（點右上角「同步雲端資料」載入名單）</span>
+              <p id="employees-status" class="hidden text-[11px] px-2.5 py-1.5 rounded-lg border"></p>
+
+              <div>
+                <div class="flex justify-between items-center mb-1">
+                  <label class="text-xs font-semibold text-slate-700">目標對象 <span class="font-mono text-[10px] text-slate-400">TargetDeviceOrName</span></label>
+                  <span class="text-[10px] text-slate-400">留空即代表全公司</span>
+                </div>
+                <input type="text" id="field-target"
+                  class="w-full px-3 py-2 text-xs rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all placeholder:text-slate-400"
+                  placeholder="留空為全體；點下方按鈕從名單挑選，或手動輸入以分號 ; 隔開">
+                <div class="flex items-center gap-1.5 mt-1.5 flex-wrap">
+                  <button type="button" onclick="setTargetClear()" class="px-2 py-0.5 text-[10px] font-medium bg-slate-100 hover:bg-slate-200 text-slate-600 rounded transition-colors">全公司(清空)</button>
+                  <button type="button" onclick="openPeoplePicker('target')" class="inline-flex items-center gap-1 px-2 py-0.5 text-[10px] font-medium bg-emerald-50 hover:bg-emerald-100 text-emerald-700 rounded border border-emerald-200 transition-colors">
+                    <i data-lucide="list-plus" class="w-3 h-3"></i>
+                    從名單挑選部門／人員
+                  </button>
+                </div>
+              </div>
+
+              <div>
+                <div class="flex justify-between items-center mb-1">
+                  <label class="text-xs font-semibold text-slate-700">排除對象 <span class="font-mono text-[10px] text-slate-400">ExcludeDeviceOrName</span></label>
+                  <span class="text-[10px] text-slate-400">從目標範圍中再剔除</span>
+                </div>
+                <input type="text" id="field-exclude"
+                  class="w-full px-3 py-2 text-xs rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all placeholder:text-slate-400"
+                  placeholder="無排除則留空；點下方按鈕從名單挑選，或手動輸入以分號 ; 隔開">
+                <div class="flex items-center gap-1.5 mt-1.5 flex-wrap">
+                  <button type="button" onclick="setExcludeClear()" class="px-2 py-0.5 text-[10px] font-medium bg-slate-100 hover:bg-slate-200 text-slate-600 rounded transition-colors">不排除(清空)</button>
+                  <button type="button" onclick="openPeoplePicker('exclude')" class="inline-flex items-center gap-1 px-2 py-0.5 text-[10px] font-medium bg-rose-50 hover:bg-rose-100 text-rose-700 rounded border border-rose-200 transition-colors">
+                    <i data-lucide="list-minus" class="w-3 h-3"></i>
+                    從名單挑選部門／人員
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Row 7: Modern Switches for Boolean Controls -->
+            <div class="p-3.5 bg-slate-50 border border-slate-200/70 rounded-xl space-y-3">
+
+              <!-- Switch 1: Enabled -->
+              <label class="flex items-center justify-between cursor-pointer">
+                <div>
+                  <div class="text-xs font-semibold text-slate-800">啟用任務 (Enabled)</div>
+                  <div class="text-[10px] text-slate-500">是否立即進入廣播輪詢佇列</div>
+                </div>
+                <div class="relative inline-flex items-center">
+                  <input type="checkbox" id="field-enabled" checked class="sr-only peer">
+                  <div class="w-9 h-5 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-emerald-600"></div>
+                </div>
+              </label>
+
+              <div class="border-t border-slate-200/60"></div>
+
+              <!-- Switch 2: RequireAck -->
+              <label class="flex items-center justify-between cursor-pointer">
+                <div>
+                  <div class="text-xs font-semibold text-slate-800">強制確認按鈕 (RequireAck)</div>
+                  <div class="text-[10px] text-slate-500">跳出後須手動點擊確認才關閉視窗</div>
+                </div>
+                <div class="relative inline-flex items-center">
+                  <input type="checkbox" id="field-require-ack" class="sr-only peer">
+                  <div class="w-9 h-5 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-emerald-600"></div>
+                </div>
+              </label>
+
+              <div class="border-t border-slate-200/60"></div>
+
+              <!-- Switch 3: SkipOnHoliday -->
+              <label class="flex items-center justify-between cursor-pointer">
+                <div>
+                  <div class="text-xs font-semibold text-slate-800">國定假日略過 (SkipOnHoliday)</div>
+                  <div class="text-[10px] text-slate-500">遇公休紅字不響鈴打擾</div>
+                </div>
+                <div class="relative inline-flex items-center">
+                  <input type="checkbox" id="field-skip-holiday" class="sr-only peer">
+                  <div class="w-9 h-5 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-emerald-600"></div>
+                </div>
+              </label>
+
+            </div>
+
+            <!-- Submit Button -->
+            <button type="submit" id="btn-submit"
+              class="w-full py-2.5 px-4 rounded-xl text-xs font-semibold text-white bg-slate-900 hover:bg-slate-800 active:scale-[0.99] transition-all flex items-center justify-center gap-2 shadow-sm">
+              <i data-lucide="plus" class="w-4 h-4"></i>
+              <span id="btn-submit-label">加入到右側清單</span>
+            </button>
+          </form>
+        </div>
+      </div>
+
+      <!-- RIGHT COLUMN: Table View & Guidance (7 cols) -->
+      <div class="lg:col-span-7 space-y-4">
+
+        <!-- Table Card -->
+        <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden flex flex-col">
+          <div class="px-5 py-3.5 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
+            <div class="flex items-center gap-2 flex-wrap">
+              <i data-lucide="layers" class="w-4 h-4 text-slate-500"></i>
+              <span class="text-xs font-bold text-slate-800">任務排程總覽</span>
+              <span class="inline-flex items-center gap-1 px-2 py-0.5 text-[11px] font-medium bg-slate-100 text-slate-600 rounded-full">
+                <i data-lucide="pencil-line" class="w-3 h-3"></i>
+                草稿 <span id="badge-count" class="font-mono font-semibold">0</span>
+              </span>
+              <span class="inline-flex items-center gap-1 px-2 py-0.5 text-[11px] font-medium bg-sky-50 text-sky-700 rounded-full border border-sky-200">
+                <i data-lucide="cloud" class="w-3 h-3"></i>
+                雲端唯讀 <span id="badge-cloud-count" class="font-mono font-semibold">0</span>
+              </span>
+            </div>
+            <div class="flex items-center gap-2">
+              <button onclick="copyDataOnlyTSV()" class="inline-flex items-center gap-1.5 px-3 py-1 text-xs font-medium text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-lg hover:bg-emerald-100 transition-colors">
+                <i data-lucide="copy" class="w-3.5 h-3.5"></i>
+                複製純資料列（僅草稿）
+              </button>
+            </div>
+          </div>
+
+          <!-- Merged Table Wrapper: cloud read-only rows first, then draft rows -->
+          <div class="overflow-x-auto min-h-[360px] max-h-[560px]">
+            <table class="w-full text-left text-xs border-collapse">
+              <thead class="bg-slate-50/80 sticky top-0 z-10 border-b border-slate-200 text-[11px] text-slate-500 uppercase">
+                <tr>
+                  <th class="py-2.5 px-3 font-semibold">來源</th>
+                  <th class="py-2.5 px-3 font-semibold">Id</th>
+                  <th class="py-2.5 px-3 font-semibold">時間</th>
+                  <th class="py-2.5 px-3 font-semibold">標題 / 說明</th>
+                  <th class="py-2.5 px-2.5 font-semibold">等級</th>
+                  <th class="py-2.5 px-2.5 font-semibold">狀態</th>
+                  <th class="py-2.5 px-3 font-semibold">週期規則</th>
+                  <th class="py-2.5 px-3 font-semibold">目標對象</th>
+                  <th class="py-2.5 px-3 font-semibold text-center">操作</th>
+                </tr>
+              </thead>
+              <tbody id="cloud-tbody" class="divide-y divide-slate-100">
+                <!-- Cloud read-only rows injected here -->
+              </tbody>
+              <tbody id="task-tbody" class="divide-y divide-slate-100">
+                <!-- Draft rows injected here -->
+              </tbody>
+            </table>
+
+            <!-- Empty state: only when BOTH cloud and draft are empty -->
+            <div id="table-empty" class="py-16 text-center">
+              <div class="w-12 h-12 mx-auto rounded-full bg-slate-100 flex items-center justify-center text-slate-400 mb-3">
+                <i data-lucide="inbox" class="w-6 h-6"></i>
+              </div>
+              <p class="text-xs font-medium text-slate-600">清單目前沒有任何任務項目</p>
+              <p class="text-[11px] text-slate-400 mt-0.5">從左側填寫表單送出、點擊右上角「載入範例」，或按「載入雲端既有任務」預覽 Sheet B 內容</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Guidance Banner Card -->
+        <div class="p-4 rounded-2xl bg-gradient-to-r from-emerald-50 via-teal-50 to-sky-50 border border-emerald-100 flex items-start gap-3">
+          <div class="p-2 rounded-xl bg-white shadow-xs text-emerald-600 shrink-0">
+            <i data-lucide="help-circle" class="w-5 h-5"></i>
+          </div>
+          <div class="text-xs space-y-1">
+            <h4 class="font-bold text-slate-800">如何傳入公司現有的 Google Sheets？</h4>
+            <ul class="text-slate-600 text-[11px] leading-relaxed list-disc list-inside space-y-0.5">
+              <li><strong>直接貼在已有標題的試算表</strong>：點擊「<strong class="text-emerald-800">複製純資料 (不含標題)</strong>」，切換到 Google Sheets 找到現有任務的最後一行（或 <code class="bg-white/80 px-1 py-0.5 rounded text-slate-700 font-mono">A3</code> 儲存格）按 <kbd class="px-1.5 py-0.5 bg-white border border-slate-300 rounded text-[10px] font-mono shadow-xs">Ctrl + V</kbd> 即可，完全不會破壞您原本的第 1、2 行標題！</li>
+              <li><strong>全新建檔</strong>：若是全新空表，點「匯出 Excel (.xlsx)」可包含中英文完整雙層表頭。</li>
+            </ul>
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+  </main>
+
+  <!-- Toast Notification -->
+  <div id="toast" class="fixed bottom-6 right-6 bg-slate-900 text-white px-4 py-2.5 rounded-xl shadow-lg text-xs font-medium flex items-center gap-2 transform translate-y-10 opacity-0 pointer-events-none transition-all duration-200 z-50">
+    <i data-lucide="check-circle" class="w-4 h-4 text-emerald-400"></i>
+    <span id="toast-text">已複製純資料列至剪貼簿！</span>
+  </div>
+
+  <!-- People Picker Modal (target / exclude, backed by Employees sheet) -->
+  <div id="people-picker-overlay" class="hidden fixed inset-0 bg-slate-900/40 backdrop-blur-[1px] z-50 flex items-center justify-center p-4">
+    <div class="bg-white w-full max-w-lg rounded-2xl shadow-xl border border-slate-200 flex flex-col max-h-[85vh]">
+      <div class="px-5 py-4 border-b border-slate-100 flex items-center justify-between">
+        <div class="flex items-center gap-2">
+          <span id="picker-icon-wrap" class="p-1.5 rounded-lg bg-emerald-100 text-emerald-700">
+            <i data-lucide="list-plus" class="w-4 h-4"></i>
+          </span>
+          <h3 id="picker-title" class="font-bold text-slate-800 text-sm">挑選目標對象</h3>
+        </div>
+        <button type="button" onclick="closePeoplePicker()" class="p-1.5 rounded-lg text-slate-400 hover:bg-slate-100 hover:text-slate-700 transition-colors">
+          <i data-lucide="x" class="w-4 h-4"></i>
+        </button>
+      </div>
+
+      <div class="px-5 pt-3">
+        <input type="text" id="picker-search" oninput="renderPeoplePickerList()" placeholder="搜尋部門、姓名或裝置代碼…"
+          class="w-full px-3 py-2 text-xs rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all">
+      </div>
+
+      <div id="picker-body" class="px-5 py-3 overflow-y-auto flex-1 space-y-4">
+        <!-- Injected: department groups + employee list, or empty/no-data state -->
+      </div>
+
+      <div class="px-5 py-3.5 border-t border-slate-100 flex items-center justify-between bg-slate-50/50 rounded-b-2xl">
+        <span id="picker-selected-summary" class="text-[11px] text-slate-500">尚未選取</span>
+        <div class="flex items-center gap-2">
+          <button type="button" onclick="closePeoplePicker()" class="px-3 py-1.5 text-xs font-medium text-slate-600 hover:text-slate-900 transition-colors">取消</button>
+          <button type="button" onclick="applyPeoplePicker()" class="px-4 py-1.5 text-xs font-semibold text-white bg-slate-900 hover:bg-slate-800 rounded-lg transition-colors">帶入欄位</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const HEADERS_EN = [
+      "Id", "Time", "Title", "Level", "Enabled", "Description",
+      "RequireAck", "Recurrence", "SkipOnHoliday", "TargetDeviceOrName", "ExcludeDeviceOrName"
+    ];
+
+    const HEADERS_ZH = [
+      "編號", "時間(YYYY-MM-DD HH:mm)", "標題", "等級(一般提醒/重要提醒/緊急提醒/強制通知)",
+      "是否啟用(TRUE/FALSE)", "說明", "是否需確認(TRUE/FALSE)",
+      "重複規則(ONCE/DAILY/WEEKLY/MONTHLY/LunarDay:n)", "國定假日略過(TRUE/FALSE)",
+      "目標對象(留空=全公司；可填部門/姓名/裝置代碼，分號分隔)", "排除對象(同左)"
+    ];
+
+    let tasks = [];
+
+    // Sheet 的連線資訊（SpreadsheetId／GID）屬於公司內部設定，不寫死在這個頁面裡。
+    // 這個頁面固定由 Cloud Alarm Overlay 程式內建的本機伺服器提供（見 TaskBuilderHostService.cs），
+    // 讀取「管理者頁 → 同步來源」已設定好的 Sheet A / Sheet B 連線資訊，由本機端代為向 Google 要 CSV。
+    const CLOUD_TASKS_CSV_URL = "/api/tasks-csv";
+    let cloudExistingIds = new Set();
+    let cloudTasks = []; // 唯讀，僅供預覽，同一份 HEADERS_EN 欄位對照
+    let cloudSyncState = "idle"; // idle | loading | ok | error
+
+    const EMPLOYEES_CSV_URL = "/api/employees-csv";
+    let employees = []; // { Id, Name, Department, Title }
+    let employeesSyncState = "idle"; // idle | loading | ok | error
+
+    // People picker state
+    let pickerMode = null; // 'target' | 'exclude'
+    let pickerSelectedDept = new Set();
+    let pickerSelectedTitle = new Set();
+    let pickerSelectedKeys = new Set(); // individual Id/Name keys chosen from the filtered list
+
+    // Helper functions
+    function getTodayString() {
+      const d = new Date();
+      const year = d.getFullYear();
+      const month = String(d.getMonth() + 1).padStart(2, '0');
+      const day = String(d.getDate()).padStart(2, '0');
+      return `${year}-${month}-${day}`;
+    }
+
+    function getCurrentTimeString() {
+      const d = new Date();
+      const h = String(d.getHours()).padStart(2, '0');
+      const m = String(d.getMinutes()).padStart(2, '0');
+      return `${h}:${m}`;
+    }
+
+    window.addEventListener('DOMContentLoaded', () => {
+      document.getElementById('field-date').value = getTodayString();
+      document.getElementById('field-clock').value = "09:00";
+      suggestNextId();
+      updateMergedEmptyState();
+      lucide.createIcons();
+      syncAllCloudData({ silent: true });
+    });
+
+    function suggestNextId() {
+      if (document.getElementById('edit-index').value !== "-1") return;
+      let nextNum = tasks.length + 1;
+      let candidate = "TB-" + String(nextNum).padStart(3, '0');
+      const takenLocally = new Set(tasks.map(t => t.Id));
+      while (takenLocally.has(candidate) || cloudExistingIds.has(candidate)) {
+        nextNum++;
+        candidate = "TB-" + String(nextNum).padStart(3, '0');
+      }
+      document.getElementById('field-id').value = candidate;
+    }
+
+    function updateRecurrenceTabs() {
+      const type = document.querySelector('input[name="rec_type"]:checked').value;
+      const panelWeekly = document.getElementById('panel-weekly');
+      const panelLunar = document.getElementById('panel-lunar');
+      const hintWorkday = document.getElementById('workday-hint');
+
+      panelWeekly.classList.toggle('hidden', type !== 'WEEKLY');
+      panelLunar.classList.toggle('hidden', type !== 'LUNAR');
+      if (hintWorkday) {
+        hintWorkday.classList.toggle('hidden', type !== 'WORKDAY');
+      }
+    }
+
+    function selectLunarPreset(daysArray) {
+      document.querySelectorAll('input[name="lunar_day"]').forEach(cb => {
+        cb.checked = daysArray.includes(parseInt(cb.value, 10));
+      });
+    }
+
+    function selectWorkdays() {
+      document.querySelectorAll('input[name="week_day"]').forEach(cb => {
+        cb.checked = ['1', '2', '3', '4', '5'].includes(cb.value);
+      });
+    }
+
+    function computeRecurrence() {
+      const type = document.querySelector('input[name="rec_type"]:checked').value;
+      if (type === 'ONCE' || type === 'DAILY' || type === 'WORKDAY' || type === 'MONTHLY') return type;
+
+      if (type === 'WEEKLY') {
+        const checked = Array.from(document.querySelectorAll('input[name="week_day"]:checked')).map(c => c.value);
+        if (checked.length === 0) return 'WEEKLY:1,2,3,4,5';
+        return `WEEKLY:${checked.join(',')}`;
+      }
+
+      if (type === 'LUNAR') {
+        const checked = Array.from(document.querySelectorAll('input[name="lunar_day"]:checked'))
+          .map(c => parseInt(c.value, 10))
+          .sort((a, b) => a - b);
+        if (checked.length === 0) return 'LunarDay:1,15';
+        return `LunarDay:${checked.join(',')}`;
+      }
+      return 'ONCE';
+    }
+
+    function setRecurrenceToUI(val) {
+      val = (val || '').trim();
+      if (val === 'DAILY' || val === 'WORKDAY' || val === 'MONTHLY' || val === 'ONCE') {
+        const r = document.querySelector(`input[name="rec_type"][value="${val}"]`);
+        if (r) r.checked = true;
+      } else if (val.startsWith('WEEKLY')) {
+        document.querySelector('input[name="rec_type"][value="WEEKLY"]').checked = true;
+        const days = val.split(':')[1]?.split(',') || ['1','2','3','4','5'];
+        document.querySelectorAll('input[name="week_day"]').forEach(cb => {
+          cb.checked = days.includes(cb.value);
+        });
+      } else if (val.startsWith('LunarDay') || val.startsWith('LUNAR')) {
+        document.querySelector('input[name="rec_type"][value="LUNAR"]').checked = true;
+        const days = val.split(':')[1]?.split(',') || ['1','15'];
+        document.querySelectorAll('input[name="lunar_day"]').forEach(cb => {
+          cb.checked = days.includes(cb.value);
+        });
+      } else {
+        document.querySelector('input[name="rec_type"][value="ONCE"]').checked = true;
+      }
+      updateRecurrenceTabs();
+    }
+
+    function setTargetClear() {
+      document.getElementById('field-target').value = '';
+    }
+
+    function setExcludeClear() {
+      document.getElementById('field-exclude').value = '';
+    }
+
+    function appendToField(fieldId, key) {
+      const input = document.getElementById(fieldId);
+      const val = input.value.trim();
+      if (!val) {
+        input.value = key;
+        return;
+      }
+      const parts = val.split(';').map(s => s.trim()).filter(Boolean);
+      if (!parts.includes(key)) input.value = parts.concat(key).join(';');
+    }
+
+    function markFieldError(id, hasError) {
+      const el = document.getElementById(id);
+      if (!el) return;
+      el.classList.toggle('border-rose-400', hasError);
+      el.classList.toggle('ring-2', hasError);
+      el.classList.toggle('ring-rose-200', hasError);
+    }
+
+    function validateForm(editIdx) {
+      let firstInvalid = null;
+      const errors = [];
+
+      const id = document.getElementById('field-id').value.trim();
+      const title = document.getElementById('field-title').value.trim();
+      const selDate = document.getElementById('field-date').value;
+      const selClock = document.getElementById('field-clock').value;
+
+      const idMissing = !id;
+      markFieldError('field-id', idMissing);
+      if (idMissing) { errors.push('請填寫編號 Id'); firstInvalid = firstInvalid || 'field-id'; }
+
+      const isDupLocal = !idMissing && tasks.some((t, i) => t.Id === id && i !== editIdx);
+      const isDupCloud = !idMissing && cloudExistingIds.has(id);
+      markFieldError('field-id', idMissing || isDupLocal || isDupCloud);
+      if (isDupLocal) { errors.push(`編號 ${id} 已存在於這份清單中，請改用其他編號`); firstInvalid = firstInvalid || 'field-id'; }
+      else if (isDupCloud) { errors.push(`編號 ${id} 已存在於雲端 Sheet B 現有任務中，請改用其他編號`); firstInvalid = firstInvalid || 'field-id'; }
+
+      const titleMissing = !title;
+      markFieldError('field-title', titleMissing);
+      if (titleMissing) { errors.push('請填寫標題 Title'); firstInvalid = firstInvalid || 'field-title'; }
+
+      const dateMissing = !selDate;
+      markFieldError('field-date', dateMissing);
+      if (dateMissing) { errors.push('請選擇日期'); firstInvalid = firstInvalid || 'field-date'; }
+
+      const clockMissing = !selClock;
+      markFieldError('field-clock', clockMissing);
+      if (clockMissing) { errors.push('請選擇時間'); firstInvalid = firstInvalid || 'field-clock'; }
+
+      if (errors.length) {
+        showToast(errors[0]);
+        const target = document.getElementById(firstInvalid);
+        if (target) target.focus();
+        return false;
+      }
+      return true;
+    }
+
+    function handleFormSubmit(e) {
+      e.preventDefault();
+      const editIdx = parseInt(document.getElementById('edit-index').value, 10);
+
+      if (!validateForm(editIdx)) return;
+
+      const selDate = document.getElementById('field-date').value;
+      const selClock = document.getElementById('field-clock').value || "09:00";
+      const formattedTime = `${selDate} ${selClock}`;
+
+      const item = {
+        Id: document.getElementById('field-id').value.trim(),
+        Time: formattedTime,
+        Title: document.getElementById('field-title').value.trim(),
+        Level: document.querySelector('input[name="level"]:checked').value,
+        Enabled: document.getElementById('field-enabled').checked ? "TRUE" : "FALSE",
+        Description: document.getElementById('field-desc').value.trim(),
+        RequireAck: document.getElementById('field-require-ack').checked ? "TRUE" : "FALSE",
+        Recurrence: computeRecurrence(),
+        SkipOnHoliday: document.getElementById('field-skip-holiday').checked ? "TRUE" : "FALSE",
+        TargetDeviceOrName: document.getElementById('field-target').value.trim(),
+        ExcludeDeviceOrName: document.getElementById('field-exclude').value.trim()
+      };
+
+      if (editIdx >= 0) {
+        tasks[editIdx] = item;
+        showToast("已成功更新排程任務！");
+      } else {
+        tasks.push(item);
+        showToast("已加入排程清單！");
+      }
+
+      resetForm();
+      renderTasks();
+    }
+
+    function editTask(idx) {
+      const t = tasks[idx];
+      if (!t) return;
+
+      ['field-id', 'field-title', 'field-date', 'field-clock'].forEach(id => markFieldError(id, false));
+      document.getElementById('edit-index').value = idx;
+      document.getElementById('form-mode-title').innerText = `編輯項目 (${t.Id})`;
+      document.getElementById('btn-submit-label').innerText = "儲存修改項目";
+      document.getElementById('btn-cancel-edit').classList.remove('hidden');
+
+      document.getElementById('field-id').value = t.Id;
+
+      if (t.Time && t.Time.includes(' ')) {
+        const parts = t.Time.split(' ');
+        document.getElementById('field-date').value = parts[0];
+        document.getElementById('field-clock').value = parts[1];
+      }
+
+      document.getElementById('field-title').value = t.Title;
+      document.getElementById('field-desc').value = t.Description || '';
+
+      const rLevel = document.querySelector(`input[name="level"][value="${t.Level}"]`);
+      if (rLevel) rLevel.checked = true;
+
+      document.getElementById('field-enabled').checked = (t.Enabled === 'TRUE');
+      document.getElementById('field-require-ack').checked = (t.RequireAck === 'TRUE');
+      document.getElementById('field-skip-holiday').checked = (t.SkipOnHoliday === 'TRUE');
+
+      document.getElementById('field-target').value = t.TargetDeviceOrName || '';
+      document.getElementById('field-exclude').value = t.ExcludeDeviceOrName || '';
+
+      setRecurrenceToUI(t.Recurrence);
+      lucide.createIcons();
+    }
+
+    function deleteTask(idx) {
+      tasks.splice(idx, 1);
+      renderTasks();
+      suggestNextId();
+      showToast("已刪除任務項目。");
+    }
+
+    function resetForm() {
+      document.getElementById('task-form').reset();
+      document.getElementById('edit-index').value = "-1";
+      document.getElementById('form-mode-title').innerText = "新增排程任務";
+      document.getElementById('btn-submit-label').innerText = "加入到右側清單";
+      document.getElementById('btn-cancel-edit').classList.add('hidden');
+      document.getElementById('field-date').value = getTodayString();
+      document.getElementById('field-clock').value = "09:00";
+      document.querySelector('input[name="level"][value="一般提醒"]').checked = true;
+      document.querySelector('input[name="rec_type"][value="ONCE"]').checked = true;
+      document.getElementById('field-enabled').checked = true;
+      document.getElementById('field-require-ack').checked = false;
+      document.getElementById('field-skip-holiday').checked = false;
+      ['field-id', 'field-title', 'field-date', 'field-clock'].forEach(id => markFieldError(id, false));
+      updateRecurrenceTabs();
+      suggestNextId();
+      lucide.createIcons();
+    }
+
+    function clearAllTasks() {
+      if (tasks.length === 0) return;
+      if (confirm("確定要清空所有任務排程？")) {
+        tasks = [];
+        resetForm();
+        renderTasks();
+        showToast("已清空所有排程。");
+      }
+    }
+
+    // Minimal RFC4180 CSV line parser (handles quoted fields with , and "")
+    function parseCsv(text) {
+      const rows = [];
+      let row = [];
+      let field = '';
+      let inQuotes = false;
+      for (let i = 0; i < text.length; i++) {
+        const c = text[i];
+        if (inQuotes) {
+          if (c === '"') {
+            if (text[i + 1] === '"') { field += '"'; i++; }
+            else { inQuotes = false; }
+          } else {
+            field += c;
+          }
+        } else {
+          if (c === '"') inQuotes = true;
+          else if (c === ',') { row.push(field); field = ''; }
+          else if (c === '\r') { /* skip */ }
+          else if (c === '\n') { row.push(field); rows.push(row); row = []; field = ''; }
+          else field += c;
+        }
+      }
+      if (field.length || row.length) { row.push(field); rows.push(row); }
+      return rows;
+    }
+
+    function setCloudStatus(state, text) {
+      cloudSyncState = state;
+      const el = document.getElementById('cloud-status');
+      const icon = document.getElementById('cloud-status-icon');
+      const label = document.getElementById('cloud-status-text');
+      const btnLabel = document.getElementById('btn-sync-cloud-label');
+
+      const styles = {
+        loading: { box: 'bg-sky-50 border-sky-200 text-sky-700', icon: 'loader-circle' },
+        ok: { box: 'bg-emerald-50 border-emerald-200 text-emerald-700', icon: 'circle-check' },
+        error: { box: 'bg-rose-50 border-rose-200 text-rose-700', icon: 'circle-alert' },
+      };
+      const s = styles[state] || styles.error;
+
+      el.classList.remove('hidden');
+      el.className = `flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-medium border ${s.box}`;
+      icon.setAttribute('data-lucide', s.icon);
+      icon.classList.toggle('animate-spin', state === 'loading');
+      label.textContent = text;
+
+      if (state === 'loading') btnLabel.textContent = '同步中…';
+      else if (state === 'ok') btnLabel.textContent = '重新同步雲端資料';
+      else btnLabel.textContent = '同步雲端資料（任務＋員工名單）';
+
+      lucide.createIcons();
+    }
+
+    async function fetchCloudTasksOnly() {
+      const res = await fetch(CLOUD_TASKS_CSV_URL, { cache: 'no-store' });
+      if (!res.ok) throw new Error(await res.text().catch(() => `HTTP ${res.status}`));
+      const text = await res.text();
+      const rows = parseCsv(text.replace(/^﻿/, ''));
+      // 第 1 列英文表頭、第 2 列中文說明，第 3 列起才是資料（見 Sheet範例/README.md）
+      const dataRows = rows.slice(2).filter(r => r.some(c => c && c.trim()));
+
+      cloudTasks = dataRows.map(r => {
+        const t = {};
+        HEADERS_EN.forEach((h, i) => { t[h] = (r[i] || '').trim(); });
+        return t;
+      });
+      cloudExistingIds = new Set(cloudTasks.map(t => t.Id).filter(Boolean));
+      renderCloudTasks();
+    }
+
+    async function fetchEmployeesOnly() {
+      const res = await fetch(EMPLOYEES_CSV_URL, { cache: 'no-store' });
+      if (!res.ok) throw new Error(await res.text().catch(() => `HTTP ${res.status}`));
+      const text = await res.text();
+      const rows = parseCsv(text.replace(/^﻿/, ''));
+      const dataRows = rows.slice(2).filter(r => r.some(c => c && c.trim()));
+      // Employees 欄位順序：Id, Name, Department, Title, MaxAllowedLevel, RequireAckOverride, EnglishName, Note
+      employees = dataRows.map(r => ({
+        Id: (r[0] || '').trim(),
+        Name: (r[1] || '').trim(),
+        Department: (r[2] || '').trim(),
+        Title: (r[3] || '').trim(),
+      })).filter(e => e.Id);
+    }
+
+    async function syncAllCloudData(opts) {
+      const silent = opts && opts.silent;
+
+      if (location.protocol === 'file:') {
+        const msg = '這個頁面需要從 Cloud Alarm Overlay 程式開啟（側邊欄「任務產生器」），才能讀取管理者已設定好的 Sheet 連線資訊；目前是直接開啟本機檔案，無法同步雲端資料。';
+        setCloudStatus('error', msg);
+        setEmployeesStatus('error', msg);
+        if (!silent) showToast('請改由 Cloud Alarm Overlay 程式開啟此頁面才能同步雲端資料');
+        return;
+      }
+
+      setCloudStatus('loading', '正在同步 Sheet B 現有任務與 Sheet A 員工名單…');
+      setEmployeesStatus('loading', '正在同步 Sheet A 員工名單…');
+
+      const [tasksResult, employeesResult] = await Promise.allSettled([
+        fetchCloudTasksOnly(),
+        fetchEmployeesOnly(),
+      ]);
+
+      if (tasksResult.status === 'fulfilled') {
+        setCloudStatus('ok', `已載入雲端現有 ${cloudExistingIds.size} 筆任務（唯讀，僅供預覽與避免重複編號，不會修改雲端資料）。`);
+      } else {
+        cloudExistingIds = new Set();
+        cloudTasks = [];
+        renderCloudTasks();
+        setCloudStatus('error', `讀取雲端任務失敗（${tasksResult.reason.message}）。可能是網路問題或 Sheet 權限變更，仍可繼續使用本工具，只是不會檢查跟雲端的重複編號。`);
+      }
+
+      if (employeesResult.status === 'fulfilled') {
+        setEmployeesStatus('ok', `已載入 ${employees.length} 位員工（唯讀，僅供挑選目標／排除對象，不會顯示或修改雲端資料）。`);
+      } else {
+        employees = [];
+        setEmployeesStatus('error', `讀取員工名單失敗（${employeesResult.reason.message}）。可能是網路問題或 Sheet 權限變更，仍可手動輸入目標／排除對象。`);
+      }
+
+      suggestNextId();
+
+      if (!silent) {
+        if (tasksResult.status === 'fulfilled' && employeesResult.status === 'fulfilled') {
+          showToast(`已同步雲端資料：${cloudExistingIds.size} 筆任務、${employees.length} 位員工`);
+        } else {
+          showToast('部分雲端資料同步失敗，請稍後再試');
+        }
+      }
+    }
+
+    function updateMergedEmptyState() {
+      const emptyState = document.getElementById('table-empty');
+      emptyState.classList.toggle('hidden', tasks.length > 0 || cloudTasks.length > 0);
+    }
+
+    function setEmployeesStatus(state, text) {
+      employeesSyncState = state;
+      const el = document.getElementById('employees-status');
+      const styles = {
+        loading: 'bg-sky-50 border-sky-200 text-sky-700',
+        ok: 'bg-emerald-50 border-emerald-200 text-emerald-700',
+        error: 'bg-rose-50 border-rose-200 text-rose-700',
+      };
+      el.classList.remove('hidden');
+      el.className = `text-[11px] px-2.5 py-1.5 rounded-lg border ${styles[state] || styles.error}`;
+      el.textContent = text;
+    }
+
+    function openPeoplePicker(mode) {
+      pickerMode = mode;
+      pickerSelectedDept = new Set();
+      pickerSelectedTitle = new Set();
+      pickerSelectedKeys = new Set();
+      document.getElementById('picker-search').value = '';
+
+      const isTarget = mode === 'target';
+      document.getElementById('picker-title').textContent = isTarget ? '挑選目標對象' : '挑選排除對象';
+      const iconWrap = document.getElementById('picker-icon-wrap');
+      iconWrap.className = `p-1.5 rounded-lg ${isTarget ? 'bg-emerald-100 text-emerald-700' : 'bg-rose-100 text-rose-700'}`;
+      iconWrap.innerHTML = `<i data-lucide="${isTarget ? 'list-plus' : 'list-minus'}" class="w-4 h-4"></i>`;
+
+      document.getElementById('people-picker-overlay').classList.remove('hidden');
+      renderPeoplePickerList();
+      lucide.createIcons();
+
+      if (employees.length === 0 && employeesSyncState !== 'loading') {
+        syncAllCloudData();
+      }
+    }
+
+    function closePeoplePicker() {
+      document.getElementById('people-picker-overlay').classList.add('hidden');
+      pickerMode = null;
+    }
+
+    function togglePickerDept(dep) {
+      if (pickerSelectedDept.has(dep)) pickerSelectedDept.delete(dep);
+      else pickerSelectedDept.add(dep);
+      renderPeoplePickerList();
+    }
+
+    function togglePickerTitle(title) {
+      if (pickerSelectedTitle.has(title)) pickerSelectedTitle.delete(title);
+      else pickerSelectedTitle.add(title);
+      renderPeoplePickerList();
+    }
+
+    function togglePickerKey(key) {
+      if (pickerSelectedKeys.has(key)) pickerSelectedKeys.delete(key);
+      else pickerSelectedKeys.add(key);
+      updatePickerSummary();
+    }
+
+    function updatePickerSummary() {
+      const summary = document.getElementById('picker-selected-summary');
+      const deptCount = pickerSelectedDept.size;
+      const peopleCount = pickerSelectedKeys.size;
+      if (deptCount === 0 && peopleCount === 0) {
+        summary.textContent = '尚未選取';
+      } else {
+        const parts = [];
+        if (deptCount) parts.push(`${deptCount} 個部門`);
+        if (peopleCount) parts.push(`${peopleCount} 位人員`);
+        summary.textContent = '已選取：' + parts.join('、');
+      }
+    }
+
+    function renderPeoplePickerList() {
+      const body = document.getElementById('picker-body');
+      const keyword = document.getElementById('picker-search').value.trim().toLowerCase();
+
+      if (employeesSyncState === 'loading') {
+        body.innerHTML = `<div class="py-10 text-center text-xs text-slate-400">員工名單讀取中…</div>`;
+        return;
+      }
+      if (employees.length === 0) {
+        body.innerHTML = `
+          <div class="py-10 text-center text-xs text-slate-400 space-y-2">
+            <p>尚未載入員工名單，或讀取失敗。</p>
+            <button type="button" onclick="syncAllCloudData()" class="px-3 py-1.5 text-xs font-medium text-sky-700 bg-sky-50 border border-sky-200 rounded-lg hover:bg-sky-100 transition-colors">重新載入</button>
+          </div>`;
+        return;
+      }
+
+      const departments = Array.from(new Set(employees.map(e => e.Department).filter(Boolean))).sort();
+      const titles = Array.from(new Set(employees.map(e => e.Title).filter(Boolean))).sort();
+
+      // 雙篩選：部門 + 職稱／職能，交集篩選；未勾選任一維度視為不篩該維度
+      let filtered = employees.filter(e => {
+        if (pickerSelectedDept.size > 0 && !pickerSelectedDept.has(e.Department)) return false;
+        if (pickerSelectedTitle.size > 0 && !pickerSelectedTitle.has(e.Title)) return false;
+        return true;
+      });
+      if (keyword) {
+        filtered = filtered.filter(e =>
+          e.Name.toLowerCase().includes(keyword) ||
+          e.Id.toLowerCase().includes(keyword) ||
+          e.Department.toLowerCase().includes(keyword) ||
+          e.Title.toLowerCase().includes(keyword)
+        );
+      }
+
+      const deptChips = departments.map(dep => {
+        const on = pickerSelectedDept.has(dep);
+        return `<button type="button" onclick="togglePickerDept('${dep.replace(/'/g, "\\'")}')"
+          class="px-2.5 py-1 text-[11px] font-medium rounded-full border transition-colors ${on ? 'bg-emerald-600 text-white border-emerald-600' : 'bg-white text-slate-600 border-slate-200 hover:border-emerald-300'}">
+          ${dep}
+        </button>`;
+      }).join('');
+
+      const titleChips = titles.map(title => {
+        const on = pickerSelectedTitle.has(title);
+        return `<button type="button" onclick="togglePickerTitle('${title.replace(/'/g, "\\'")}')"
+          class="px-2.5 py-1 text-[11px] font-medium rounded-full border transition-colors ${on ? 'bg-sky-600 text-white border-sky-600' : 'bg-white text-slate-600 border-slate-200 hover:border-sky-300'}">
+          ${title}
+        </button>`;
+      }).join('');
+
+      const wholeDeptButtons = pickerSelectedDept.size > 0
+        ? Array.from(pickerSelectedDept).map(dep => `
+          <button type="button" onclick="addWholeDeptToSelection('${dep.replace(/'/g, "\\'")}')"
+            class="inline-flex items-center gap-1 px-2.5 py-1 text-[11px] font-semibold rounded-lg bg-amber-50 text-amber-700 border border-amber-200 hover:bg-amber-100 transition-colors">
+            <i data-lucide="users" class="w-3 h-3"></i>
+            整個「${dep}」部門
+          </button>`).join('')
+        : '';
+
+      const peopleRows = filtered.map(e => {
+        const key = e.Name || e.Id;
+        const on = pickerSelectedKeys.has(key);
+        return `
+          <label class="flex items-center gap-2.5 px-2.5 py-2 rounded-lg cursor-pointer hover:bg-slate-50 ${on ? 'bg-emerald-50/60' : ''}">
+            <input type="checkbox" ${on ? 'checked' : ''} onchange="togglePickerKey('${key.replace(/'/g, "\\'")}')" class="w-3.5 h-3.5 accent-emerald-600">
+            <div class="flex-1 min-w-0">
+              <div class="text-xs font-semibold text-slate-800 truncate">${e.Name || '(公用電腦，無對應個人)'} <span class="font-mono text-[10px] text-slate-400 font-normal">${e.Id}</span></div>
+              <div class="text-[10px] text-slate-400 truncate">${e.Department || '-'}${e.Title ? ' · ' + e.Title : ''}</div>
+            </div>
+          </label>`;
+      }).join('');
+
+      body.innerHTML = `
+        <div>
+          <div class="text-[11px] font-semibold text-slate-500 mb-1.5">依部門篩選</div>
+          <div class="flex flex-wrap gap-1.5">${deptChips || '<span class="text-[11px] text-slate-400">無部門資料</span>'}</div>
+        </div>
+        <div>
+          <div class="text-[11px] font-semibold text-slate-500 mb-1.5">依職稱／職能篩選</div>
+          <div class="flex flex-wrap gap-1.5">${titleChips || '<span class="text-[11px] text-slate-400">無職稱資料</span>'}</div>
+        </div>
+        ${wholeDeptButtons ? `<div class="flex flex-wrap gap-1.5 pt-1 border-t border-slate-100">${wholeDeptButtons}</div>` : ''}
+        <div>
+          <div class="flex items-center justify-between mb-1.5">
+            <span class="text-[11px] font-semibold text-slate-500">符合條件的人員（${filtered.length}）</span>
+            ${filtered.length > 0 ? `<button type="button" onclick="selectAllFiltered()" class="text-[11px] text-emerald-700 underline">全選</button>` : ''}
+          </div>
+          <div class="border border-slate-100 rounded-xl divide-y divide-slate-50 max-h-56 overflow-y-auto">
+            ${peopleRows || '<div class="py-6 text-center text-[11px] text-slate-400">沒有符合條件的人員</div>'}
+          </div>
+        </div>
+      `;
+      lucide.createIcons();
+      updatePickerSummary();
+    }
+
+    function addWholeDeptToSelection(dep) {
+      // 直接把整個部門當作鍵值（比對規則見 Sheet範例/README.md：部門鍵值會展開成該部門所有員工）
+      const fieldId = pickerMode === 'target' ? 'field-target' : 'field-exclude';
+      appendToField(fieldId, dep);
+      showToast(`已帶入整個「${dep}」部門`);
+      closePeoplePicker();
+    }
+
+    function selectAllFiltered() {
+      const keyword = document.getElementById('picker-search').value.trim().toLowerCase();
+      let filtered = employees.filter(e => {
+        if (pickerSelectedDept.size > 0 && !pickerSelectedDept.has(e.Department)) return false;
+        if (pickerSelectedTitle.size > 0 && !pickerSelectedTitle.has(e.Title)) return false;
+        return true;
+      });
+      if (keyword) {
+        filtered = filtered.filter(e =>
+          e.Name.toLowerCase().includes(keyword) ||
+          e.Id.toLowerCase().includes(keyword) ||
+          e.Department.toLowerCase().includes(keyword) ||
+          e.Title.toLowerCase().includes(keyword)
+        );
+      }
+      filtered.forEach(e => pickerSelectedKeys.add(e.Name || e.Id));
+      renderPeoplePickerList();
+    }
+
+    function applyPeoplePicker() {
+      if (!pickerMode) return;
+      const fieldId = pickerMode === 'target' ? 'field-target' : 'field-exclude';
+      if (pickerSelectedKeys.size === 0) {
+        showToast('尚未勾選任何人員，已取消');
+        closePeoplePicker();
+        return;
+      }
+      pickerSelectedKeys.forEach(key => appendToField(fieldId, key));
+      showToast(`已帶入 ${pickerSelectedKeys.size} 位人員`);
+      closePeoplePicker();
+    }
+
+    function renderCloudTasks() {
+      const tbody = document.getElementById('cloud-tbody');
+      const badge = document.getElementById('badge-cloud-count');
+
+      tbody.innerHTML = '';
+      badge.innerText = cloudTasks.length;
+
+      cloudTasks.forEach(t => {
+        const tr = document.createElement('tr');
+        tr.className = "bg-sky-50/40 hover:bg-sky-50/70 transition-colors";
+
+        let badgeStyle = "bg-emerald-50 text-emerald-700 border-emerald-200";
+        if (t.Level === '重要提醒') badgeStyle = "bg-amber-50 text-amber-700 border-amber-200";
+        else if (t.Level === '緊急提醒') badgeStyle = "bg-rose-50 text-rose-700 border-rose-200";
+        else if (t.Level === '強制通知') badgeStyle = "bg-purple-50 text-purple-700 border-purple-200";
+
+        tr.innerHTML = `
+          <td class="py-3 px-3 whitespace-nowrap">
+            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-semibold bg-sky-100 text-sky-700 border border-sky-200">
+              <i data-lucide="lock" class="w-3 h-3"></i>
+              雲端
+            </span>
+          </td>
+          <td class="py-3 px-3 font-mono font-semibold text-slate-800">${t.Id}</td>
+          <td class="py-3 px-3 font-mono text-[11px] text-slate-600 whitespace-nowrap">${t.Time}</td>
+          <td class="py-3 px-3">
+            <div class="font-semibold text-slate-900">${t.Title}</div>
+            <div class="text-[11px] text-slate-400 truncate max-w-[180px]">${t.Description || '-'}</div>
+          </td>
+          <td class="py-3 px-2.5">
+            <span class="inline-flex items-center px-2 py-0.5 rounded-md text-[11px] font-medium border ${badgeStyle}">
+              ${t.Level}
+            </span>
+          </td>
+          <td class="py-3 px-2.5 whitespace-nowrap">
+            <div class="flex items-center gap-1.5">
+              <span class="w-2 h-2 rounded-full ${t.Enabled === 'TRUE' ? 'bg-emerald-500' : 'bg-slate-300'}"></span>
+              <span class="text-[11px] text-slate-600">${t.Enabled === 'TRUE' ? '啟用' : '停用'}</span>
+            </div>
+          </td>
+          <td class="py-3 px-3 font-mono text-[11px] text-slate-600">${t.Recurrence}</td>
+          <td class="py-3 px-3 text-[11px] text-slate-600 max-w-[130px] truncate">
+            ${t.TargetDeviceOrName ? `<span class="bg-slate-100 px-1.5 py-0.5 rounded text-slate-700 font-mono">${t.TargetDeviceOrName}</span>` : '<span class="text-slate-400 italic">全公司</span>'}
+          </td>
+          <td class="py-3 px-3 text-center text-slate-300" title="雲端資料唯讀，無法在此編輯">
+            <i data-lucide="lock" class="w-3.5 h-3.5 inline-block"></i>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+
+      updateMergedEmptyState();
+      lucide.createIcons();
+    }
+
+    function renderTasks() {
+      const tbody = document.getElementById('task-tbody');
+      const badgeCount = document.getElementById('badge-count');
+
+      tbody.innerHTML = '';
+      badgeCount.innerText = tasks.length;
+
+      tasks.forEach((t, i) => {
+        const tr = document.createElement('tr');
+        tr.className = "hover:bg-slate-50/70 transition-colors group";
+
+        // Level style
+        let badgeStyle = "bg-emerald-50 text-emerald-700 border-emerald-200";
+        if (t.Level === '重要提醒') badgeStyle = "bg-amber-50 text-amber-700 border-amber-200";
+        else if (t.Level === '緊急提醒') badgeStyle = "bg-rose-50 text-rose-700 border-rose-200";
+        else if (t.Level === '強制通知') badgeStyle = "bg-purple-50 text-purple-700 border-purple-200";
+
+        tr.innerHTML = `
+          <td class="py-3 px-3 whitespace-nowrap">
+            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-semibold bg-slate-100 text-slate-600 border border-slate-200">
+              <i data-lucide="pencil-line" class="w-3 h-3"></i>
+              草稿
+            </span>
+          </td>
+          <td class="py-3 px-3 font-mono font-semibold text-slate-800">${t.Id}</td>
+          <td class="py-3 px-3 font-mono text-[11px] text-slate-600 whitespace-nowrap">${t.Time}</td>
+          <td class="py-3 px-3">
+            <div class="font-semibold text-slate-900">${t.Title}</div>
+            <div class="text-[11px] text-slate-400 truncate max-w-[180px]">${t.Description || '-'}</div>
+          </td>
+          <td class="py-3 px-2.5">
+            <span class="inline-flex items-center px-2 py-0.5 rounded-md text-[11px] font-medium border ${badgeStyle}">
+              ${t.Level}
+            </span>
+          </td>
+          <td class="py-3 px-2.5 whitespace-nowrap">
+            <div class="flex items-center gap-1.5">
+              <span class="w-2 h-2 rounded-full ${t.Enabled === 'TRUE' ? 'bg-emerald-500' : 'bg-slate-300'}"></span>
+              <span class="text-[11px] text-slate-600">${t.Enabled === 'TRUE' ? '啟用' : '停用'}</span>
+            </div>
+          </td>
+          <td class="py-3 px-3 font-mono text-[11px] text-slate-600">${t.Recurrence}</td>
+          <td class="py-3 px-3 text-[11px] text-slate-600 max-w-[130px] truncate">
+            ${t.TargetDeviceOrName ? `<span class="bg-slate-100 px-1.5 py-0.5 rounded text-slate-700 font-mono">${t.TargetDeviceOrName}</span>` : '<span class="text-slate-400 italic">全公司</span>'}
+          </td>
+          <td class="py-3 px-3 text-center whitespace-nowrap">
+            <div class="flex items-center justify-center gap-1 opacity-80 group-hover:opacity-100 transition-opacity">
+              <button onclick="editTask(${i})" class="p-1 rounded hover:bg-slate-200 text-slate-600 transition-colors" title="編輯">
+                <i data-lucide="edit-3" class="w-3.5 h-3.5"></i>
+              </button>
+              <button onclick="deleteTask(${i})" class="p-1 rounded hover:bg-rose-100 text-slate-400 hover:text-rose-600 transition-colors" title="刪除">
+                <i data-lucide="trash" class="w-3.5 h-3.5"></i>
+              </button>
+            </div>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+
+      updateMergedEmptyState();
+      lucide.createIcons();
+    }
+
+    function loadSampleData() {
+      tasks = [
+        {
+          Id: "TB-001",
+          Time: "2026-09-24 17:00",
+          Title: "中秋節祝福",
+          Level: "一般提醒",
+          Enabled: "TRUE",
+          Description: "祝全體同仁中秋節快樂！連假愉快！",
+          RequireAck: "FALSE",
+          Recurrence: "ONCE",
+          SkipOnHoliday: "FALSE",
+          TargetDeviceOrName: "",
+          ExcludeDeviceOrName: ""
+        },
+        {
+          Id: "TB-002",
+          Time: "2026-10-01 09:00",
+          Title: "初一祭拜與庫存盤點",
+          Level: "一般提醒",
+          Enabled: "TRUE",
+          Description: "今日農曆初一，請營業部與行銷部同仁配合例行巡檢登記。",
+          RequireAck: "FALSE",
+          Recurrence: "LunarDay:1,15",
+          SkipOnHoliday: "TRUE",
+          TargetDeviceOrName: "營業部;行銷部",
+          ExcludeDeviceOrName: "倉管課"
+        },
+        {
+          Id: "TB-003",
+          Time: "2026-10-05 18:00",
+          Title: "下班打卡與門窗閉鎖通知",
+          Level: "重要提醒",
+          Enabled: "TRUE",
+          Description: "離開前請務必至前台打卡，並巡檢關閉空調與照明設備。",
+          RequireAck: "TRUE",
+          Recurrence: "WORKDAY",
+          SkipOnHoliday: "TRUE",
+          TargetDeviceOrName: "",
+          ExcludeDeviceOrName: ""
+        },
+        {
+          Id: "TB-004",
+          Time: "2026-10-10 10:00",
+          Title: "消防警報全棟疏散廣播測試",
+          Level: "緊急提醒",
+          Enabled: "FALSE",
+          Description: "本季度消防設備檢測演練，各樓層請依疏散路線行動。",
+          RequireAck: "TRUE",
+          Recurrence: "ONCE",
+          SkipOnHoliday: "FALSE",
+          TargetDeviceOrName: "DEV-01;DEV-02",
+          ExcludeDeviceOrName: ""
+        }
+      ];
+      renderTasks();
+      suggestNextId();
+      showToast("已載入 4 筆預設測試範例！");
+    }
+
+    // Export .xlsx with headers intact
+    function exportToExcel() {
+      if (tasks.length === 0) {
+        alert("清單目前沒有任何任務，請先新增任務或點擊「載入範例」！");
+        return;
+      }
+      const grid = [HEADERS_EN, HEADERS_ZH];
+      tasks.forEach(t => {
+        grid.push([
+          t.Id, t.Time, t.Title, t.Level, t.Enabled, t.Description || "",
+          t.RequireAck, t.Recurrence, t.SkipOnHoliday, t.TargetDeviceOrName || "", t.ExcludeDeviceOrName || ""
+        ]);
+      });
+
+      const wb = XLSX.utils.book_new();
+      const ws = XLSX.utils.aoa_to_sheet(grid);
+
+      ws['!cols'] = HEADERS_EN.map((h, i) => {
+        let len = Math.max(h.length, HEADERS_ZH[i].length * 2);
+        tasks.forEach(t => {
+          const v = String(grid[tasks.indexOf(t) + 2][i] || '');
+          len = Math.max(len, v.length);
+        });
+        return { wch: Math.min(Math.max(len + 4, 12), 40) };
+      });
+
+      XLSX.utils.book_append_sheet(wb, ws, "Tasks");
+      XLSX.writeFile(wb, "CloudAlarm_Tasks_排程表.xlsx");
+      showToast("已下載 Excel (.xlsx) 檔案！");
+    }
+
+    // Copy DATA ONLY (without headers) for direct paste into existing Google Sheets
+    function copyDataOnlyTSV() {
+      if (tasks.length === 0) {
+        alert("清單目前沒有任何任務可複製！");
+        return;
+      }
+      // ONLY task rows, NO headers!
+      const dataRows = tasks.map(t => [
+        t.Id,
+        t.Time,
+        t.Title,
+        t.Level,
+        t.Enabled,
+        t.Description || "",
+        t.RequireAck,
+        t.Recurrence,
+        t.SkipOnHoliday,
+        t.TargetDeviceOrName || "",
+        t.ExcludeDeviceOrName || ""
+      ]);
+
+      const tsv = dataRows.map(r => r.join('\t')).join('\n');
+      navigator.clipboard.writeText(tsv).then(() => {
+        showToast("已複製純資料列 (不含標題)！可直接至 Google Sheets 接續貼上");
+      }).catch(() => {
+        alert("瀏覽器剪貼簿權限受限，請改用「匯出 Excel」！");
+      });
+    }
+
+    function showToast(msg) {
+      const toast = document.getElementById('toast');
+      document.getElementById('toast-text').innerText = msg;
+      toast.classList.remove('translate-y-10', 'opacity-0', 'pointer-events-none');
+      setTimeout(() => {
+        toast.classList.add('translate-y-10', 'opacity-0', 'pointer-events-none');
+      }, 2800);
+    }
+  </script>
+</body>
+</html>

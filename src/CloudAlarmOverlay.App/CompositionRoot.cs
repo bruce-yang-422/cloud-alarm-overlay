@@ -37,6 +37,7 @@ public static class CompositionRoot
         services.AddSingleton<IAlarmPresenter>(provider=>provider.GetRequiredService<AlarmPresenter>());
         services.AddSingleton<IUserDialogs, UserDialogs>();
         services.AddSingleton<IAutoStartService, AutoStartService>();
+        services.AddSingleton<TaskBuilderHostService>();
         services.AddSingleton<ILoggerProvider, LocalFileLoggerProvider>();
         services.AddSingleton<PreferencesViewModel>();
         services.AddSingleton<MaintenanceViewModel>();

@@ -94,6 +94,25 @@
                 </Style>
               </ListBox.ItemContainerStyle>
             </ListBox>
+            <Border x:Name="TaskBuilderNavItem" Padding="12,9" Margin="0,-8,0,8" CornerRadius="7" Background="Transparent" Cursor="Hand" MouseLeftButtonUp="OpenTaskBuilder">
+              <Border.Style>
+                <Style TargetType="Border">
+                  <Style.Triggers>
+                    <Trigger Property="IsMouseOver" Value="True">
+                      <Setter Property="Opacity" Value=".8" />
+                    </Trigger>
+                  </Style.Triggers>
+                </Style>
+              </Border.Style>
+              <Grid>
+                <Grid.ColumnDefinitions>
+                  <ColumnDefinition Width="30" />
+                  <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+                <TextBlock Text="&#xE943;" FontFamily="Segoe MDL2 Assets" FontSize="20" Foreground="{adaptive:AdaptiveBrush #697C99}" />
+                <TextBlock Grid.Column="1" Text="任務產生器" FontSize="14" Foreground="{adaptive:AdaptiveBrush #697C99}" />
+              </Grid>
+            </Border>
           </StackPanel>
         </ScrollViewer>
       </DockPanel>
