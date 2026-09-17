@@ -22,6 +22,8 @@ OutputBaseFilename=CloudAlarmOverlay-v{#AppVersion}-Setup-x64
 Compression=lzma2
 SolidCompression=yes
 WizardStyle=modern
+SetupIconFile=..\src\CloudAlarmOverlay.App\Assets\Brand\cloud_alarm_app.ico
+DisableWelcomePage=no
 ArchitecturesAllowed=x64compatible
 ArchitecturesInstallIn64BitMode=x64compatible
 CloseApplications=yes
@@ -29,6 +31,9 @@ UninstallDisplayIcon={app}\{#AppExeName}
 VersionInfoDescription=Cloud Alarm Overlay Installer
 VersionInfoProductName={#AppName}
 VersionInfoVersion={#AppVersion}
+
+[Languages]
+Name: "chinesetraditional"; MessagesFile: "compiler:Languages\ChineseTraditional.isl"
 
 [Tasks]
 Name: "desktopicon"; Description: "建立桌面捷徑"; GroupDescription: "附加捷徑："; Flags: unchecked
@@ -49,6 +54,40 @@ Filename: "{app}\{#AppExeName}"; Description: "啟動 Cloud Alarm Overlay"; Flag
 ; Uninstall deliberately retains the user's AppData database.
 
 [Code]
+procedure InitializeWizard();
+var
+  AboutPage: TWizardPage;
+  Heading, Description: TNewStaticText;
+begin
+  AboutPage := CreateCustomPage(wpWelcome, '認識 Cloud Alarm Overlay', '雲端鬧鐘警示・安裝前說明');
+
+  Heading := TNewStaticText.Create(AboutPage);
+  Heading.Parent := AboutPage.Surface;
+  Heading.Left := ScaleX(8);
+  Heading.Top := ScaleY(16);
+  Heading.AutoSize := False;
+  Heading.WordWrap := True;
+  Heading.Width := AboutPage.SurfaceWidth - ScaleX(16);
+  Heading.Font.Style := [fsBold];
+  Heading.Font.Size := 14;
+  Heading.Caption := 'Cloud Alarm Overlay｜雲端鬧鐘警示';
+  Heading.AdjustHeight;
+
+  Description := TNewStaticText.Create(AboutPage);
+  Description.Parent := AboutPage.Surface;
+  Description.Left := ScaleX(8);
+  Description.Top := Heading.Top + Heading.Height + ScaleY(20);
+  Description.AutoSize := False;
+  Description.WordWrap := True;
+  Description.Width := AboutPage.SurfaceWidth - ScaleX(16);
+  Description.Caption :=
+    '這是一套 Windows 提醒工具，可同步公司 Google Sheets 的任務，也能建立本機提醒。' + #13#10#13#10 +
+    '提供一般提醒、重要提醒、緊急提醒與強制通知，並可查看歷史紀錄及使用番茄鐘。' + #13#10#13#10 +
+    '首次開啟時，請依公司提供的名單填入裝置代碼與顯示名稱；同步來源由管理者設定。' + #13#10#13#10 +
+    '關閉主視窗後，程式仍會留在右下角系統匣持續提醒。';
+  Description.AdjustHeight;
+end;
+
 function ShouldRegisterAutoStart: Boolean;
 var
   Enabled: Cardinal;

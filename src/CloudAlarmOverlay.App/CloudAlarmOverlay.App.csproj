@@ -3,6 +3,7 @@
     <TargetFramework>net10.0-windows</TargetFramework>
     <OutputType>WinExe</OutputType>
     <UseWPF>true</UseWPF>
+    <ApplicationIcon>Assets/Brand/cloud_alarm_app.ico</ApplicationIcon>
   </PropertyGroup>
   <ItemGroup>
     <Resource Include="Assets/Emoji/*.png" />
