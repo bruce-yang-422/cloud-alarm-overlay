@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#f5f9ff">
-  <meta name="description" content="Cloud Alarm Overlay 是 Windows 桌面提醒程式：建立本機任務、從 Google Sheets 公開 CSV 同步團隊任務，提供一般、重要、緊急與強制通知四種提醒模式，以及確認紀錄與番茄鐘。">
+  <meta name="description" content="Cloud Alarm Overlay 是 Windows 桌面提醒程式：建立本機任務、同步 Google Sheets 團隊任務，提供四種提醒模式、確認紀錄與番茄鐘，並介紹即將加入的內建任務產生器。">
   <meta name="robots" content="index,follow,max-image-preview:large">
   <title>Cloud Alarm Overlay｜Windows 桌面提醒、任務同步與番茄鐘</title>
   <link rel="canonical" href="https://bruce-yang-422.github.io/cloud-alarm-overlay/">
@@ -14,7 +14,7 @@
   <meta property="og:locale" content="zh_TW">
   <meta property="og:site_name" content="Cloud Alarm Overlay">
   <meta property="og:title" content="Cloud Alarm Overlay｜重要的事，準時看見">
-  <meta property="og:description" content="Windows 桌面提醒程式，整合本機與 Google Sheets 任務、四種提醒模式、確認紀錄與番茄鐘。">
+  <meta property="og:description" content="Windows 桌面提醒程式，整合本機與 Google Sheets 任務、四種提醒模式、番茄鐘，以及即將提供的任務產生器。">
   <meta property="og:url" content="https://bruce-yang-422.github.io/cloud-alarm-overlay/">
   <meta property="og:image" content="https://bruce-yang-422.github.io/cloud-alarm-overlay/site-assets/og-preview.png">
   <meta property="og:image:width" content="1200">
@@ -22,7 +22,7 @@
   <meta property="og:image:alt" content="Cloud Alarm Overlay：重要的事，準時看見。Windows 桌面提醒程式介面預覽。">
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:title" content="Cloud Alarm Overlay｜重要的事，準時看見">
-  <meta name="twitter:description" content="Windows 桌面提醒、Google Sheets 任務同步、分級通知與番茄鐘。">
+  <meta name="twitter:description" content="Windows 桌面提醒、Google Sheets 任務同步、分級通知、番茄鐘與即將提供的任務產生器。">
   <meta name="twitter:image" content="https://bruce-yang-422.github.io/cloud-alarm-overlay/site-assets/og-preview.png">
   <script type="application/ld+json">
     {
@@ -163,6 +163,21 @@
     .feature h3 { margin-bottom: 9px; font-size: 1.16rem; letter-spacing: -.02em; }
     .feature p { margin-bottom: 0; color: var(--muted); font-size: .91rem; }
 
+    .builder-panel {
+      display: grid; grid-template-columns: minmax(0, 1.05fr) minmax(0, .95fr);
+      gap: 44px; align-items: center; margin-top: 24px; padding: 38px 44px;
+      border: 1px solid #cfe1f7; border-radius: 24px;
+      background: linear-gradient(125deg, #edf5ff, #f8fbff 62%, #eaf7f4);
+    }
+    .builder-panel h2 { margin-bottom: 14px; }
+    .builder-intro { margin-bottom: 17px; color: #526985; }
+    .builder-availability { margin-bottom: 0; color: #315b8d; font-size: .88rem; font-weight: 700; }
+    .builder-steps { display: grid; gap: 11px; margin: 0; padding: 0; list-style: none; }
+    .builder-steps li { display: flex; gap: 14px; align-items: flex-start; padding: 14px 16px; border: 1px solid #dce8f6; border-radius: 14px; background: #fff; }
+    .builder-steps span { flex: none; color: var(--blue); font-size: .82rem; font-weight: 850; }
+    .builder-steps strong { display: block; margin-bottom: 2px; }
+    .builder-steps p { margin-bottom: 0; color: var(--muted); font-size: .88rem; }
+
     .levels-section { background: #edf5ff; }
     .levels-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px; }
     .level-card {
@@ -243,6 +258,7 @@
       .hero-visual { max-width: 640px; }
       .section { padding: 72px 0; }
       .steps, .preview-grid { grid-template-columns: 1fr; }
+      .builder-panel { grid-template-columns: 1fr; gap: 25px; padding: 32px; }
       .notice-showcase { padding: 30px; grid-template-columns: 1fr 220px; }
       .trust-panel { grid-template-columns: 1fr; }
     }
@@ -258,6 +274,7 @@
       .hero-meta { font-size: .78rem; }
       .features, .levels-grid { grid-template-columns: 1fr; }
       .feature, .level-card { min-height: 0; }
+      .builder-panel { padding: 26px 22px; }
       .preview-image-link img { height: 245px; }
       .notice-showcase { grid-template-columns: 1fr; }
       .notice-showcase a { justify-self: start; width: 200px; }
@@ -331,6 +348,19 @@
           <article class="feature"><span class="feature-mark" aria-hidden="true">02</span><h3>分級通知與確認</h3><p>依重要程度顯示不同通知。最高級通知須輸入畫面上的數字確認碼，避免匆忙略過。</p></article>
           <article class="feature"><span class="feature-mark" aria-hidden="true">03</span><h3>番茄鐘專注計時</h3><p>依自己的節奏設定專注與休息時間，查看每日進度及完成紀錄。</p></article>
           <article class="feature"><span class="feature-mark" aria-hidden="true">04</span><h3>紀錄與管理</h3><p>查詢提醒與確認紀錄、匯出資料；管理者可設定同步來源、政策、備份及還原。</p></article>
+        </div>
+        <div class="builder-panel" id="task-builder" aria-labelledby="builder-title">
+          <div>
+            <p class="section-kicker">TEAM TASK BUILDER</p>
+            <h2 id="builder-title">團隊任務，用表單整理好。</h2>
+            <p class="builder-intro">內建「任務產生器」可從程式側邊欄或系統匣開啟。依序填寫提醒內容、選擇通知對象，預覽後複製資料列或匯出 Excel，再貼入團隊的 Google Sheet。</p>
+            <p class="builder-availability">此工具將隨下一次安裝檔更新提供。</p>
+          </div>
+          <ol class="builder-steps" aria-label="任務產生器使用方式">
+            <li><span>01</span><div><strong>設定提醒</strong><p>填入時間、提醒等級與重複規則，表單協助整理 Sheet 欄位。</p></div></li>
+            <li><span>02</span><div><strong>挑選對象</strong><p>依部門與職稱篩選員工，指定通知或排除的人員。</p></div></li>
+            <li><span>03</span><div><strong>預覽並匯出</strong><p>檢查任務後，複製資料列或下載 Excel，貼入團隊任務表。</p></div></li>
+          </ol>
         </div>
       </div>
     </section>
