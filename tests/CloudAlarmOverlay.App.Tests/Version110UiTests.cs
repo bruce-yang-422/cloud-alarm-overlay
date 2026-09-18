@@ -39,7 +39,7 @@ public sealed class Version110UiTests
         {
             preview.Show(); settingsWindow.Show();
             Assert.Equal(new[]{"淺色","暗色","跟隨系統"},vm.Themes);
-            Assert.Equal(new[]{"預設","粉紅色","若竹色"},vm.ThemeColors);
+            Assert.Equal(new[]{"預設","櫻花粉","若竹綠","薰衣草紫","夕陽橘","極簡銀白"},vm.ThemeColors);
             foreach(var color in vm.ThemeColors)
             foreach(var brightness in vm.Themes)
             {
@@ -53,7 +53,7 @@ public sealed class Version110UiTests
                 Assert.Equal(color,(await settings.GetAsync("ThemeColorStyle"))!.Value);
                 await vm.InitializeAsync();
                 Assert.Equal(brightness,vm.ThemeChoice); Assert.Equal(color,vm.ThemeColorChoice);
-                Assert.Equal(color switch{"粉紅色"=>ThemeColorStyle.Pink,"若竹色"=>ThemeColorStyle.Bamboo,_=>ThemeColorStyle.Default},theme.ColorStyle);
+                Assert.Equal(color switch{"櫻花粉"=>ThemeColorStyle.Pink,"若竹綠"=>ThemeColorStyle.Bamboo,"薰衣草紫"=>ThemeColorStyle.Lavender,"夕陽橘"=>ThemeColorStyle.Sunset,"極簡銀白"=>ThemeColorStyle.Silver,_=>ThemeColorStyle.Default},theme.ColorStyle);
                 Assert.Equal(brightness switch{"淺色"=>ThemeMode.Light,"暗色"=>ThemeMode.Dark,_=>ThemeMode.System},theme.Mode);
                 if(brightness!="跟隨系統")Assert.Equal(brightness=="暗色",theme.IsDark);
                 await Dispatcher.Yield(DispatcherPriority.ApplicationIdle);
@@ -61,6 +61,15 @@ public sealed class Version110UiTests
                 var foreground=((SolidColorBrush)preview.Foreground).Color;
                 var background=((SolidColorBrush)preview.Background).Color;
                 Assert.True(Contrast(foreground,background)>=4.5,$"{brightness}/{color} contrast");
+                if(color is "薰衣草紫" or "夕陽橘" or "極簡銀白")
+                {
+                    var primary=new Button { Style=(Style)preview.FindResource("Primary") };
+                    var fill=((SolidColorBrush)primary.Background).Color;
+                    var text=((SolidColorBrush)primary.Foreground).Color;
+                    var expected=color switch {"薰衣草紫"=>theme.IsDark?"#7C3AED":"#C4B5FD","夕陽橘"=>theme.IsDark?"#EA580C":"#FDBA74",_=>theme.IsDark?"#64748B":"#E2E8F0"};
+                    Assert.Equal((Color)ColorConverter.ConvertFromString(expected),fill);
+                    Assert.True(Contrast(text,fill)>=4.5,$"{brightness}/{color} primary button contrast");
+                }
                 if(brightness!="跟隨系統")
                 {
                     Capture(preview,$"preview-{color}-{brightness}");
@@ -69,6 +78,22 @@ public sealed class Version110UiTests
             }
         }
         finally {preview.Close();settingsWindow.Close();AdaptiveBrushExtension.Apply(false);}
+    });
+
+    [Theory]
+    [InlineData("粉紅色","櫻花粉",ThemeColorStyle.Pink)]
+    [InlineData("若竹色","若竹綠",ThemeColorStyle.Bamboo)]
+    public Task Legacy_color_names_keep_brightness_and_load_with_new_labels(string oldName,string newName,ThemeColorStyle expected) => MilestoneOneTests.RunSta(async () =>
+    {
+        using var fixture=new Fixture();await fixture.Initialize();
+        var settings=fixture.Get<ISettingsRepository>();
+        await settings.SaveAsync(new(){Key="ThemeMode",Value="暗色"});
+        await settings.SaveAsync(new(){Key="ThemeColorStyle",Value=oldName});
+        var vm=fixture.Get<MaintenanceViewModel>();await vm.InitializeAsync();
+        Assert.Equal("暗色",vm.ThemeChoice);Assert.Equal(newName,vm.ThemeColorChoice);
+        Assert.Equal(expected,fixture.Get<IThemeService>().ColorStyle);
+        Assert.True(fixture.Get<IThemeService>().IsDark);
+        AdaptiveBrushExtension.Apply(false);
     });
 
     private static double Contrast(Color a,Color b)
@@ -161,7 +186,7 @@ public sealed class Version110UiTests
             await fixture.Get<ISettingsRepository>().SaveAsync(new() { Key = "ThemeMode", Value = choice });
             await maintenance.InitializeAsync();
             Assert.Equal("淺色", maintenance.ThemeChoice);
-            Assert.Equal(choice, maintenance.ThemeColorChoice);
+            Assert.Equal(choice=="粉紅色"?"櫻花粉":"若竹綠", maintenance.ThemeColorChoice);
             Assert.Equal(ThemeMode.Light, fixture.Get<IThemeService>().Mode);
             Assert.Equal(choice == "粉紅色" ? ThemeColorStyle.Pink : ThemeColorStyle.Bamboo, fixture.Get<IThemeService>().ColorStyle);
             var entry = new AcknowledgementLog { Id = "old", TaskId = "task", DeviceId = "TEST", Result = "Acknowledged", TriggeredAt = DateTime.Now, TaskName = "歷史任務", TaskSnapshotJson = JsonSerializer.Serialize(TaskSample()) };

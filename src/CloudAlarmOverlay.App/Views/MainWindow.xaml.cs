@@ -29,16 +29,23 @@ public partial class MainWindow:Window
         InitializeComponent();DataContext=vm=viewModel;this.authentication=authentication;this.taskBuilderHost=taskBuilderHost;
         vm.TaskSelectionRestored+=RestoreTaskSelection;
         Closed+=(_,_)=>vm.TaskSelectionRestored-=RestoreTaskSelection;
-        SourceInitialized+=(_,_)=>HwndSource.FromHwnd(new WindowInteropHelper(this).Handle)?.AddHook(WindowSizing);
-        // WPF work-area dimensions are device-independent units, including display scaling.
-        // Leave the taskbar available and use the full work area on shorter displays.
-        var workArea = SystemParameters.WorkArea;
-        MinWidth = Math.Min(MinWidth, workArea.Width);
-        MinHeight = Math.Min(MinHeight, workArea.Height);
-        Width = Math.Min(1280, workArea.Width);
-        Height = Math.Min(980, workArea.Height);
-        if (workArea.Height < 1000 || workArea.Width < 1300)
-            WindowState = WindowState.Maximized;
+        var defaultWidth = Width;
+        var defaultHeight = Height;
+        SourceInitialized+=(_,_)=>
+        {
+            var handle = new WindowInteropHelper(this).Handle;
+            HwndSource.FromHwnd(handle)?.AddHook(WindowSizing);
+            // Wait for a native window so the monitor and its DPI are known.
+            // Preserve an explicit size supplied by the caller before Show().
+            if (Width == defaultWidth && Height == defaultHeight && WindowState == WindowState.Normal)
+            {
+                var size = MainWindowSizing.ForWindow(handle);
+                MinWidth = Math.Min(MinWidth, size.Width);
+                MinHeight = Math.Min(MinHeight, size.Height);
+                Width = size.Width;
+                Height = size.Height;
+            }
+        };
         vm.Admin.LoginRequested+=Login;vm.Admin.Session.Changed+=SessionChanged;
         sessionTimer.Tick+=(_,_)=>vm.Admin.Session.CheckExpiry();sessionTimer.Start();
         Closing+=(_,e)=>{if(tray is not null&&!allowClose){e.Cancel=true;Hide();}};

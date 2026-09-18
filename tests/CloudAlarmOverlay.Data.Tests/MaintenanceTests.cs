@@ -13,6 +13,12 @@ public sealed class MaintenanceTests : IDisposable
     [InlineData("淺色","粉紅色")]
     [InlineData("暗色","若竹色")]
     [InlineData("跟隨系統","粉紅色")]
+    [InlineData("淺色","櫻花粉")]
+    [InlineData("暗色","若竹綠")]
+    [InlineData("淺色","薰衣草紫")]
+    [InlineData("暗色","薰衣草紫")]
+    [InlineData("跟隨系統","夕陽橘")]
+    [InlineData("暗色","極簡銀白")]
     public async Task Backup_restores_brightness_and_color_style_independently(string mode,string color)
     {
         await Get<IDeviceIdentityService>().SetInitialIdentityAsync("THEME","測試");

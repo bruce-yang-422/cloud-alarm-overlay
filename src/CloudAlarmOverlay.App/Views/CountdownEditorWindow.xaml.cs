@@ -1,7 +1,6 @@
-﻿using System.ComponentModel;
+using System.ComponentModel;
 using System.Windows;
 using CloudAlarmOverlay.App.ViewModels;
-using CloudAlarmOverlay.Core.Recurrence;
 
 namespace CloudAlarmOverlay.App.Views;
 
@@ -19,7 +18,13 @@ public partial class CountdownEditorWindow : Window
         viewModel.PropertyChanged += OnDraftChanged;
         foreach (var choice in viewModel.Weekdays.Concat(viewModel.Months).Concat(viewModel.LunarDays))
             choice.PropertyChanged += OnDraftChanged;
-        Loaded += (_, _) => { EventTitle.Focus(); RefreshPreview(); ResizePreview(); };
+        Loaded += (_, _) =>
+        {
+            if (DirectionSelector.ItemContainerGenerator.ContainerFromIndex(DirectionSelector.SelectedIndex) is UIElement selectedDirection)
+                selectedDirection.Focus();
+            else DirectionSelector.Focus();
+            RefreshPreview(); ResizePreview();
+        };
         SizeChanged += (_, _) => ResizePreview();
         Closed += (_, _) =>
         {
@@ -44,21 +49,15 @@ public partial class CountdownEditorWindow : Window
 
     private void RefreshPreview()
     {
-        PreviewTitle.Text = string.IsNullOrWhiteSpace(viewModel.Title) ? "我的紀念事件" : viewModel.Title;
         try
         {
-            var row = viewModel.CreateEditorPreview();
-            PreviewValue.Text = row.HomeSummary;
-            PreviewDate.Text = row.IsScheduleUnavailable ? "尚無可用提醒日期" : row.DateCaption;
-            PreviewRepeat.Text = RecurrenceRule.Describe(row.Item.EffectiveRecurrence);
-            PreviewReminder.Text = row.HasNextReminderLabel ? row.NextReminderLabel : "不提醒";
+            PreviewCard.Content = viewModel.CreateEditorPreview();
+            PreviewError.Text = "";
         }
         catch (ArgumentException ex)
         {
-            PreviewValue.Text = "—";
-            PreviewDate.Text = ex.Message;
-            PreviewRepeat.Text = viewModel.Repeat;
-            PreviewReminder.Text = "完成設定後顯示預覽";
+            PreviewCard.Content = null;
+            PreviewError.Text = ex.Message;
         }
     }
 

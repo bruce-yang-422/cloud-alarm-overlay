@@ -21,7 +21,7 @@
   <text x="68" y="246" fill="#183352" font-family="Segoe UI, Microsoft JhengHei, sans-serif" font-size="62" font-weight="700">重要的事，</text>
   <text x="68" y="326" fill="#135dce" font-family="Segoe UI, Microsoft JhengHei, sans-serif" font-size="67" font-weight="700">準時看見。</text>
   <text x="70" y="404" fill="#536e8c" font-family="Segoe UI, Microsoft JhengHei, sans-serif" font-size="24">Windows 桌面提醒 · 團隊任務同步</text>
-  <text x="70" y="441" fill="#536e8c" font-family="Segoe UI, Microsoft JhengHei, sans-serif" font-size="24">分級通知 · 番茄鐘</text>
+  <text x="70" y="441" fill="#536e8c" font-family="Segoe UI, Microsoft JhengHei, sans-serif" font-size="24">分級通知 · 番茄鐘 · 倒數／正數</text>
   <rect x="69" y="489" width="280" height="52" rx="15" fill="#1462db"/>
   <text x="95" y="524" fill="#fff" font-family="Segoe UI, Microsoft JhengHei, sans-serif" font-size="20" font-weight="700">免費下載 Windows 版</text>
   <g filter="url(#shadow)"><rect x="615" y="112" width="525" height="401" rx="21" fill="#fff"/></g>
@@ -30,7 +30,7 @@
     <circle cx="632" cy="128" r="4" fill="#b5c8dd"/>
     <circle cx="647" cy="128" r="4" fill="#b5c8dd"/>
     <circle cx="662" cy="128" r="4" fill="#b5c8dd"/>
-    <image xlink:href="screenshots/home_light.png" x="615" y="143" width="525" height="391"/>
+    <image xlink:href="screenshots/home_light.png" x="615" y="143" width="525" height="366"/>
   </g>
   <rect x="615" y="112" width="525" height="401" rx="21" fill="none" stroke="#c9dcef"/>
 </svg>

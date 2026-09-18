@@ -74,6 +74,8 @@ public sealed class MilestoneOneTests
                 await vm.InitializeAsync();
                 window = host.Services.GetRequiredService<MainWindow>(); window.ShowInTaskbar = false; window.ShowActivated = false; window.Show();
                 var screenshotDirectory = Environment.GetEnvironmentVariable("CLOUD_ALARM_SCREENSHOT_DIR");
+                if (screenshotDirectory is not null)
+                    await SiteScreenshotCapture.CaptureAsync(host.Services, window, vm, screenshotDirectory);
                 for (var page = 0; page < 5; page++)
                 {
                     vm.PageIndex = page; window.UpdateLayout();

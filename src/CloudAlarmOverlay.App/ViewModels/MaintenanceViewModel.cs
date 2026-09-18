@@ -35,7 +35,7 @@ public partial class MaintenanceViewModel(IBackupRestoreService backups, IUpdate
         catch(Exception ex){Message="視窗設定儲存失敗："+ex.Message;}
     }
     public string[] Themes {get;}=["淺色","暗色","跟隨系統"];
-    public string[] ThemeColors {get;}=["預設","粉紅色","若竹色"];
+    public string[] ThemeColors {get;}=["預設","櫻花粉","若竹綠","薰衣草紫","夕陽橘","極簡銀白"];
     public UpdateInfo? AvailableUpdate {get; private set;}
     private bool loading;
     public async Task InitializeAsync()
@@ -48,7 +48,7 @@ public partial class MaintenanceViewModel(IBackupRestoreService backups, IUpdate
             ThemeChoice=savedTheme switch{"粉紅色" or "若竹色" or "淺粉色" or "淺若竹色"=>"淺色","深色" or "暗粉色" or "暗若竹色"=>"暗色",null=>"跟隨系統",_=>savedTheme};
             var savedColor=(await settings.GetAsync("ThemeColorStyle"))?.Value;
             ThemeColorChoice=savedTheme switch
-            {"粉紅色" or "淺粉色" or "暗粉色"=>"粉紅色","若竹色" or "淺若竹色" or "暗若竹色"=>"若竹色",_=>savedColor??"預設"};
+            {"粉紅色" or "淺粉色" or "暗粉色"=>"櫻花粉","若竹色" or "淺若竹色" or "暗若竹色"=>"若竹綠",_=>savedColor switch {"粉紅色"=>"櫻花粉","若竹色"=>"若竹綠",_=>savedColor??"預設"}};
             KeepWindowAspectRatio=!bool.TryParse((await settings.GetAsync("KeepWindowAspectRatio"))?.Value,out var keepRatio)||keepRatio;
             theme.Changed-=ApplyPalette; theme.Changed+=ApplyPalette;
             ApplyTheme();
@@ -57,7 +57,7 @@ public partial class MaintenanceViewModel(IBackupRestoreService backups, IUpdate
     }
     private void ApplyPalette(bool dark)=>AdaptiveBrushExtension.Apply(dark,theme.ColorStyle);
     private void ApplyTheme()=>theme.Apply(ThemeChoice switch{"暗色" or "深色"=>ThemeMode.Dark,"淺色"=>ThemeMode.Light,_=>ThemeMode.System},
-        ThemeColorChoice switch{"粉紅色"=>ThemeColorStyle.Pink,"若竹色"=>ThemeColorStyle.Bamboo,_=>ThemeColorStyle.Default});
+        ThemeColorChoice switch{"櫻花粉" or "粉紅色"=>ThemeColorStyle.Pink,"若竹綠" or "若竹色"=>ThemeColorStyle.Bamboo,"薰衣草紫"=>ThemeColorStyle.Lavender,"夕陽橘"=>ThemeColorStyle.Sunset,"極簡銀白"=>ThemeColorStyle.Silver,_=>ThemeColorStyle.Default});
     partial void OnThemeChoiceChanged(string value)
     {
         if(!loading) _=SaveThemeAsync();

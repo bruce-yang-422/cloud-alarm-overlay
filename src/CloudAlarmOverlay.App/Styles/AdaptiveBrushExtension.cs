@@ -19,6 +19,7 @@ public sealed class AdaptiveBrushExtension(string color) : MarkupExtension
     private static readonly Dictionary<string,ColorSource> Brushes = new();
     private static bool dark;
     private static ThemeMode mode;
+    private static ThemeColorStyle colorStyle;
     public override object ProvideValue(IServiceProvider serviceProvider)
     {
         if(!Brushes.TryGetValue(color,out var brush))
@@ -29,15 +30,35 @@ public sealed class AdaptiveBrushExtension(string color) : MarkupExtension
         return new Binding("Brush") { Source=brush }.ProvideValue(serviceProvider);
     }
     public static void Apply(bool isDark)=>Apply(isDark,isDark?ThemeMode.Dark:ThemeMode.Light);
-    public static void Apply(bool isDark,ThemeColorStyle colorStyle)=>Apply(isDark,colorStyle switch{ThemeColorStyle.Pink=>ThemeMode.Pink,ThemeColorStyle.Bamboo=>ThemeMode.Bamboo,_=>isDark?ThemeMode.Dark:ThemeMode.Light});
-    public static void Apply(bool isDark,ThemeMode themeMode)
+    public static void Apply(bool isDark,ThemeMode themeMode)=>Apply(isDark,themeMode switch{ThemeMode.Pink=>ThemeColorStyle.Pink,ThemeMode.Bamboo=>ThemeColorStyle.Bamboo,_=>ThemeColorStyle.Default});
+    public static void Apply(bool isDark,ThemeColorStyle style)
     {
-        if(Application.Current is {} app && !app.Dispatcher.CheckAccess()) { app.Dispatcher.BeginInvoke(()=>Apply(isDark,themeMode)); return; }
-        dark=isDark; mode=themeMode;
+        if(Application.Current is {} app && !app.Dispatcher.CheckAccess()) { app.Dispatcher.BeginInvoke(()=>Apply(isDark,style)); return; }
+        dark=isDark; colorStyle=style;
+        mode=style switch{ThemeColorStyle.Pink=>ThemeMode.Pink,ThemeColorStyle.Bamboo=>ThemeMode.Bamboo,_=>isDark?ThemeMode.Dark:ThemeMode.Light};
         foreach(var (key,brush) in Brushes)brush.Set(Resolve(key));
     }
     private static Color Resolve(string value)
     {
+        // Countdown state colors retain their meaning in every color style.
+        // Explicit dark surfaces avoid flattening every pale tint into the same navy.
+        string? countdownColor = value switch
+        {
+            "CountdownCalmSurface" => dark ? "#20364F" : "#EFF6FF",
+            "CountdownCalmAccent" => dark ? "#90C4FF" : "#205AB0",
+            "CountdownSoonSurface" => dark ? "#403326" : "#FFF5E8",
+            "CountdownSoonAccent" => dark ? "#FFC27D" : "#995000",
+            "CountdownDueSurface" => dark ? "#442C39" : "#FFF0F3",
+            "CountdownDueAccent" => dark ? "#FFADC1" : "#AD284B",
+            "CountdownUpSurface" => dark ? "#203D35" : "#ECF8F1",
+            "CountdownUpAccent" => dark ? "#86DEC0" : "#196A4F",
+            "CountdownNeutralSurface" => dark ? "#303847" : "#F0F3F7",
+            "CountdownNeutralAccent" => dark ? "#C0CDDF" : "#52647A",
+            _ => null
+        };
+        if (countdownColor is not null) return (Color)ColorConverter.ConvertFromString(countdownColor);
+        if(colorStyle is ThemeColorStyle.Lavender or ThemeColorStyle.Sunset or ThemeColorStyle.Silver)
+            return ExtendedThemePalette.Resolve(value,dark,colorStyle);
         if(value=="Accent")return (Color)ColorConverter.ConvertFromString(mode switch
         {
             ThemeMode.Pink=>dark?"#C2185B":"#FFB8C8",

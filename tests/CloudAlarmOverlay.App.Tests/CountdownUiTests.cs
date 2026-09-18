@@ -19,6 +19,37 @@ namespace CloudAlarmOverlay.App.Tests;
 public sealed class CountdownUiTests
 {
     [Fact]
+    public Task Main_window_starts_with_monitor_preset_and_restores_the_same_size() => MilestoneOneTests.RunSta(async () =>
+    {
+        using var fixture = new Fixture(); await fixture.Initialize();
+        var window = fixture.Get<MainWindow>();
+        try
+        {
+            window.Show(); await Dispatcher.Yield(DispatcherPriority.ApplicationIdle);
+            var expected = MainWindowSizing.ForWindow(new System.Windows.Interop.WindowInteropHelper(window).Handle);
+            Assert.Equal(WindowState.Normal, window.WindowState);
+            Assert.Equal(expected.Width, window.Width, 3);
+            Assert.Equal(expected.Height, window.Height, 3);
+            Assert.Equal(1.4, window.Width / window.Height, 6);
+            Assert.True(window.MinWidth <= window.Width); Assert.True(window.MinHeight <= window.Height);
+            window.Hide(); window.Open();
+            await Dispatcher.Yield(DispatcherPriority.ApplicationIdle);
+            Assert.Equal(expected.Width, window.Width, 3); Assert.Equal(expected.Height, window.Height, 3);
+            Capture(window,"main-window-default-7x5");
+            Assert.True(double.IsPositiveInfinity(window.MaxWidth));
+            Assert.True(double.IsPositiveInfinity(window.MaxHeight));
+            window.Width = expected.Width * 1.1; window.Height = expected.Height * 1.1;
+            window.Hide(); window.Open();
+            await Dispatcher.Yield(DispatcherPriority.ApplicationIdle);
+            // Native window resizing rounds fractional layout units to physical pixels.
+            var dpi = VisualTreeHelper.GetDpi(window);
+            Assert.InRange(Math.Abs(expected.Width * 1.1 - window.Width), 0, 1 / dpi.DpiScaleX);
+            Assert.InRange(Math.Abs(expected.Height * 1.1 - window.Height), 0, 1 / dpi.DpiScaleY);
+        }
+        finally {window.ForceClose();}
+    });
+
+    [Fact]
     public Task Five_categories_slide_filter_and_count_without_losing_existing_values() => MilestoneOneTests.RunSta(async () =>
     {
         using var fixture = new Fixture(); await fixture.Initialize();
@@ -33,7 +64,7 @@ public sealed class CountdownUiTests
         try
         {
             editor.Show(); await Dispatcher.Yield(DispatcherPriority.ApplicationIdle);
-            var selector=Descendants(editor).OfType<CloudAlarmOverlay.App.Controls.SlidingSegmentedControl>().Single();
+            var selector=Descendants(editor).OfType<CloudAlarmOverlay.App.Controls.SlidingSegmentedControl>().Single(c => System.Windows.Automation.AutomationProperties.GetName(c)=="事件分類");
             Assert.Equal("旅行",selector.SelectedItem);
             selector.SelectedItem="其他"; await Dispatcher.Yield(DispatcherPriority.ApplicationIdle);
             Assert.Equal("其他",vm.Category);
@@ -74,7 +105,7 @@ public sealed class CountdownUiTests
         Assert.Equal(17,TimePickerWindow.ValueAt(new Point(145+118*Math.Sin(angle),145-118*Math.Cos(angle)),true));
         try
         {
-            foreach(var style in new[]{ThemeColorStyle.Default,ThemeColorStyle.Pink,ThemeColorStyle.Bamboo})
+            foreach(var style in Enum.GetValues<ThemeColorStyle>())
             foreach(var dark in new[]{false,true})
             {
                 AdaptiveBrushExtension.Apply(dark,style);
@@ -100,6 +131,59 @@ public sealed class CountdownUiTests
             Assert.True(accepted.ShowDialog()); Assert.Equal("00:07",accepted.SelectedTime);
         }
         finally {AdaptiveBrushExtension.Apply(false);}
+    });
+
+    [Fact]
+    public Task Editor_display_segments_switches_month_day_picker_and_real_card_preview_roundtrip() => MilestoneOneTests.RunSta(async () =>
+    {
+        using var fixture=new Fixture();await fixture.Initialize();var vm=fixture.Get<CountdownsViewModel>();
+        vm.Title="年度紀念日";vm.Repeat="每年（國曆）";vm.AnnualMonth=1;vm.AnnualDay=31;
+        var editor=new CountdownEditorWindow(vm);
+        try
+        {
+            editor.Show();await Dispatcher.Yield(DispatcherPriority.ApplicationIdle);
+            var segments=Descendants(editor).OfType<CloudAlarmOverlay.App.Controls.SlidingSegmentedControl>().ToArray();
+            Assert.Equal(3,segments.Length);
+            var direction=segments.Single(c=>System.Windows.Automation.AutomationProperties.GetName(c)=="計數方向");
+            Assert.Same(segments[0],direction);
+            Assert.Same(editor.FindResource("PillSlidingSegmentedControl"),direction.Style);
+            Assert.True(direction.IsKeyboardFocusWithin);
+            Assert.True(direction.TranslatePoint(new Point(),editor).Y < ((TextBox)editor.FindName("EventTitle")).TranslatePoint(new Point(),editor).Y);
+            direction.SelectedItem="正數";
+            await Dispatcher.Yield(DispatcherPriority.ApplicationIdle);
+            Assert.Equal("起始日期",vm.DateLabel);
+            Assert.Contains("不重設累計時間",((TextBlock)editor.FindName("DirectionHint")).Text);
+            Assert.True(((CountdownRow)((ContentControl)editor.FindName("PreviewCard")).Content).Item.IsCountUp);
+            Assert.Equal("每年（國曆）",vm.Repeat);
+            segments.Single(c=>System.Windows.Automation.AutomationProperties.GetName(c)=="日期顯示方式").SelectedItem="年＋月＋天";
+            Assert.Equal("正數",vm.Direction);Assert.Equal("年＋月＋天",vm.DisplayFormat);
+            var toggles=Descendants(editor).OfType<CheckBox>().Where(c=>c.Style==editor.FindResource("PillSwitch")).ToArray();
+            Assert.Equal(2,toggles.Length);foreach(var toggle in toggles)toggle.IsChecked=true;
+            Assert.True(vm.PinOnHome);Assert.True(vm.SkipOnHoliday);
+            var picker=(CloudAlarmOverlay.App.Controls.MonthDayPicker)editor.FindName("AnnualDatePicker");
+            ((System.Windows.Controls.Primitives.ToggleButton)picker.FindName("OpenButton")).IsChecked=true;
+            ((Button)picker.FindName("MonthHeading")).RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+            var months=(System.Windows.Controls.Primitives.UniformGrid)picker.FindName("MonthGrid");
+            months.Children.OfType<Button>().Single(b=>(string)b.Content=="2 月").RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+            Assert.Equal(1,vm.AnnualMonth);Assert.Equal(31,vm.AnnualDay);
+            var days=(System.Windows.Controls.Primitives.UniformGrid)picker.FindName("DayGrid");
+            Assert.Equal(29,days.Children.Count);
+            await Dispatcher.Yield(DispatcherPriority.ApplicationIdle);
+            CaptureElement((FrameworkElement)((System.Windows.Controls.Primitives.Popup)picker.FindName("DatePopup")).Child,"countdown-annual-month-day");
+            days.Children.OfType<Button>().Single(b=>(int)b.Content==29).RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+            Assert.False(((System.Windows.Controls.Primitives.Popup)picker.FindName("DatePopup")).IsOpen);
+            Assert.Equal(2,vm.AnnualMonth);Assert.Equal(29,vm.AnnualDay);
+            vm.Notes="記得慶祝";
+            var preview=(ContentControl)editor.FindName("PreviewCard");
+            var row=Assert.IsType<CountdownRow>(preview.Content);
+            Assert.Equal("記得慶祝",row.Item.Notes);Assert.True(row.Item.IsPinned);
+            Assert.Same(editor.FindResource("CountdownCardBody"),preview.ContentTemplate);
+            await vm.SaveCommand.ExecuteAsync(null);
+            var saved=Assert.Single(vm.Items).Item;
+            Assert.Equal("Monthly:29:2",saved.Recurrence);Assert.Equal("Up",saved.Direction);
+            Assert.Equal("YearsMonthsDays",saved.DisplayFormat);Assert.True(saved.SkipOnHoliday);Assert.True(saved.IsPinned);
+        }
+        finally {if(editor.IsVisible)editor.Close();}
     });
 
     [Fact]
@@ -139,20 +223,20 @@ public sealed class CountdownUiTests
         try
         {
             editor.Show(); await Dispatcher.Yield(DispatcherPriority.ApplicationIdle);
-            Assert.Contains("2 天", ((TextBlock)editor.FindName("PreviewValue")).Text);
+            Assert.Contains("2 天", ((CountdownRow)((ContentControl)editor.FindName("PreviewCard")).Content).HomeSummary);
             vm.Direction = "正數"; vm.TargetDate = new(2026, 9, 1);
-            Assert.Contains("17 天", ((TextBlock)editor.FindName("PreviewValue")).Text);
+            Assert.Contains("17 天", ((CountdownRow)((ContentControl)editor.FindName("PreviewCard")).Content).HomeSummary);
             vm.Direction = "倒數"; vm.Repeat = "每年（農曆）"; vm.LunarMonth = 1; vm.LunarDate = 1;
-            Assert.Contains("2027/02/06", ((TextBlock)editor.FindName("PreviewDate")).Text);
+            Assert.Contains("2027/02/06", ((CountdownRow)((ContentControl)editor.FindName("PreviewCard")).Content).DateCaption);
             vm.Repeat = "每月";
             foreach (var month in vm.Months) month.IsSelected = false;
-            Assert.Contains("至少選擇", ((TextBlock)editor.FindName("PreviewDate")).Text);
+            Assert.Contains("至少選擇", ((TextBlock)editor.FindName("PreviewError")).Text);
             vm.Months[9].IsSelected = true;
-            Assert.DoesNotContain("至少選擇", ((TextBlock)editor.FindName("PreviewDate")).Text);
+            Assert.DoesNotContain("至少選擇", ((TextBlock)editor.FindName("PreviewError")).Text);
             vm.Mode = "倒數時間"; vm.TargetTime = "25:00";
-            Assert.Equal("—", ((TextBlock)editor.FindName("PreviewValue")).Text);
+            Assert.Null(((ContentControl)editor.FindName("PreviewCard")).Content);
             vm.TargetTime = "09:00";
-            Assert.NotEqual("—", ((TextBlock)editor.FindName("PreviewValue")).Text);
+            Assert.NotNull(((ContentControl)editor.FindName("PreviewCard")).Content);
             editor.Width = 640; await Dispatcher.Yield(DispatcherPriority.ApplicationIdle);
             var preview = (FrameworkElement)editor.FindName("PreviewPanel");
             Assert.True(preview.IsVisible);
@@ -432,17 +516,44 @@ public sealed class CountdownUiTests
             var pinned = (Border)window.FindName("PinnedCountdownCard");
             Assert.Equal(Grid.GetColumn(next),Grid.GetColumn(summary)); Assert.True(Grid.GetRow(summary)>Grid.GetRow(next));
             Assert.Equal(2,Grid.GetColumn(pinned)); Assert.Equal(0,Grid.GetRow(pinned));
-            foreach (var style in new[]{ThemeColorStyle.Default,ThemeColorStyle.Pink,ThemeColorStyle.Bamboo})
+            foreach (var style in Enum.GetValues<ThemeColorStyle>())
             foreach (var dark in new[]{false,true})
             {
                 AdaptiveBrushExtension.Apply(dark,style);
                 main.PageIndex=0; main.UpdateCountdown();
                 await Dispatcher.Yield(DispatcherPriority.ApplicationIdle); window.UpdateLayout();
                 Assert.True(pinned.ActualWidth>200); Assert.True(summary.ActualWidth>400);
+                Assert.Equal(next.TranslatePoint(new Point(),window).Y, pinned.TranslatePoint(new Point(),window).Y, 2);
+                Assert.Equal(summary.TranslatePoint(new Point(0,summary.ActualHeight),window).Y,
+                    pinned.TranslatePoint(new Point(0,pinned.ActualHeight),window).Y, 2);
                 var pinCards = Descendants(pinned).OfType<Border>().Where(b => b.Name == "PinnedCounterItem").ToArray();
                 Assert.Equal(2, pinCards.Length);
-                Assert.All(pinCards, card => Assert.True(card.ActualHeight < 155, $"Pinned height: {card.ActualHeight}"));
+                Assert.Equal(pinCards[0].ActualHeight, pinCards[1].ActualHeight, 2);
+                Assert.True(pinCards[0].ActualHeight > 0);
+                var lastCardBottom = pinCards[1].TranslatePoint(new Point(0,pinCards[1].ActualHeight), pinned).Y;
+                Assert.Equal(pinned.ActualHeight - pinned.Padding.Bottom - pinned.BorderThickness.Bottom, lastCardBottom, 2);
                 AssertTitleContrast(pinned);
+                Assert.NotEqual(((SolidColorBrush)pinCards[0].Background).Color, ((SolidColorBrush)pinCards[1].Background).Color);
+                // Verify status transitions on a rendered home card, including contrast
+                // after live theme changes (pink/bamboo must retain semantic colors).
+                var sampleCard = pinCards[0];
+                var originalRow = sampleCard.DataContext;
+                var now = new DateTime(2026,9,18,12,0,0);
+                var sampleItem = new CountdownItem { Title="狀態配色", TargetAt=now.Date.AddDays(30), CreatedAt=now.AddDays(-30) };
+                var tones = new HashSet<Color>();
+                foreach (var item in new[] { sampleItem, sampleItem with { TargetAt=now.Date.AddDays(1) }, sampleItem with { TargetAt=now.Date.AddDays(-1) }, sampleItem with { Direction="Up", TargetAt=now.Date.AddDays(-10) }, sampleItem with { CompletedAt=now } })
+                {
+                    var stateRow = new CountdownRow(item); stateRow.Update(now);
+                    sampleCard.DataContext = stateRow;
+                    await Dispatcher.Yield(DispatcherPriority.ApplicationIdle); window.UpdateLayout();
+                    Assert.True(tones.Add(((SolidColorBrush)sampleCard.BorderBrush).Color), $"Repeated state color: {stateRow.StatusLabel}");
+                    AssertTitleContrast(sampleCard);
+                    Assert.Contains(Descendants(sampleCard).OfType<TextBlock>(), t=>t.Text==stateRow.StatusLabel && t.IsVisible);
+                    var value = Descendants(sampleCard).OfType<TextBlock>().Single(t=>t.Name=="PinnedCounterValue");
+                    Assert.Equal(((SolidColorBrush)sampleCard.BorderBrush).Color, ((SolidColorBrush)value.Foreground).Color);
+                }
+                sampleCard.DataContext = originalRow;
+                await Dispatcher.Yield(DispatcherPriority.ApplicationIdle); window.UpdateLayout();
                 Capture(window,$"countdown-home-{style}-{dark}");
                 main.OpenCountdownsCommand.Execute(null);
                 vm.Mode="倒數時間"; vm.Reminder="提前 1 天"; vm.ReminderTime="14:30";

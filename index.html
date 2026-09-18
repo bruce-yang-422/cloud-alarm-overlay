@@ -38,7 +38,9 @@
       "screenshot": [
         "https://bruce-yang-422.github.io/cloud-alarm-overlay/site-assets/screenshots/home_light.png",
         "https://bruce-yang-422.github.io/cloud-alarm-overlay/site-assets/screenshots/tasks_light.png",
-        "https://bruce-yang-422.github.io/cloud-alarm-overlay/site-assets/screenshots/pomodoro_light.png"
+        "https://bruce-yang-422.github.io/cloud-alarm-overlay/site-assets/screenshots/pomodoro_light.png",
+        "https://bruce-yang-422.github.io/cloud-alarm-overlay/site-assets/screenshots/countdown_light.png",
+        "https://bruce-yang-422.github.io/cloud-alarm-overlay/site-assets/screenshots/countdown_editor_light.png"
       ],
       "license": "https://github.com/bruce-yang-422/cloud-alarm-overlay/blob/main/LICENSE",
       "offers": {
@@ -151,15 +153,16 @@
     .section-kicker { margin-bottom: 13px; color: var(--blue); font-size: .78rem; font-weight: 800; letter-spacing: .16em; }
     h2 { margin-bottom: 14px; font-size: clamp(2rem, 3.2vw, 2.8rem); letter-spacing: -.045em; line-height: 1.25; }
     .section-heading > p:last-child { margin-bottom: 0; color: var(--muted); font-size: 1.02rem; }
-    .features { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px; }
+    .features { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
     .feature {
-      min-height: 248px; padding: 25px 23px; border: 1px solid var(--line); border-radius: 20px;
+      min-height: 220px; padding: 25px 23px; border: 1px solid var(--line); border-radius: 20px;
       background: var(--paper); box-shadow: 0 7px 22px #3d66920a;
     }
     .feature-mark { display: inline-grid; place-items: center; width: 44px; height: 44px; margin-bottom: 22px; border-radius: 13px; color: #0c5dcf; background: #e9f2ff; font-weight: 850; }
     .feature:nth-child(2) .feature-mark { color: #117b65; background: #e6f8f2; }
     .feature:nth-child(3) .feature-mark { color: #c96847; background: #fff0e8; }
     .feature:nth-child(4) .feature-mark { color: #6254ad; background: #f0edff; }
+    .feature:nth-child(5) .feature-mark { color: #b0227a; background: #fdecf4; }
     .feature h3 { margin-bottom: 9px; font-size: 1.16rem; letter-spacing: -.02em; }
     .feature p { margin-bottom: 0; color: var(--muted); font-size: .91rem; }
 
@@ -208,8 +211,8 @@
     .preview-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 22px; }
     .preview-card { overflow: hidden; border: 1px solid var(--line); border-radius: 20px; background: #f7faff; box-shadow: 0 8px 24px #274a760a; }
     .preview-image-link { display: block; overflow: hidden; border-bottom: 1px solid var(--line); }
-    .preview-image-link img { width: 100%; height: 338px; object-fit: cover; object-position: top left; transition: transform .25s ease; }
-    .preview-image-link:hover img { transform: scale(1.025); }
+    .preview-image-link img { width: 100%; height: auto; aspect-ratio: 2288 / 1594; object-fit: contain; background: #f7fafe; }
+    .preview-image-link:hover { background: #e6f0ff; }
     .preview-copy { padding: 22px 24px 24px; }
     .preview-copy h3 { margin-bottom: 5px; font-size: 1.14rem; }
     .preview-copy p { margin-bottom: 0; color: var(--muted); font-size: .9rem; }
@@ -274,7 +277,7 @@
       .features, .levels-grid { grid-template-columns: 1fr; }
       .feature, .level-card { min-height: 0; }
       .builder-panel { padding: 26px 22px; }
-      .preview-image-link img { height: 245px; }
+      .preview-image-link img { height: auto; }
       .notice-showcase { grid-template-columns: 1fr; }
       .notice-showcase a { justify-self: start; width: 200px; }
       .trust-panel { padding: 30px 24px; }
@@ -328,9 +331,9 @@
         <div class="hero-visual">
           <div class="app-frame hero-frame">
             <div class="frame-bar" aria-hidden="true"><i class="frame-dot"></i><i class="frame-dot"></i><i class="frame-dot"></i><span class="frame-label">首頁 · 淺色模式</span></div>
-            <img src="site-assets/screenshots/home_light.png" alt="Cloud Alarm Overlay 淺色模式首頁，顯示下一個提醒、今日任務概況與雲端同步狀態" width="1898" height="1414" fetchpriority="high">
+            <img src="site-assets/screenshots/home_light.png" alt="Cloud Alarm Overlay v1.2.0 淺色首頁，顯示提醒、倒數與正數釘選卡、今日任務概況及常用功能" width="2288" height="1594" fetchpriority="high">
           </div>
-          <span class="visual-caption">實際程式介面 · 示範資料</span>
+          <span class="visual-caption">v1.2.0 本機預覽 · 實際介面與示範資料</span>
         </div>
       </div>
     </section>
@@ -347,6 +350,7 @@
           <article class="feature"><span class="feature-mark" aria-hidden="true">02</span><h3>分級通知與確認</h3><p>依重要程度顯示不同通知。最高級通知須輸入畫面上的數字確認碼，避免匆忙略過。</p></article>
           <article class="feature"><span class="feature-mark" aria-hidden="true">03</span><h3>番茄鐘專注計時</h3><p>依自己的節奏設定專注與休息時間，查看每日進度及完成紀錄。</p></article>
           <article class="feature"><span class="feature-mark" aria-hidden="true">04</span><h3>紀錄與管理</h3><p>查詢提醒與確認紀錄、匯出資料；管理者可設定同步來源、政策、備份及還原。</p></article>
+          <article class="feature"><span class="feature-mark" aria-hidden="true">05</span><h3>倒數／正數日</h3><p>記錄重要日子，支援倒數與正數計時、每年國曆或農曆月日重複，首頁最多可釘選兩項，隨時看到剩餘或已過天數。</p></article>
         </div>
         <div class="builder-panel" id="task-builder" aria-labelledby="builder-title">
           <div>
@@ -400,21 +404,29 @@
         <div class="section-heading">
           <p class="section-kicker">TAKE A LOOK</p>
           <h2 id="preview-title">看看每天會用到的畫面。</h2>
-          <p>下方是程式的淺色介面截圖；點擊圖片可查看完整大小。</p>
+          <p>下方為 v1.2.0 的最新淺色介面與示範資料；點擊圖片可查看完整大小。v1.2.0 尚待發布，下載版本以 GitHub Release 為準。</p>
         </div>
         <div class="preview-grid">
           <article class="preview-card">
-            <a class="preview-image-link" href="site-assets/screenshots/tasks_light.png" target="_blank" rel="noopener noreferrer" aria-label="查看我的任務完整截圖（新視窗）"><img src="site-assets/screenshots/tasks_light.png" alt="我的任務頁面，包含來源分類、任務清單與啟用狀態" width="1898" height="1414" loading="lazy"></a>
+            <a class="preview-image-link" href="site-assets/screenshots/tasks_light.png" target="_blank" rel="noopener noreferrer" aria-label="查看我的任務完整截圖（新視窗）"><img src="site-assets/screenshots/tasks_light.png" alt="我的任務頁面，包含來源分類、任務清單與啟用狀態" width="2288" height="1594" loading="lazy"></a>
             <div class="preview-copy"><h3>我的任務</h3><p>用來源篩選任務，一眼看到時間、重要程度與啟用狀態。</p></div>
           </article>
           <article class="preview-card">
-            <a class="preview-image-link" href="site-assets/screenshots/pomodoro_light.png" target="_blank" rel="noopener noreferrer" aria-label="查看番茄鐘完整截圖（新視窗）"><img src="site-assets/screenshots/pomodoro_light.png" alt="番茄鐘頁面，包含 25 分鐘計時、目前階段與今日進度" width="1898" height="1414" loading="lazy"></a>
+            <a class="preview-image-link" href="site-assets/screenshots/pomodoro_light.png" target="_blank" rel="noopener noreferrer" aria-label="查看番茄鐘完整截圖（新視窗）"><img src="site-assets/screenshots/pomodoro_light.png" alt="番茄鐘頁面，包含 25 分鐘計時、目前階段與今日進度" width="2288" height="1594" loading="lazy"></a>
             <div class="preview-copy"><h3>番茄鐘</h3><p>專注計時、休息節奏與每天的完成進度並排呈現。</p></div>
+          </article>
+          <article class="preview-card">
+            <a class="preview-image-link" href="site-assets/screenshots/countdown_light.png" target="_blank" rel="noopener noreferrer" aria-label="查看倒數／正數頁面完整截圖（新視窗）"><img src="site-assets/screenshots/countdown_light.png" alt="倒數／正數頁面，顯示五種分類統計、六張事件卡片、釘選與置頂操作" width="2288" height="1594" loading="lazy"></a>
+            <div class="preview-copy"><h3>倒數／正數</h3><p>五種分類搭配狀態統計，切換卡片或資料表，查看剩餘時間、累計天數與提醒。</p></div>
+          </article>
+          <article class="preview-card">
+            <a class="preview-image-link" href="site-assets/screenshots/countdown_editor_light.png" target="_blank" rel="noopener noreferrer" aria-label="查看事件編輯視窗完整截圖（新視窗）"><img src="site-assets/screenshots/countdown_editor_light.png" alt="事件編輯視窗，包含倒數與正數滑動選項、五種分類、日期時間、提醒、顯示方式、開關與實際卡片預覽" width="1598" height="1555" loading="lazy"></a>
+            <div class="preview-copy"><h3>新增與編輯事件</h3><p>先選倒數或正數，再設定日期與提醒；滑動選項、釘選開關與卡片預覽集中在同一視窗。</p></div>
           </article>
         </div>
         <div class="notice-showcase">
           <div><p class="section-kicker">CLEAR WHEN IT MATTERS</p><h3>重要提醒：訊息清楚看見。</h3><p>右側是「重要提醒」的實際畫面。通知顯示任務內容與補充說明；閱讀後按下確認，系統便會記錄確認結果。</p></div>
-          <a href="site-assets/screenshots/notification_light.png" target="_blank" rel="noopener noreferrer" aria-label="查看通知完整截圖（新視窗）"><img src="site-assets/screenshots/notification_light.png" alt="淺色模式的重要提醒通知，顯示任務詳情、備註與確認按鈕" width="430" height="520" loading="lazy"></a>
+          <a href="site-assets/screenshots/notification_light.png" target="_blank" rel="noopener noreferrer" aria-label="查看通知完整截圖（新視窗）"><img src="site-assets/screenshots/notification_light.png" alt="淺色模式的重要提醒通知，顯示任務詳情、備註與確認按鈕" width="645" height="780" loading="lazy"></a>
         </div>
       </div>
     </section>

@@ -270,7 +270,7 @@ public partial class CountdownsViewModel(ICountdownRepository repository, TimePr
             TargetAt = date.Date + time, CreatedAt = editing?.CreatedAt ?? now,
             Mode = IsTimeMode ? "Time" : "Days", Direction = IsCountUp ? "Up" : "Down",
             DisplayFormat = FormatValues[Array.IndexOf(DisplayFormats, DisplayFormat)],
-            Category = Category, Recurrence = BuildRecurrence(date), SkipOnHoliday = SkipOnHoliday,
+            Category = Category, Notes = Notes, IsPinned = PinOnHome, Recurrence = BuildRecurrence(date), SkipOnHoliday = SkipOnHoliday,
             ReminderDays = ReminderValues[Array.IndexOf(Reminders, Reminder)], ReminderMinutes = minutes
         };
         item.Validate();

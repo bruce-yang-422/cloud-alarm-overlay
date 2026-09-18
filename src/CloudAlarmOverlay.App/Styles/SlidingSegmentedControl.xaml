@@ -16,4 +16,22 @@
    </Grid></Border>
   </ControlTemplate></Setter.Value></Setter>
  </Style>
+ <Style x:Key="PillSlidingSegmentedControl" TargetType="controls:SlidingSegmentedControl" BasedOn="{StaticResource {x:Type controls:SlidingSegmentedControl}}">
+  <Setter Property="ItemContainerStyle"><Setter.Value><Style TargetType="ListBoxItem">
+   <Setter Property="Foreground" Value="{adaptive:AdaptiveBrush #697C99}"/>
+   <Setter Property="Template"><Setter.Value><ControlTemplate TargetType="ListBoxItem">
+    <Border x:Name="Pill" Padding="8" CornerRadius="20" Background="Transparent"><ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/></Border>
+    <ControlTemplate.Triggers>
+     <Trigger Property="IsSelected" Value="True"><Setter Property="Foreground" Value="{adaptive:AdaptiveBrush #0766FF}"/><Setter Property="FontWeight" Value="SemiBold"/></Trigger>
+     <Trigger Property="IsKeyboardFocused" Value="True"><Setter TargetName="Pill" Property="BorderBrush" Value="{adaptive:AdaptiveBrush #0766FF}"/><Setter TargetName="Pill" Property="BorderThickness" Value="1"/></Trigger>
+    </ControlTemplate.Triggers>
+   </ControlTemplate></Setter.Value></Setter>
+  </Style></Setter.Value></Setter>
+  <Setter Property="Template"><Setter.Value><ControlTemplate TargetType="controls:SlidingSegmentedControl">
+   <Border Background="{adaptive:AdaptiveBrush #F0F5FB}" CornerRadius="24" Padding="{TemplateBinding Padding}"><Grid>
+    <Canvas x:Name="PART_Rail" IsHitTestVisible="False"><Border x:Name="PART_Indicator" Canvas.Left="0" Width="0" Background="{adaptive:AdaptiveBrush #E6F0FF}" CornerRadius="20"/></Canvas>
+    <ItemsPresenter/>
+   </Grid></Border>
+  </ControlTemplate></Setter.Value></Setter>
+ </Style>
 </ResourceDictionary>

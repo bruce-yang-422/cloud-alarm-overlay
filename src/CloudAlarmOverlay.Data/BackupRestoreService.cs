@@ -119,7 +119,7 @@ public sealed class BackupRestoreService(Database db, IAuthenticationService aut
             NotificationPreferences.Validate(setting);
             if(setting.Key=="KeepWindowAspectRatio" && !bool.TryParse(setting.Value,out _))throw new InvalidDataException("視窗設定無效。");
             if(setting.Key=="ThemeMode" && setting.Value is not ("淺色" or "深色" or "暗色" or "粉紅色" or "若竹色" or "淺粉色" or "暗粉色" or "淺若竹色" or "暗若竹色" or "跟隨系統"))throw new InvalidDataException("主題設定無效。");
-            if(setting.Key=="ThemeColorStyle" && setting.Value is not ("預設" or "粉紅色" or "若竹色"))throw new InvalidDataException("色彩風格設定無效。");
+            if(setting.Key=="ThemeColorStyle" && setting.Value is not ("預設" or "粉紅色" or "若竹色" or "櫻花粉" or "若竹綠" or "薰衣草紫" or "夕陽橘" or "極簡銀白"))throw new InvalidDataException("色彩風格設定無效。");
             if(setting.Key.StartsWith("Sound:",StringComparison.Ordinal)) _=JsonSerializer.Deserialize<SoundPreference>(setting.Value??"{}");
             if(setting.Key=="EmojiLibrary")
             {

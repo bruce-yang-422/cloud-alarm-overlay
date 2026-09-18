@@ -1,4 +1,35 @@
-﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:adaptive="clr-namespace:CloudAlarmOverlay.App.Styles">
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:adaptive="clr-namespace:CloudAlarmOverlay.App.Styles">
+ <ResourceDictionary.MergedDictionaries><ResourceDictionary Source="LightTheme.xaml"/></ResourceDictionary.MergedDictionaries>
+ <Style x:Key="PinnedCountdownState" TargetType="Border">
+  <Setter Property="Background" Value="{adaptive:AdaptiveBrush CountdownCalmSurface}"/>
+  <Setter Property="BorderBrush" Value="{adaptive:AdaptiveBrush CountdownCalmAccent}"/>
+  <Style.Triggers>
+   <DataTrigger Binding="{Binding StatusLabel}" Value="即將到來">
+    <Setter Property="Background" Value="{adaptive:AdaptiveBrush CountdownSoonSurface}"/>
+    <Setter Property="BorderBrush" Value="{adaptive:AdaptiveBrush CountdownSoonAccent}"/>
+   </DataTrigger>
+   <DataTrigger Binding="{Binding StatusLabel}" Value="就是今天">
+    <Setter Property="Background" Value="{adaptive:AdaptiveBrush CountdownDueSurface}"/>
+    <Setter Property="BorderBrush" Value="{adaptive:AdaptiveBrush CountdownDueAccent}"/>
+   </DataTrigger>
+   <DataTrigger Binding="{Binding IsExpired}" Value="True">
+    <Setter Property="Background" Value="{adaptive:AdaptiveBrush CountdownDueSurface}"/>
+    <Setter Property="BorderBrush" Value="{adaptive:AdaptiveBrush CountdownDueAccent}"/>
+   </DataTrigger>
+   <DataTrigger Binding="{Binding Item.IsCountUp}" Value="True">
+    <Setter Property="Background" Value="{adaptive:AdaptiveBrush CountdownUpSurface}"/>
+    <Setter Property="BorderBrush" Value="{adaptive:AdaptiveBrush CountdownUpAccent}"/>
+   </DataTrigger>
+   <DataTrigger Binding="{Binding IsScheduleUnavailable}" Value="True">
+    <Setter Property="Background" Value="{adaptive:AdaptiveBrush CountdownNeutralSurface}"/>
+    <Setter Property="BorderBrush" Value="{adaptive:AdaptiveBrush CountdownNeutralAccent}"/>
+   </DataTrigger>
+   <DataTrigger Binding="{Binding Item.IsCompleted}" Value="True">
+    <Setter Property="Background" Value="{adaptive:AdaptiveBrush CountdownNeutralSurface}"/>
+    <Setter Property="BorderBrush" Value="{adaptive:AdaptiveBrush CountdownNeutralAccent}"/>
+   </DataTrigger>
+  </Style.Triggers>
+ </Style>
  <Style x:Key="CountdownBar" TargetType="ProgressBar">
   <Setter Property="Height" Value="7"/>
   <Setter Property="Background" Value="{adaptive:AdaptiveBrush #E6F0FF}"/>
@@ -28,4 +59,34 @@
   <Setter Property="Padding" Value="7"/><Setter Property="Margin" Value="3,0,0,0"/>
   <Setter Property="Foreground" Value="{adaptive:AdaptiveBrush #536982}"/><Setter Property="Background" Value="Transparent"/><Setter Property="BorderThickness" Value="0"/>
  </Style>
+ <DataTemplate x:Key="CountdownCardBody"><StackPanel>
+        <DockPanel Margin="0,0,0,8">
+         <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" Margin="8,0,0,0">
+          <TextBlock Text="&#xE74A;" FontFamily="Segoe MDL2 Assets" Foreground="{adaptive:AdaptiveBrush #0766FF}" Margin="0,0,8,0" ToolTip="已置頂" Visibility="{Binding Item.IsTop,Converter={StaticResource BoolVisibility}}"/>
+          <TextBlock Text="&#xE718;" FontFamily="Segoe MDL2 Assets" Foreground="{adaptive:AdaptiveBrush #0766FF}" ToolTip="已釘選首頁" Visibility="{Binding Item.IsPinned,Converter={StaticResource BoolVisibility}}"/>
+         </StackPanel>
+         <Border DockPanel.Dock="Left" Background="{adaptive:AdaptiveBrush #E6F0FF}" CornerRadius="10" Width="36" Height="36" Margin="0,0,10,0">
+          <TextBlock Text="{Binding ModeIcon}" FontFamily="Segoe MDL2 Assets" FontSize="19" Foreground="{adaptive:AdaptiveBrush #0766FF}" HorizontalAlignment="Center"/>
+         </Border>
+         <StackPanel><TextBlock Text="{Binding Title}" FontSize="16" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" ToolTip="{Binding Title}" Foreground="{adaptive:AdaptiveBrush #16243E}"/>
+          <TextBlock Text="{Binding TargetLabel}" Style="{StaticResource Muted}" FontSize="11"/>
+         </StackPanel>
+        </DockPanel>
+        <DockPanel Margin="0,0,0,8">
+         <TextBlock DockPanel.Dock="Right" Text="{Binding StatusLabel}" Style="{StaticResource Muted}" FontSize="11" HorizontalAlignment="Right"/>
+         <StackPanel Orientation="Horizontal">
+          <Border CornerRadius="5" Padding="7,2" Margin="0,0,6,0"><Border.Style><Style TargetType="Border"><Setter Property="Background" Value="{adaptive:AdaptiveBrush #E6F0FF}"/><Style.Triggers><DataTrigger Binding="{Binding Item.Category}" Value="生活"><Setter Property="Background" Value="{adaptive:AdaptiveBrush #EAF7F2}"/></DataTrigger><DataTrigger Binding="{Binding Item.Category}" Value="節日"><Setter Property="Background" Value="{adaptive:AdaptiveBrush #FFF3F5}"/></DataTrigger></Style.Triggers></Style></Border.Style><TextBlock Text="{Binding Item.Category}" FontSize="11" Foreground="{adaptive:AdaptiveBrush #16243E}"/></Border>
+          <TextBlock Text="{Binding ModeLabel}" Style="{StaticResource Muted}" FontSize="11"/>
+         </StackPanel>
+        </DockPanel>
+        <Border Background="{adaptive:AdaptiveBrush #F6FAFF}" CornerRadius="10" Padding="8,4" ToolTip="{Binding DetailsLabel}">
+         <StackPanel>
+          <TextBlock Text="{Binding Remaining}" FontSize="23" FontWeight="SemiBold" Foreground="{adaptive:AdaptiveBrush #0766FF}" TextTrimming="CharacterEllipsis" ToolTip="{Binding Remaining}" Margin="0,0,0,6"/>
+          <ProgressBar Style="{StaticResource CountdownBar}" Value="{Binding ElapsedPercent}" Maximum="100" Visibility="{Binding ShowProgress,Converter={StaticResource BoolVisibility}}" Height="5" AutomationProperties.Name="時間經過比例"/>
+          <TextBlock Text="{Binding ProgressLabel}" Style="{StaticResource Muted}" FontSize="11" Margin="0,3,0,0" ToolTip="從建立日期／時間到目標的時間經過比例，不代表任務完成度。"/>
+         </StackPanel>
+        </Border>
+        <TextBlock Text="{Binding NextReminderLabel}" Style="{StaticResource Muted}" FontSize="11" Margin="0,4,0,0" Visibility="{Binding HasNextReminderLabel,Converter={StaticResource BoolVisibility}}"/>
+        <TextBlock Text="{Binding Item.Notes}" TextTrimming="CharacterEllipsis" ToolTip="{Binding Item.Notes}" Style="{StaticResource Muted}" TextWrapping="NoWrap" FontSize="11" Margin="0,4,0,0" Visibility="{Binding HasNotes,Converter={StaticResource BoolVisibility}}"/>
+ </StackPanel></DataTemplate>
 </ResourceDictionary>

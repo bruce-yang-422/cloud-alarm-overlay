@@ -5,4 +5,4 @@ public sealed record UpdateInfo(Version LatestVersion, Uri DownloadUrl, string R
 public enum ThemeMode { System, Light, Dark, Pink, Bamboo }
 
 
-public enum ThemeColorStyle { Default, Pink, Bamboo }
+public enum ThemeColorStyle { Default, Pink, Bamboo, Lavender, Sunset, Silver }
