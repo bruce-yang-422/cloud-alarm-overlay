@@ -24,6 +24,7 @@ public sealed class NotificationPreferences(ISettingsRepository settings)
         JsonSerializer.Deserialize<SoundPreference>((await settings.GetAsync("Sound:"+level,ct))?.Value??"{}")??new();
     public static void Validate(Setting setting)
     {
+        if(setting.Key==HomePinOptions.SettingKey)HomePinOptions.Validate(setting.Value);
         if(setting.Key=="NotificationColorMode"&&setting.Value is not ("亮色" or "暗色"))throw new ArgumentException("請選擇亮色或暗色通知。");
         if(setting.Key=="NotificationColorScheme"&&setting.Value is not ("依提醒等級" or "海灣藍" or "森林綠" or "暮紫"))throw new ArgumentException("請選擇通知配色。");
         if(setting.Key=="FlashMilliseconds"&&(!int.TryParse(setting.Value,out var ms)||ms is <200 or >5000))

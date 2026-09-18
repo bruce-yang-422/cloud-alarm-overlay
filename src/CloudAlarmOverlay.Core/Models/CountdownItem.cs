@@ -4,7 +4,6 @@ namespace CloudAlarmOverlay.Core.Models;
 
 public sealed record CountdownItem
 {
-    public const int HomePinLimit = 2;
     public string Id { get; init; } = Guid.NewGuid().ToString("N");
     public string Title { get; init; } = "";
     public DateTime TargetAt { get; init; }

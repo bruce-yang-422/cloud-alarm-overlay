@@ -9,10 +9,50 @@ using CloudAlarmOverlay.Core.Services;
 namespace CloudAlarmOverlay.App.ViewModels;
 public partial class MainViewModel(ITaskRepository tasks,ITaskService taskService,ITaskSchedulingService scheduling,
     IAckLogRepository history,ISyncLogRepository syncLogs,ISyncService sync,SyncConfiguration configuration,
-    IDeviceIdentityService identity,IAlarmPresenter presenter,IUserDialogs dialogs,ILunarCalendarRepository lunar,AdminViewModel admin,PreferencesViewModel preferences,PomodoroViewModel pomodoro,IAlarmHeartbeat heartbeat,CountdownsViewModel countdowns):ObservableObject
+    IDeviceIdentityService identity,IAlarmPresenter presenter,IUserDialogs dialogs,ILunarCalendarRepository lunar,AdminViewModel admin,PreferencesViewModel preferences,PomodoroViewModel pomodoro,IAlarmHeartbeat heartbeat,CountdownsViewModel countdowns,ITaskHomePinRepository taskHomePins,ChangeSignal changes):ObservableObject
 {
     public PomodoroViewModel Pomodoro=>pomodoro;
     public CountdownsViewModel Countdowns=>countdowns;
+    public ObservableCollection<CountdownRow> HomePins {get;}=[];
+    private HashSet<string> taskPinIds=[];
+    private readonly List<PinnedTaskRow> pinnedTasks=[];
+    public bool IsHomePinsEmpty=>HomePins.Count==0;
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(HomePinSummary))]
+    private int homePinLimit=HomePinOptions.DefaultLimit;
+    public string HomePinSummary=>$"已釘選 {HomePins.Count} / {HomePinLimit} 項 · 尚餘 {Math.Max(0,HomePinLimit-HomePins.Count)} 項 · 任務與倒數／正數共用";
+    private void UpdateHomePins(DateTime now)
+    {
+        foreach(var row in pinnedTasks)row.Update(now);
+        var rows=Countdowns.Pinned.Concat(pinnedTasks).OrderBy(row=>row.IsScheduleUnavailable?DateTime.MaxValue:row.DisplayDate)
+            .ThenBy(row=>row.Title).ThenBy(row=>row.PinKind).ToArray();
+        if(!HomePins.SequenceEqual(rows))
+        {
+            HomePins.Clear();foreach(var row in rows)HomePins.Add(row);
+            OnPropertyChanged(nameof(IsHomePinsEmpty));OnPropertyChanged(nameof(HomePinSummary));
+        }
+    }
+    [RelayCommand] private async Task ToggleTaskPinAsync(TaskRow row)
+    {
+        try
+        {
+            var pinned=(await taskHomePins.GetTaskIdsAsync()).Contains(row.Task.Id);
+            await taskHomePins.SetPinnedAsync(row.Task.Id,!pinned);
+            await RefreshAsync();changes.Notify();
+            Status=pinned?"已取消任務釘選，任務提醒保持不變。":"任務已釘選首頁，依下一次提醒時間倒數。";
+        }
+        catch(Exception ex){Status=ex.Message;}
+    }
+    [RelayCommand] private async Task UnpinHomeAsync(CountdownRow row)
+    {
+        try
+        {
+            if(row is PinnedTaskRow taskRow)await taskHomePins.SetPinnedAsync(taskRow.Task.Id,false);
+            else if(!await Countdowns.UnpinAsync(row)){Status=Countdowns.Message;return;}
+            await RefreshAsync();changes.Notify();
+        }
+        catch(Exception ex){Status=ex.Message;}
+    }
     [RelayCommand] private void OpenCountdowns()=>PageIndex=6;
     [RelayCommand] private void OpenPomodoro()=>PageIndex=3;
     [ObservableProperty] private int historyTabIndex;
@@ -93,7 +133,7 @@ public partial class MainViewModel(ITaskRepository tasks,ITaskService taskServic
     public bool HasTaskSelection=>SelectedTasks.Count>0;
     public bool CanEditSelectedTask=>SelectedTasks.Count==1&&SelectedTasks[0].IsLocal;
     public bool CanCopySelectedTask=>SelectedTasks.Count==1;
-    public string SelectionHint=>!HasTaskSelection?"勾選任務以進行操作；雲端任務可複製成本機。":
+    public string SelectionHint=>!HasTaskSelection?"勾選任務以進行操作；名稱旁圖釘可釘選首頁，與倒數／正數共用名額，上限可於設定調整。":
         SelectedTasks.All(t=>!t.IsLocal)?"🔒 已選取雲端唯讀任務：不可編輯、啟停或刪除；可複製成本機後修改。":
         SelectedTasks.Any(t=>!t.IsLocal)?"🔒 混合選取：批次啟用、停用及刪除只處理本機任務，雲端設定保持不變。":
         SelectedTasks.Count>1?"已選取多筆本機任務，請使用批次操作；編輯請只選一筆。":"已選取本機任務，可編輯、複製、啟停或刪除。";
@@ -164,6 +204,9 @@ public partial class MainViewModel(ITaskRepository tasks,ITaskService taskServic
     {
         UpdateClock(DateTime.Now);
         Countdowns.Update(DateTime.Now);
+        UpdateHomePins(DateTime.Now);
+        if(pinnedTasks.Any(row=>row.NeedsReschedule(DateTime.Now)) && !RefreshCommand.IsRunning)
+            _=RefreshCommand.ExecuteAsync(null);
         if(nextReminderAt is not {} at){Countdown="—";CountdownLabel="—";RemainingHours=0;return;}
         var remaining=at-DateTime.Now;
         if(remaining<TimeSpan.Zero)remaining=TimeSpan.Zero;
@@ -213,8 +256,10 @@ public partial class MainViewModel(ITaskRepository tasks,ITaskService taskServic
         {
             await RefreshHealthAsync();
             await Countdowns.LoadAsync();
+            HomePinLimit=await taskHomePins.GetLimitAsync();
             await RefreshCalendarAsync(DateTime.Now);
-            allTasks=await tasks.GetAllAsync();FilterTasks();
+            allTasks=await tasks.GetAllAsync();
+            taskPinIds=(await taskHomePins.GetTaskIdsAsync()).ToHashSet();FilterTasks();
             CalendarWarning=allTasks.Any(t=>t.Enabled&&t.Recurrence.StartsWith("LunarDay:",StringComparison.Ordinal))
                 &&await lunar.GetByDateAsync(DateOnly.FromDateTime(DateTime.Today)) is null
                 ?"缺少今日農曆對照：農曆任務今天不會觸發，請 IT 更新 LunarCalendar 分頁。":"";
@@ -222,10 +267,16 @@ public partial class MainViewModel(ITaskRepository tasks,ITaskService taskServic
             allHistory=await history.GetRangeAsync(DateTime.MinValue,DateTime.MaxValue);FilterHistory(false);
             var now=DateTime.Now;
             var upcoming=new List<TaskRow>();
+            var newPinnedTasks=new List<PinnedTaskRow>();
             foreach(var task in allTasks)
             {
-                if(await scheduling.GetNextOccurrenceAsync(task,now) is {} next)upcoming.Add(new TaskRow(task,next));
+                var next=await scheduling.GetNextOccurrenceAsync(task,now);
+                if(next is not null)upcoming.Add(new TaskRow(task,next));
+                if(taskPinIds.Contains(task.Id))newPinnedTasks.Add(new PinnedTaskRow(task,next,
+                    allHistory.Where(log=>log.TaskId==task.Id && log.ScheduledAt==task.ScheduledAt && log.AcknowledgedAt is not null)
+                        .Select(log=>log.AcknowledgedAt).FirstOrDefault()));
             }
+            pinnedTasks.Clear();pinnedTasks.AddRange(newPinnedTasks);
             Upcoming.Clear();foreach(var row in upcoming.OrderBy(t=>t.NextAt).Take(8))Upcoming.Add(row);
             NextTitle=Upcoming.FirstOrDefault()?.Title??"目前沒有即將到來的提醒";
             nextReminderAt=Upcoming.FirstOrDefault()?.NextAt;
@@ -273,9 +324,18 @@ public partial class MainViewModel(ITaskRepository tasks,ITaskService taskServic
         var selectedIds=SelectedTasks.Select(t=>t.Task.Id).ToHashSet();
         rebuildingTasks=true;
         try {
-        Tasks.Clear();
+        var existing=Tasks.ToDictionary(r=>r.Task.Id);
+        var index=0;
         foreach(var task in allTasks.Where(t=>(SourceFilter=="全部來源"||t.Source==SourceFilter)&&(t.Title.Contains(Search,StringComparison.OrdinalIgnoreCase)||t.Description?.Contains(Search,StringComparison.OrdinalIgnoreCase)==true)))
-            Tasks.Add(new TaskRow(task));
+        {
+            var row=existing.TryGetValue(task.Id,out var old) && old.Task==task ? old : new TaskRow(task);
+            row.IsPinned=taskPinIds.Contains(task.Id);
+            var previous=Tasks.IndexOf(row);
+            if(previous<0)Tasks.Insert(index,row);
+            else if(previous!=index)Tasks.Move(previous,index);
+            index++;
+        }
+        while(Tasks.Count>index)Tasks.RemoveAt(Tasks.Count-1);
         } finally {rebuildingTasks=false;}
         SetTaskSelection(Tasks.Where(t=>selectedIds.Contains(t.Task.Id)).ToArray());
         SelectedTask=SelectedTasks.FirstOrDefault();
@@ -370,8 +430,12 @@ public partial class MainViewModel(ITaskRepository tasks,ITaskService taskServic
         catch(Exception ex){Status=ex.Message;}
     }
 }
-public sealed record TaskRow(AlarmTask Task,DateTime? NextAt=null)
+public sealed partial class TaskRow(AlarmTask task,DateTime? nextAt=null):ObservableObject
 {
+    public AlarmTask Task {get;}=task;
+    public DateTime? NextAt {get;}=nextAt;
+    [ObservableProperty] [NotifyPropertyChangedFor(nameof(PinLabel))] private bool isPinned;
+    public string PinLabel=>IsPinned?"取消釘選":"釘選首頁";
     public string UpcomingState=>"等待觸發";
     public string Title=>Task.Title;
     public string Source=>Task.Source;

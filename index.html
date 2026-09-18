@@ -4,9 +4,9 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#f5f9ff">
-  <meta name="description" content="Cloud Alarm Overlay 是 Windows 桌面提醒程式：建立本機任務、同步 Google Sheets 團隊任務，提供四種提醒模式、確認紀錄與番茄鐘，並內建可產生 Google Sheets 任務資料的表單工具。">
+  <meta name="description" content="Cloud Alarm Overlay v1.2.0：Windows 桌面提醒、Google Sheets 任務同步、倒數／正數、共用首頁釘選與番茄鐘。提供四種提醒模式及確認紀錄，支援舊版直接升級。">
   <meta name="robots" content="index,follow,max-image-preview:large">
-  <title>Cloud Alarm Overlay｜Windows 桌面提醒、任務同步與番茄鐘</title>
+  <title>Cloud Alarm Overlay v1.2.0｜Windows 提醒、倒數與番茄鐘</title>
   <link rel="canonical" href="https://bruce-yang-422.github.io/cloud-alarm-overlay/">
   <link rel="icon" type="image/x-icon" href="src/CloudAlarmOverlay.App/Assets/Brand/cloud_alarm_app.ico">
   <link rel="sitemap" type="application/xml" href="sitemap.xml">
@@ -14,7 +14,7 @@
   <meta property="og:locale" content="zh_TW">
   <meta property="og:site_name" content="Cloud Alarm Overlay">
   <meta property="og:title" content="Cloud Alarm Overlay｜重要的事，準時看見">
-  <meta property="og:description" content="Windows 桌面提醒程式，整合本機與 Google Sheets 任務、四種提醒模式、番茄鐘，以及內建的任務產生器表單工具。">
+  <meta property="og:description" content="v1.2.0 已發布：整合 Windows 任務提醒、Google Sheets 同步、倒數／正數與番茄鐘，任務和倒數共用 2～5 張首頁釘選卡片。">
   <meta property="og:url" content="https://bruce-yang-422.github.io/cloud-alarm-overlay/">
   <meta property="og:image" content="https://bruce-yang-422.github.io/cloud-alarm-overlay/site-assets/og-preview.png">
   <meta property="og:image:width" content="1200">
@@ -22,7 +22,7 @@
   <meta property="og:image:alt" content="Cloud Alarm Overlay：重要的事，準時看見。Windows 桌面提醒程式介面預覽。">
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:title" content="Cloud Alarm Overlay｜重要的事，準時看見">
-  <meta name="twitter:description" content="Windows 桌面提醒、Google Sheets 任務同步、分級通知、番茄鐘與內建任務產生器。">
+  <meta name="twitter:description" content="Cloud Alarm Overlay v1.2.0：Windows 提醒、Google Sheets 同步、倒數／正數、共用首頁釘選與番茄鐘。">
   <meta name="twitter:image" content="https://bruce-yang-422.github.io/cloud-alarm-overlay/site-assets/og-preview.png">
   <script type="application/ld+json">
     {
@@ -31,7 +31,10 @@
       "@id": "https://bruce-yang-422.github.io/cloud-alarm-overlay/#software",
       "name": "Cloud Alarm Overlay",
       "url": "https://bruce-yang-422.github.io/cloud-alarm-overlay/",
-      "description": "Windows 桌面提醒程式，支援本機任務、Google Sheets 公開 CSV 同步、四種提醒模式、確認紀錄、番茄鐘與內建任務產生器。",
+      "description": "Windows 桌面提醒程式，支援本機任務、Google Sheets 同步、倒數／正數、共用首頁釘選、四種提醒模式、番茄鐘與任務產生器。",
+      "softwareVersion": "1.2.0",
+      "releaseNotes": "https://github.com/bruce-yang-422/cloud-alarm-overlay/releases/tag/v1.2.0",
+      "downloadUrl": "https://github.com/bruce-yang-422/cloud-alarm-overlay/releases/download/v1.2.0/CloudAlarmOverlay-v1.2.0-Setup-x64.exe",
       "applicationCategory": "BusinessApplication",
       "operatingSystem": "Windows",
       "image": "https://bruce-yang-422.github.io/cloud-alarm-overlay/site-assets/og-preview.png",
@@ -309,7 +312,7 @@
         <a href="#preview">介面預覽</a>
         <a href="#getting-started">如何開始</a>
       </nav>
-      <a class="header-download" data-download-link href="https://github.com/bruce-yang-422/cloud-alarm-overlay/releases/latest"><span class="download-text-long">下載 Windows 版</span><span class="download-text-short">下載</span><span aria-hidden="true">↗</span></a>
+      <a class="header-download" data-download-link href="https://github.com/bruce-yang-422/cloud-alarm-overlay/releases/download/v1.2.0/CloudAlarmOverlay-v1.2.0-Setup-x64.exe"><span class="download-text-long">下載 Windows 版</span><span class="download-text-short">下載</span><span aria-hidden="true">↗</span></a>
     </div>
   </header>
 
@@ -317,15 +320,15 @@
     <section class="hero" id="top" aria-labelledby="hero-title">
       <div class="container hero-grid">
         <div>
-          <span class="eyebrow">Windows 桌面提醒程式</span>
+          <span class="eyebrow">v1.2.0 已發布 · Windows 桌面提醒</span>
           <h1 id="hero-title">重要的事，<br><span>準時看見。</span></h1>
-          <p class="hero-lead">把個人待辦與團隊任務放在同一個地方。Cloud Alarm Overlay 會在指定時間提醒，讓你確認提醒內容，也讓你留一段時間好好專注。</p>
+          <p class="hero-lead">把個人待辦、團隊任務與重要日子放在同一個地方。釘選任務截止時間，倒數期待、累計紀念日，再用番茄鐘留一段時間好好專注。</p>
           <div class="hero-actions">
-            <a class="button button-primary" data-download-link href="https://github.com/bruce-yang-422/cloud-alarm-overlay/releases/latest">下載 Windows 安裝檔 <span aria-hidden="true">↓</span></a>
+            <a class="button button-primary" data-download-link href="https://github.com/bruce-yang-422/cloud-alarm-overlay/releases/download/v1.2.0/CloudAlarmOverlay-v1.2.0-Setup-x64.exe">下載 Windows 安裝檔 <span aria-hidden="true">↓</span></a>
             <a class="button button-secondary" href="https://github.com/bruce-yang-422/cloud-alarm-overlay">查看 GitHub 專案 <span aria-hidden="true">↗</span></a>
           </div>
           <div class="hero-meta" aria-label="程式資訊">
-            <span>Windows x64</span><span>MIT 開放原始碼</span>
+            <span>Windows x64</span><span>免另裝 .NET</span><span>MIT 開放原始碼</span>
           </div>
         </div>
         <div class="hero-visual">
@@ -333,7 +336,7 @@
             <div class="frame-bar" aria-hidden="true"><i class="frame-dot"></i><i class="frame-dot"></i><i class="frame-dot"></i><span class="frame-label">首頁 · 淺色模式</span></div>
             <img src="site-assets/screenshots/home_light.png" alt="Cloud Alarm Overlay v1.2.0 淺色首頁，顯示提醒、倒數與正數釘選卡、今日任務概況及常用功能" width="2288" height="1594" fetchpriority="high">
           </div>
-          <span class="visual-caption">v1.2.0 本機預覽 · 實際介面與示範資料</span>
+          <span class="visual-caption">v1.2.0 · 實際介面與示範資料</span>
         </div>
       </div>
     </section>
@@ -350,7 +353,8 @@
           <article class="feature"><span class="feature-mark" aria-hidden="true">02</span><h3>分級通知與確認</h3><p>依重要程度顯示不同通知。最高級通知須輸入畫面上的數字確認碼，避免匆忙略過。</p></article>
           <article class="feature"><span class="feature-mark" aria-hidden="true">03</span><h3>番茄鐘專注計時</h3><p>依自己的節奏設定專注與休息時間，查看每日進度及完成紀錄。</p></article>
           <article class="feature"><span class="feature-mark" aria-hidden="true">04</span><h3>紀錄與管理</h3><p>查詢提醒與確認紀錄、匯出資料；管理者可設定同步來源、政策、備份及還原。</p></article>
-          <article class="feature"><span class="feature-mark" aria-hidden="true">05</span><h3>倒數／正數日</h3><p>記錄重要日子，支援倒數與正數計時、每年國曆或農曆月日重複，首頁最多可釘選兩項，隨時看到剩餘或已過天數。</p></article>
+          <article class="feature"><span class="feature-mark" aria-hidden="true">05</span><h3>倒數／正數日</h3><p>五種分類管理重要日子，倒數未來、累計過去；支援年度國曆／農曆提醒、自訂時間、統計圖表與卡片／資料表切換。</p></article>
+          <article class="feature"><span class="feature-mark" aria-hidden="true">06</span><h3>共用首頁釘選</h3><p>任務與倒數共用名額，預設 2 張、設定可選 2～5 張。任務依下一次提醒倒數，超過兩張在區塊內捲動；圖釘變色與動畫讓操作更清楚。</p></article>
         </div>
         <div class="builder-panel" id="task-builder" aria-labelledby="builder-title">
           <div>
@@ -404,12 +408,12 @@
         <div class="section-heading">
           <p class="section-kicker">TAKE A LOOK</p>
           <h2 id="preview-title">看看每天會用到的畫面。</h2>
-          <p>下方為 v1.2.0 的最新淺色介面與示範資料；點擊圖片可查看完整大小。v1.2.0 尚待發布，下載版本以 GitHub Release 為準。</p>
+          <p>下方為 v1.2.0 功能的淺色示範畫面；點擊圖片可查看完整大小。<a href="https://github.com/bruce-yang-422/cloud-alarm-overlay/releases/tag/v1.2.0">查看完整改版說明</a>。</p>
         </div>
         <div class="preview-grid">
           <article class="preview-card">
             <a class="preview-image-link" href="site-assets/screenshots/tasks_light.png" target="_blank" rel="noopener noreferrer" aria-label="查看我的任務完整截圖（新視窗）"><img src="site-assets/screenshots/tasks_light.png" alt="我的任務頁面，包含來源分類、任務清單與啟用狀態" width="2288" height="1594" loading="lazy"></a>
-            <div class="preview-copy"><h3>我的任務</h3><p>用來源篩選任務，一眼看到時間、重要程度與啟用狀態。</p></div>
+            <div class="preview-copy"><h3>我的任務</h3><p>用來源篩選任務，查看時間、重要程度與啟用狀態；釘選後可在首頁追蹤下一次提醒。</p></div>
           </article>
           <article class="preview-card">
             <a class="preview-image-link" href="site-assets/screenshots/pomodoro_light.png" target="_blank" rel="noopener noreferrer" aria-label="查看番茄鐘完整截圖（新視窗）"><img src="site-assets/screenshots/pomodoro_light.png" alt="番茄鐘頁面，包含 25 分鐘計時、目前階段與今日進度" width="2288" height="1594" loading="lazy"></a>
@@ -439,7 +443,7 @@
     </section>
 
     <section class="final-cta" aria-labelledby="download-title">
-      <div class="container"><h2 id="download-title">開始讓提醒跟得上你的工作。</h2><p>下載 Windows x64 安裝檔，安裝後即可建立自己的第一個提醒。</p><a class="button button-primary" data-download-link href="https://github.com/bruce-yang-422/cloud-alarm-overlay/releases/latest">下載 Cloud Alarm Overlay <span aria-hidden="true">↓</span></a></div>
+      <div class="container"><h2 id="download-title">開始讓提醒跟得上你的工作。</h2><p>下載 v1.2.0 Windows x64 安裝檔，不需另裝 .NET。v1.0.0／v1.1.0 可直接覆蓋升級，保留任務與設定；升級前請先備份並儲存編輯內容。</p><a class="button button-primary" data-download-link href="https://github.com/bruce-yang-422/cloud-alarm-overlay/releases/download/v1.2.0/CloudAlarmOverlay-v1.2.0-Setup-x64.exe">下載 Cloud Alarm Overlay v1.2.0 <span aria-hidden="true">↓</span></a></div>
     </section>
   </main>
 

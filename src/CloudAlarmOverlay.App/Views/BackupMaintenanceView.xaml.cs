@@ -29,7 +29,7 @@ public partial class BackupMaintenanceView : UserControl
             vm.RequireAdministrator();
             var preview=await vm.Backups.InspectAsync(file.FileName);
             var text=$"還原裝置：{preview.DeviceId}／{preview.DisplayName}\n任務 {preview.Tasks} 筆，歷史 {preview.History} 筆，倒數 {preview.Countdowns} 筆。\n裝置身分及未鎖定的個人設定會覆蓋，重複任務、歷史與倒數保留本機版本。";
-            text+="\n首頁釘選最多 2 項，超出名額的倒數仍會匯入，但不釘選到首頁。";
+            text+="\n首頁釘選依共用上限還原（2～5 項），現有釘選優先保留；超出名額的任務與倒數仍會匯入，但不釘選到首頁。";
             if(preview.ContainsAdministrator)text+="\n此備份含管理者帳密，會取代目前帳密；請先在此頁填入目前帳密驗證。";
             if(MessageBox.Show(text,"確認還原備份",MessageBoxButton.OKCancel,MessageBoxImage.Question)!=MessageBoxResult.OK)return;
             vm.RequireAdministrator();

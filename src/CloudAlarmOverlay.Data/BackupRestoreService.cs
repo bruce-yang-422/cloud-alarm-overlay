@@ -14,7 +14,7 @@ namespace CloudAlarmOverlay.Data;
 public sealed class BackupRestoreService(Database db, IAuthenticationService authentication, AdminSession session, ChangeSignal changes) : IBackupRestoreService
 {
     private const long MaxArchiveBytes = 64 * 1024 * 1024;
-    private static readonly HashSet<string> AllowedSettings = ["KeepWindowAspectRatio", "FlashMilliseconds", "QuietPeriods", "EmojiLibrary", "ThemeMode", "ThemeColorStyle", "NotificationColorMode", "NotificationColorScheme", .. new[] { AlarmLevels.Low, AlarmLevels.Mid, AlarmLevels.High, AlarmLevels.Max, "低級", "中級", "高級", "最高級" }.Select(x => "Sound:" + x)];
+    private static readonly HashSet<string> AllowedSettings = [HomePinOptions.SettingKey, "KeepWindowAspectRatio", "FlashMilliseconds", "QuietPeriods", "EmojiLibrary", "ThemeMode", "ThemeColorStyle", "NotificationColorMode", "NotificationColorScheme", .. new[] { AlarmLevels.Low, AlarmLevels.Mid, AlarmLevels.High, AlarmLevels.Max, "低級", "中級", "高級", "最高級" }.Select(x => "Sound:" + x)];
     public Task CreateBackupAsync(string path, CancellationToken cancellationToken = default) => CreateBackupAsync(path, null, cancellationToken);
     public async Task RestoreAsync(string path, CancellationToken cancellationToken = default) => await RestoreAsync(path, false, null, cancellationToken);
     private async Task VerifyAsync(BackupCredentials? credentials, CancellationToken ct)
@@ -38,6 +38,7 @@ public sealed class BackupRestoreService(Database db, IAuthenticationService aut
         var pomodoroSettings = await Read<PomodoroSetting>("SELECT * FROM PomodoroSettings;");
         var pomodoroLogs = await Read<PomodoroLogEntry>("SELECT * FROM PomodoroLog;");
         var countdowns = await Read<CountdownItem>("SELECT * FROM Countdowns;");
+        var taskPins = await Read<string>("SELECT TaskId FROM TaskHomePins WHERE TaskId IN (SELECT Id FROM Tasks WHERE Source='本機') ORDER BY TaskId;");
         tx.Commit();
         var target = Path.GetFullPath(path);
         var temporary = target + "." + Guid.NewGuid().ToString("N") + ".tmp";
@@ -46,7 +47,8 @@ public sealed class BackupRestoreService(Database db, IAuthenticationService aut
             await using(var stream = new FileStream(temporary, FileMode.CreateNew, FileAccess.Write))
             using(var zip = new ZipArchive(stream, ZipArchiveMode.Create))
             {
-                await Write(zip,"manifest.json",JsonSerializer.Serialize(new { Format="CloudAlarmOverlay", Version=2 }),cancellationToken);
+                await Write(zip,"manifest.json",JsonSerializer.Serialize(new { Format="CloudAlarmOverlay", Version=3 }),cancellationToken);
+                await Write(zip,"task-pins.json",JsonSerializer.Serialize(taskPins),cancellationToken);
                 await Write(zip,"countdowns.json",JsonSerializer.Serialize(countdowns),cancellationToken);
                 await Write(zip,"identity.json",JsonSerializer.Serialize(identity),cancellationToken);
                 await Write(zip,"settings.json",JsonSerializer.Serialize(settings),cancellationToken);
@@ -81,16 +83,16 @@ public sealed class BackupRestoreService(Database db, IAuthenticationService aut
         using var csv = new CsvReader(reader,CultureInfo.InvariantCulture);
         return csv.GetRecords<T>().ToList();
     }
-    private sealed record Package(Device Identity,List<Setting> Settings,List<AlarmTask> Tasks,List<AcknowledgementLog> Logs,List<User>? Users,List<SavedOccurrence> Occurrences,List<PomodoroSetting> PomodoroSettings,List<PomodoroLogEntry> PomodoroLogs,List<CountdownItem> Countdowns);
+    private sealed record Package(Device Identity,List<Setting> Settings,List<AlarmTask> Tasks,List<AcknowledgementLog> Logs,List<User>? Users,List<SavedOccurrence> Occurrences,List<PomodoroSetting> PomodoroSettings,List<PomodoroLogEntry> PomodoroLogs,List<CountdownItem> Countdowns,List<string> TaskPins);
     public sealed record SavedOccurrence(string Id,string TaskId,DateTime ScheduledAt,string State,DateTime? TriggeredAt) { public SavedOccurrence():this("","",default,"",null) {} }
     private static async Task<Package> ReadPackage(string path,CancellationToken ct)
     {
         await using var stream = File.OpenRead(path);
         if(stream.Length>MaxArchiveBytes)throw new InvalidDataException("備份檔過大（上限 64 MB）。");
         using var zip = new ZipArchive(stream,ZipArchiveMode.Read);
-        if(zip.Entries.Count>10 || zip.Entries.Sum(e=>e.Length)>MaxArchiveBytes || zip.Entries.Select(e=>e.FullName).Distinct().Count()!=zip.Entries.Count)
+        if(zip.Entries.Count>11 || zip.Entries.Sum(e=>e.Length)>MaxArchiveBytes || zip.Entries.Select(e=>e.FullName).Distinct().Count()!=zip.Entries.Count)
             throw new InvalidDataException("備份檔項目重複或解壓縮後超過 64 MB。");
-        string[] allowed = ["manifest.json","identity.json","settings.json","tasks.csv","acklog.csv","admin.key","occurrences.json","pomodoro-settings.json","pomodoro.csv","countdowns.json"];
+        string[] allowed = ["manifest.json","identity.json","settings.json","tasks.csv","acklog.csv","admin.key","occurrences.json","pomodoro-settings.json","pomodoro.csv","countdowns.json","task-pins.json"];
         if(zip.Entries.Any(e=>!allowed.Contains(e.FullName)))throw new InvalidDataException("備份檔含有不支援的項目。");
         async Task<string> Read(string name)
         {
@@ -100,11 +102,14 @@ public sealed class BackupRestoreService(Database db, IAuthenticationService aut
         T Parse<T>(string json)=>JsonSerializer.Deserialize<T>(json)??throw new InvalidDataException("備份資料不可為空。");
         using var manifest=JsonDocument.Parse(await Read("manifest.json"));
         var formatVersion = manifest.RootElement.GetProperty("Version").GetInt32();
-        if(manifest.RootElement.GetProperty("Format").GetString()!="CloudAlarmOverlay" || formatVersion is not (1 or 2))
+        if(manifest.RootElement.GetProperty("Format").GetString()!="CloudAlarmOverlay" || formatVersion is not (1 or 2 or 3))
             throw new InvalidDataException("不支援的備份格式版本。");
         var countdowns = formatVersion == 1 && zip.GetEntry("countdowns.json") is null
             ? new List<CountdownItem>() : Parse<List<CountdownItem>>(await Read("countdowns.json"));
-        var package=new Package(Parse<Device>(await Read("identity.json")),Parse<List<Setting>>(await Read("settings.json")),ReadCsv<AlarmTask>(await Read("tasks.csv")),ReadCsv<AcknowledgementLog>(await Read("acklog.csv")),zip.GetEntry("admin.key") is null?null:Parse<List<User>>(await Read("admin.key")),zip.GetEntry("occurrences.json") is null?[]:Parse<List<SavedOccurrence>>(await Read("occurrences.json")),zip.GetEntry("pomodoro-settings.json") is null?[]:Parse<List<PomodoroSetting>>(await Read("pomodoro-settings.json")),zip.GetEntry("pomodoro.csv") is null?[]:ReadCsv<PomodoroLogEntry>(await Read("pomodoro.csv")),countdowns);
+        var taskPins = formatVersion < 3 && zip.GetEntry("task-pins.json") is null ? new List<string>() : Parse<List<string>>(await Read("task-pins.json"));
+        var package=new Package(Parse<Device>(await Read("identity.json")),Parse<List<Setting>>(await Read("settings.json")),ReadCsv<AlarmTask>(await Read("tasks.csv")),ReadCsv<AcknowledgementLog>(await Read("acklog.csv")),zip.GetEntry("admin.key") is null?null:Parse<List<User>>(await Read("admin.key")),zip.GetEntry("occurrences.json") is null?[]:Parse<List<SavedOccurrence>>(await Read("occurrences.json")),zip.GetEntry("pomodoro-settings.json") is null?[]:Parse<List<PomodoroSetting>>(await Read("pomodoro-settings.json")),zip.GetEntry("pomodoro.csv") is null?[]:ReadCsv<PomodoroLogEntry>(await Read("pomodoro.csv")),countdowns,taskPins);
+        if (taskPins.Any(id => string.IsNullOrWhiteSpace(id) || !package.Tasks.Any(t => t.Id == id)) || taskPins.Distinct().Count() != taskPins.Count)
+            throw new InvalidDataException("備份任務釘選包含重複或不存在的任務。");
         foreach (var item in package.Countdowns)
         {
             if (item is null) throw new InvalidDataException("倒數資料不可為空。");
@@ -174,6 +179,14 @@ public sealed class BackupRestoreService(Database db, IAuthenticationService aut
             var key=setting.Key.StartsWith("Sound:",StringComparison.Ordinal)?"Sound:"+AlarmLevels.Normalize(setting.Key[6..]):setting.Key;
             await Run("INSERT INTO Settings(Key,Value,Locked) VALUES(@Key,@Value,0) ON CONFLICT(Key) DO UPDATE SET Value=excluded.Value WHERE Settings.Locked=0;",setting with {Key=key});
         }
+        // Restoring a smaller preference must not displace existing pins.
+        var existingPins=await c.ExecuteScalarAsync<int>(HomePinStorage.CountSql,transaction:tx);
+        var homePinLimit=await HomePinStorage.ReadLimitAsync(c,tx,cancellationToken);
+        if(existingPins>homePinLimit)
+        {
+            homePinLimit=Math.Min(HomePinOptions.MaximumLimit,existingPins);
+            await Run("INSERT INTO Settings(Key,Value,Locked) VALUES(@key,@value,0) ON CONFLICT(Key) DO UPDATE SET Value=excluded.Value;",new {key=HomePinOptions.SettingKey,value=homePinLimit.ToString()});
+        }
         int tasks=0,logs=0,countdowns=0;
         var imported=new HashSet<string>();
         foreach(var task in p.Tasks)if(await Insert(c,tx,"Tasks",task with {Level=AlarmLevels.Normalize(task.Level)},cancellationToken)>0){tasks++;imported.Add(task.Id);}
@@ -188,13 +201,18 @@ public sealed class BackupRestoreService(Database db, IAuthenticationService aut
         }
         foreach(var setting in p.PomodoroSettings)await Run("INSERT INTO PomodoroSettings(Key,Value) VALUES(@Key,@Value) ON CONFLICT(Key) DO UPDATE SET Value=excluded.Value;",setting);
         foreach(var log in p.PomodoroLogs)await Insert(c,tx,"PomodoroLog",log with{IsActive=false},cancellationToken);
-        var homePins=await c.ExecuteScalarAsync<int>("SELECT COUNT(*) FROM Countdowns WHERE IsPinned=1;",transaction:tx);
+        var homePins=await c.ExecuteScalarAsync<int>("SELECT (SELECT COUNT(*) FROM Countdowns WHERE IsPinned=1) + (SELECT COUNT(*) FROM TaskHomePins);",transaction:tx);
         foreach(var item in p.Countdowns.OrderBy(i=>i.TargetAt).ThenBy(i=>i.Title).ThenBy(i=>i.Id))
         {
-            var restored=item with { IsPinned=item.IsPinned && homePins<CountdownItem.HomePinLimit };
+            var restored=item with { IsPinned=item.IsPinned && homePins<homePinLimit };
             var importedCount=await Insert(c,tx,"Countdowns",restored,cancellationToken);
             countdowns+=importedCount;
             if(importedCount>0 && restored.IsPinned)homePins++;
+        }
+        foreach(var taskId in p.TaskPins.Where(imported.Contains))
+        {
+            if(homePins >= homePinLimit) break;
+            homePins += await Run("INSERT OR IGNORE INTO TaskHomePins(TaskId) VALUES(@taskId);",new { taskId });
         }
         if(p.Users is not null)
         {

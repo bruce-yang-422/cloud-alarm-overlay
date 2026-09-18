@@ -1,9 +1,10 @@
-<Window x:Class="CloudAlarmOverlay.App.Views.MainWindow" xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:adaptive="clr-namespace:CloudAlarmOverlay.App.Styles" Title="{Binding Title}" Icon="/CloudAlarmOverlay.App;component/Assets/Brand/cloud_alarm_icon.png" Width="1344" Height="960" MinWidth="1050" MinHeight="680" WindowStartupLocation="CenterScreen" Background="{adaptive:AdaptiveBrush #F7FAFE}" Foreground="{adaptive:AdaptiveBrush #16243E}" FontFamily="Segoe UI, Microsoft JhengHei UI" FontSize="14">
+<Window xmlns:pincontrols="clr-namespace:CloudAlarmOverlay.App.Controls" x:Class="CloudAlarmOverlay.App.Views.MainWindow" xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:adaptive="clr-namespace:CloudAlarmOverlay.App.Styles" Title="{Binding Title}" Icon="/CloudAlarmOverlay.App;component/Assets/Brand/cloud_alarm_icon.png" Width="1344" Height="960" MinWidth="1050" MinHeight="680" WindowStartupLocation="CenterScreen" Background="{adaptive:AdaptiveBrush #F7FAFE}" Foreground="{adaptive:AdaptiveBrush #16243E}" FontFamily="Segoe UI, Microsoft JhengHei UI" FontSize="14">
   <Window.Resources>
     <ResourceDictionary>
       <ResourceDictionary.MergedDictionaries>
         <ResourceDictionary Source="../Styles/LightTheme.xaml" />
         <ResourceDictionary Source="../Styles/CountdownStyles.xaml" />
+        <ResourceDictionary Source="../Styles/PinButtonStyles.xaml" />
       </ResourceDictionary.MergedDictionaries>
                 <DataTemplate x:Key="NavigationItemTemplate">
                   <Button Click="Navigate" AutomationProperties.Name="{Binding Title}" HorizontalContentAlignment="Stretch">
@@ -45,6 +46,7 @@
                     </Grid>
                   </Button>
                 </DataTemplate>
+      <pincontrols:PinnedCardHeightConverter x:Key="PinnedCardHeight"/>
       <Style x:Key="HomeShortcut" TargetType="Button" BasedOn="{StaticResource {x:Type Button}}">
         <Setter Property="Padding" Value="6,14"/><Setter Property="Margin" Value="0,0,8,0"/><Setter Property="FontSize" Value="14"/><Setter Property="FontWeight" Value="SemiBold"/>
         <Setter Property="Template"><Setter.Value><ControlTemplate TargetType="Button">
@@ -210,24 +212,42 @@
                   <Grid>
                     <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="*"/></Grid.RowDefinitions>
                     <DockPanel Margin="0,0,0,8">
-                      <Button DockPanel.Dock="Right" Content="管理 →" Command="{Binding OpenCountdownsCommand}" FontSize="12" Padding="8,5" Margin="6,0,0,0"/>
-                      <TextBlock Text="釘選倒數／正數" FontSize="17" FontWeight="SemiBold"/>
+                      <Button DockPanel.Dock="Right" Content="倒數 →" Command="{Binding OpenCountdownsCommand}" FontSize="12" Padding="8,5" Margin="6,0,0,0"/>
+                      <Button DockPanel.Dock="Right" Content="任務 →" Command="{Binding OpenTasksCommand}" FontSize="12" Padding="8,5" Margin="6,0,0,0"/>
+                      <TextBlock Text="首頁釘選" FontSize="17" FontWeight="SemiBold"/>
                     </DockPanel>
-                    <TextBlock Grid.Row="1" Text="{Binding Countdowns.Pinned.Count,StringFormat=已釘選 {0} / 2 項 · 依目標時間排序}" Style="{StaticResource Muted}" FontSize="12" Margin="0,0,0,8"/>
-                    <StackPanel Grid.Row="2" Visibility="{Binding Countdowns.IsPinnedEmpty,Converter={StaticResource BoolVisibility}}">
-                      <TextBlock Text="把期待的日子釘選在這裡。" Style="{StaticResource Muted}" TextWrapping="Wrap" Margin="0,0,0,8"/>
-                      <Button Content="＋ 新增倒數" Command="{Binding OpenCountdownsCommand}" Style="{StaticResource Primary}" HorizontalAlignment="Left"/>
+                    <TextBlock Grid.Row="1" Text="{Binding HomePinSummary}" TextWrapping="Wrap" Style="{StaticResource Muted}" FontSize="12" Margin="0,0,0,8"/>
+                    <StackPanel Grid.Row="2" Visibility="{Binding IsHomePinsEmpty,Converter={StaticResource BoolVisibility}}">
+                      <TextBlock Text="釘選任務追蹤截止時間，或加入倒數／正數；共用名額可於設定調整。" Style="{StaticResource Muted}" TextWrapping="Wrap" Margin="0,0,0,8"/>
+                      <WrapPanel><Button Content="選擇任務" Command="{Binding OpenTasksCommand}" Margin="0,0,8,6"/>
+                      <Button Content="＋ 新增倒數" Command="{Binding OpenCountdownsCommand}" Margin="0,0,0,6"/></WrapPanel>
                     </StackPanel>
-                      <ItemsControl x:Name="PinnedCounterList" Grid.Row="3" ItemsSource="{Binding Countdowns.Pinned}" Margin="0,-3,0,-3">
+                      <pincontrols:PinnedCardsScrollViewer x:Name="PinnedCounterScroll" Grid.Row="3" HorizontalScrollBarVisibility="Disabled" CanContentScroll="False" PanningMode="VerticalOnly" Margin="0,-3,0,-3" AutomationProperties.Name="首頁釘選卡片捲動區">
+                        <pincontrols:PinnedCardsScrollViewer.Style><Style TargetType="pincontrols:PinnedCardsScrollViewer">
+                          <Setter Property="VerticalScrollBarVisibility" Value="Auto"/>
+                          <Style.Triggers>
+                            <DataTrigger Binding="{Binding HomePins.Count}" Value="0"><Setter Property="VerticalScrollBarVisibility" Value="Disabled"/></DataTrigger>
+                            <DataTrigger Binding="{Binding HomePins.Count}" Value="1"><Setter Property="VerticalScrollBarVisibility" Value="Disabled"/></DataTrigger>
+                            <DataTrigger Binding="{Binding HomePins.Count}" Value="2"><Setter Property="VerticalScrollBarVisibility" Value="Disabled"/></DataTrigger>
+                          </Style.Triggers>
+                        </Style></pincontrols:PinnedCardsScrollViewer.Style>
+                      <ItemsControl x:Name="PinnedCounterList" ItemsSource="{Binding HomePins}">
+                        <ItemsControl.ItemContainerStyle><Style TargetType="ContentPresenter">
+                          <Setter Property="Height"><Setter.Value><MultiBinding Converter="{StaticResource PinnedCardHeight}">
+                            <Binding Path="ViewportHeight" ElementName="PinnedCounterScroll"/>
+                            <Binding Path="Items.Count" RelativeSource="{RelativeSource AncestorType=ItemsControl}"/>
+                          </MultiBinding></Setter.Value></Setter>
+                        </Style></ItemsControl.ItemContainerStyle>
                         <ItemsControl.ItemsPanel><ItemsPanelTemplate><UniformGrid Columns="1"/></ItemsPanelTemplate></ItemsControl.ItemsPanel>
                         <ItemsControl.ItemTemplate><DataTemplate>
-                          <Border x:Name="PinnedCounterItem" Style="{StaticResource PinnedCountdownState}" BorderThickness="1" CornerRadius="12" Padding="10" Margin="0,3,0,3">
+                          <Border x:Name="PinnedCounterItem" Style="{StaticResource PinnedCountdownState}" BorderThickness="1" CornerRadius="12" Padding="10" Margin="0,3,0,3" MinHeight="140">
                             <Grid>
                               <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
                               <DockPanel Margin="0,0,0,4">
-                                <Button DockPanel.Dock="Right" Content="&#xE77A;" FontFamily="Segoe MDL2 Assets" Command="{Binding DataContext.Countdowns.TogglePinCommand,RelativeSource={RelativeSource AncestorType=Window}}" CommandParameter="{Binding}" ToolTip="取消首頁釘選（保留倒數項目）" AutomationProperties.Name="取消釘選" Background="Transparent" Padding="4" Margin="6,0,0,0"/>
+                                <Button DockPanel.Dock="Right" Content="&#xE77A;" FontFamily="Segoe MDL2 Assets" Command="{Binding DataContext.UnpinHomeCommand,RelativeSource={RelativeSource AncestorType=Window}}" CommandParameter="{Binding}" ToolTip="取消首頁釘選（保留原項目及提醒）" AutomationProperties.Name="取消釘選" Background="Transparent" Padding="4" Margin="6,0,0,0"/>
                                 <TextBlock DockPanel.Dock="Left" Text="{Binding ModeIcon}" FontFamily="Segoe MDL2 Assets" FontSize="17" Foreground="{Binding BorderBrush,ElementName=PinnedCounterItem}" VerticalAlignment="Center" Margin="0,0,8,0"/>
-                                <TextBlock Text="{Binding Title}" FontSize="16" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" ToolTip="{Binding Title}" VerticalAlignment="Center" Foreground="{adaptive:AdaptiveBrush #16243E}"/>
+                                <StackPanel><TextBlock Text="{Binding Title}" FontSize="16" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" ToolTip="{Binding Title}" Foreground="{adaptive:AdaptiveBrush #16243E}"/>
+                                <TextBlock Text="{Binding PinKind}" Style="{StaticResource Muted}" FontSize="11"/></StackPanel>
                               </DockPanel>
                               <TextBlock x:Name="PinnedCounterValue" Grid.Row="1" VerticalAlignment="Center" Text="{Binding HomeSummary}" TextWrapping="Wrap" MaxHeight="60" FontSize="23" FontWeight="SemiBold" Foreground="{Binding BorderBrush,ElementName=PinnedCounterItem}" TextTrimming="CharacterEllipsis" ToolTip="{Binding HomeSummary}" Margin="0,3,0,5"/>
                               <Grid Grid.Row="2" Margin="0,0,0,4" Visibility="{Binding ShowProgress,Converter={StaticResource BoolVisibility}}" ToolTip="從建立到目前目標的時間經過比例，不代表事件完成度。">
@@ -246,6 +266,7 @@
                           </Border>
                         </DataTemplate></ItemsControl.ItemTemplate>
                       </ItemsControl>
+                      </pincontrols:PinnedCardsScrollViewer>
                   </Grid>
                 </Border>
                 <Border x:Name="TodaySummaryCard" Grid.Row="1" Style="{StaticResource Card}" Padding="14">
@@ -410,6 +431,12 @@
 <TextBlock Text="{Binding SelectionHint}" Style="{StaticResource Muted}" Margin="0,4,0,8"/><TextBlock Text="沒有符合條件的任務。按「新增任務」建立本機提醒。" Style="{StaticResource Muted}" Visibility="{Binding IsTasksEmpty,Converter={StaticResource BoolVisibility}}" Margin="0,12" />
             </StackPanel>
             <DataGrid x:Name="TaskGrid" ItemsSource="{Binding Tasks}" SelectionMode="Extended" SelectionUnit="FullRow" SelectionChanged="TaskSelectionChanged">
+              <DataGrid.CellStyle><Style TargetType="DataGridCell" BasedOn="{StaticResource {x:Type DataGridCell}}">
+                <Setter Property="Padding" Value="6,4"/><Setter Property="Background" Value="Transparent"/><Setter Property="Foreground" Value="{adaptive:AdaptiveBrush #16243E}"/>
+                <Style.Triggers><Trigger Property="IsSelected" Value="True">
+                  <Setter Property="Background" Value="Transparent"/><Setter Property="Foreground" Value="{adaptive:AdaptiveBrush #16243E}"/>
+                </Trigger></Style.Triggers>
+              </Style></DataGrid.CellStyle>
               <DataGrid.RowStyle><Style TargetType="DataGridRow">
                 <Style.Triggers>
                   <DataTrigger Binding="{Binding IsLocal}" Value="False">
@@ -419,32 +446,35 @@
                   <Trigger Property="IsSelected" Value="True"><Setter Property="Background" Value="{adaptive:AdaptiveBrush #E6F0FF}"/></Trigger>
                 </Style.Triggers>
               </Style></DataGrid.RowStyle>
-              <DataGrid.Columns><DataGridTemplateColumn Header="選取" Width="55">
+              <DataGrid.Columns><DataGridTemplateColumn Header="選取" Width="44">
  <DataGridTemplateColumn.CellTemplate><DataTemplate>
   <CheckBox Style="{StaticResource TaskSelectionCheckBox}" HorizontalAlignment="Center" PreviewMouseLeftButtonDown="TaskCheckMouseDown" PreviewKeyDown="TaskCheckKeyDown" IsChecked="{Binding IsSelected,RelativeSource={RelativeSource AncestorType=DataGridRow},Mode=OneWay}" AutomationProperties.Name="選取任務"/>
  </DataTemplate></DataGridTemplateColumn.CellTemplate>
 </DataGridTemplateColumn>
-<DataGridTemplateColumn Header="權限" Width="65">
+<DataGridTemplateColumn Header="權限" Width="44">
  <DataGridTemplateColumn.CellTemplate><DataTemplate>
   <TextBlock Text="&#xE72E;" FontFamily="Segoe MDL2 Assets" HorizontalAlignment="Center" ToolTip="雲端唯讀：不能編輯、刪除或切換啟用；可複製成本機任務。">
    <TextBlock.Style><Style TargetType="TextBlock" BasedOn="{StaticResource {x:Type TextBlock}}"><Style.Triggers><DataTrigger Binding="{Binding IsLocal}" Value="True"><Setter Property="Visibility" Value="Collapsed"/></DataTrigger></Style.Triggers></Style></TextBlock.Style>
   </TextBlock>
  </DataTemplate></DataGridTemplateColumn.CellTemplate>
 </DataGridTemplateColumn>
-                <DataGridTemplateColumn Header="任務名稱" Width="*" MinWidth="180"><DataGridTemplateColumn.CellTemplate><DataTemplate>
-                 <TextBlock Text="{Binding Title}" Background="Transparent" Padding="5" Cursor="Hand" ToolTip="連按兩下查看詳細訊息" MouseLeftButtonDown="TaskTitleDoubleClick"/>
+                <DataGridTemplateColumn Header="任務名稱" Width="*" MinWidth="220"><DataGridTemplateColumn.CellTemplate><DataTemplate>
+                 <Grid><Grid.ColumnDefinitions><ColumnDefinition/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                  <TextBlock Text="{Binding Title}" TextTrimming="CharacterEllipsis" Background="Transparent" Padding="4,0" Cursor="Hand" ToolTip="{Binding Title}" AutomationProperties.HelpText="連按兩下查看詳細訊息" MouseLeftButtonDown="TaskTitleDoubleClick"/>
+                  <Button Grid.Column="1" Style="{StaticResource TaskPinButton}" Tag="{Binding IsPinned}" Command="{Binding DataContext.ToggleTaskPinCommand,RelativeSource={RelativeSource AncestorType=Window}}" CommandParameter="{Binding}" Margin="3,2,2,2" ToolTip="{Binding PinLabel}" AutomationProperties.Name="{Binding PinLabel}"/>
+                 </Grid>
                 </DataTemplate></DataGridTemplateColumn.CellTemplate></DataGridTemplateColumn>
-                <DataGridTextColumn Header="日期 / 時間" Binding="{Binding Time}" Width="145" MinWidth="140" />
-                <DataGridTemplateColumn Header="等級" CellTemplate="{StaticResource LevelBadge}" Width="SizeToCells" MinWidth="110" />
-                <DataGridTextColumn Header="重複" Binding="{Binding Recurrence}" Width="130" MinWidth="110" />
-                <DataGridTemplateColumn Header="狀態" Width="175" MinWidth="165"><DataGridTemplateColumn.CellTemplate><DataTemplate>
+                <DataGridTextColumn Header="日期 / 時間" Binding="{Binding Time}" Width="136" MinWidth="136" />
+                <DataGridTemplateColumn Header="等級" CellTemplate="{StaticResource LevelBadge}" Width="90" MinWidth="90" />
+                <DataGridTextColumn Header="重複" Binding="{Binding Recurrence}" Width="102" MinWidth="90" />
+                <DataGridTemplateColumn Header="狀態" Width="148" MinWidth="148"><DataGridTemplateColumn.CellTemplate><DataTemplate>
                   <Grid><Grid.ColumnDefinitions><ColumnDefinition Width="58"/><ColumnDefinition/></Grid.ColumnDefinitions>
                     <CheckBox Style="{StaticResource PillSwitch}" IsChecked="{Binding Task.Enabled,Mode=OneWay}" IsEnabled="{Binding IsLocal}" VerticalAlignment="Center" Margin="0"
                       PreviewMouseLeftButtonDown="TaskStateMouseDown" PreviewKeyDown="TaskStateKeyDown" ToolTip="{Binding StateOrigin}" ToolTipService.ShowOnDisabled="True" AutomationProperties.Name="任務啟用開關"/>
                     <StackPanel Grid.Column="1"><TextBlock Text="{Binding State}"/><TextBlock Text="{Binding StateOrigin}" FontSize="11" Foreground="{adaptive:AdaptiveBrush #70568F}"/></StackPanel>
                   </Grid>
                 </DataTemplate></DataGridTemplateColumn.CellTemplate></DataGridTemplateColumn>
-                <DataGridTemplateColumn Header="來源" CellTemplate="{StaticResource SourceBadge}" Width="100" />
+                <DataGridTemplateColumn Header="來源" CellTemplate="{StaticResource SourceBadge}" Width="72" />
               </DataGrid.Columns>
             </DataGrid>
           </DockPanel>

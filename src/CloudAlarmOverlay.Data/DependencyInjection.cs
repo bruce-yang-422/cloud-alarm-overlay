@@ -18,6 +18,7 @@ public static class DependencyInjection
         services.AddSingleton<IDatabaseInitializer, DatabaseInitializer>();
         services.AddSingleton<ITaskRepository, TaskRepository>();
         services.AddSingleton<ICountdownRepository, CountdownRepository>();
+        services.AddSingleton<ITaskHomePinRepository, TaskHomePinRepository>();
         services.AddSingleton<IHolidayRepository, HolidayRepository>();
         services.AddSingleton<ILunarCalendarRepository, LunarCalendarRepository>();
         services.AddSingleton<IEmployeeRepository, EmployeeRepository>();

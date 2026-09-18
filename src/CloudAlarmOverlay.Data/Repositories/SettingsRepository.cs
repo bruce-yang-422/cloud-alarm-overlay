@@ -15,6 +15,12 @@ internal sealed class SettingsRepository(Database db,AdminSession session):ISett
         NotificationPreferences.Validate(setting);
         await using var c=await db.OpenAsync(cancellationToken);
         using var tx=c.BeginTransaction(deferred:false);
+        if(setting.Key==HomePinOptions.SettingKey)
+        {
+            var count=await c.ExecuteScalarAsync<int>(new CommandDefinition(HomePinStorage.CountSql,transaction:tx,cancellationToken:cancellationToken));
+            if(count>HomePinOptions.ReadLimit(setting.Value))
+                throw new InvalidOperationException($"目前已釘選 {count} 項，請先取消部分釘選，再降低上限。");
+        }
         var old=await c.QuerySingleOrDefaultAsync<Setting>(new CommandDefinition("SELECT * FROM Settings WHERE Key=@Key;",setting,tx,cancellationToken:cancellationToken));
         if(old?.Locked==true)throw new UnauthorizedAccessException("此設定已由管理者鎖定。");
         await c.ExecuteAsync(new CommandDefinition("INSERT INTO Settings(Key,Value,Locked) VALUES(@Key,@Value,0) ON CONFLICT(Key) DO UPDATE SET Value=excluded.Value;",setting,tx,cancellationToken:cancellationToken));

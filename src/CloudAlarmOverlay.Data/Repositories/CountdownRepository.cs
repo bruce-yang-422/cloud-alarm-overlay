@@ -13,9 +13,10 @@ internal sealed class CountdownRepository(Database db) : ICountdownRepository
         item.Validate();
         await using var connection = await db.OpenAsync(cancellationToken);
         using var transaction = connection.BeginTransaction(deferred:false);
+        var limit = await HomePinStorage.ReadLimitAsync(connection, transaction, cancellationToken);
         if (item.IsPinned && await connection.ExecuteScalarAsync<int>(new CommandDefinition(
-            "SELECT COUNT(*) FROM Countdowns WHERE IsPinned=1 AND Id<>@Id;", new { item.Id }, transaction, cancellationToken:cancellationToken)) >= CountdownItem.HomePinLimit)
-            throw new InvalidOperationException("首頁最多釘選 2 項，請先取消其他項目的首頁釘選。");
+            "SELECT (SELECT COUNT(*) FROM Countdowns WHERE IsPinned=1 AND Id<>@Id) + (SELECT COUNT(*) FROM TaskHomePins);", new { item.Id }, transaction, cancellationToken:cancellationToken)) >= limit)
+            throw new InvalidOperationException(HomePinOptions.FullMessage(limit));
         await connection.ExecuteAsync(new CommandDefinition("""
             INSERT INTO Countdowns(Id,Title,TargetAt,Mode,IsPinned,CreatedAt,IsTop,Category,Repeat,ReminderDays,ReminderMinutes,Notes,CompletedAt,ReminderChangedAt,Direction,DisplayFormat,Recurrence,SkipOnHoliday)
             VALUES(@Id,@Title,@TargetAt,@Mode,@IsPinned,@CreatedAt,@IsTop,@Category,@Repeat,@ReminderDays,@ReminderMinutes,@Notes,@CompletedAt,@ReminderChangedAt,@Direction,@DisplayFormat,@Recurrence,@SkipOnHoliday)

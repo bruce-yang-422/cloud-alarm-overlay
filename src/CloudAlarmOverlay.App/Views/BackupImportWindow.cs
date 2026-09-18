@@ -12,7 +12,7 @@ public sealed class BackupImportWindow : Window
         var panel=new StackPanel{Margin=new Thickness(24)};Content=panel;
         panel.Children.Add(new TextBlock{Text=$"{preview.DeviceId} · {preview.DisplayName}",FontSize=20,TextWrapping=TextWrapping.Wrap});
         panel.Children.Add(new TextBlock{Text=$"任務 {preview.Tasks} 筆，歷史 {preview.History} 筆，倒數 {preview.Countdowns} 筆。\n個人設定及身分會還原，重複任務與倒數保留本機版本。",TextWrapping=TextWrapping.Wrap,Margin=new Thickness(0,12,0,12)});
-        panel.Children.Add(new TextBlock{Text="首頁釘選最多 2 項，還原後超出名額的倒數仍會匯入，但不釘選到首頁。",TextWrapping=TextWrapping.Wrap});
+        panel.Children.Add(new TextBlock{Text="首頁釘選依共用上限還原（2～5 項），現有釘選優先保留；超出名額的任務與倒數仍會匯入，但不釘選到首頁。",TextWrapping=TextWrapping.Wrap});
         var name=new TextBox{Text="admin"};var password=new PasswordBox{Padding=new Thickness(10)};
         if(preview.ContainsAdministrator)
         {

@@ -7,8 +7,21 @@ using CloudAlarmOverlay.Core.Models;
 using CloudAlarmOverlay.Core.Repositories;
 using CloudAlarmOverlay.Core.Services;
 namespace CloudAlarmOverlay.App.ViewModels;
-public partial class PreferencesViewModel(ISettingsRepository settings,NotificationPreferences preferences,ISoundService sound,CloudAlarmOverlay.App.Services.EmojiLibrary emojis,MaintenanceViewModel maintenance):ObservableObject
+public partial class PreferencesViewModel(ISettingsRepository settings,NotificationPreferences preferences,ISoundService sound,CloudAlarmOverlay.App.Services.EmojiLibrary emojis,MaintenanceViewModel maintenance,ChangeSignal changes):ObservableObject
 {
+    public int[] HomePinLimitChoices {get;}=[2,3,4,5];
+    [ObservableProperty] private int homePinLimit=HomePinOptions.DefaultLimit;
+    [ObservableProperty] private string homePinMessage="";
+    [RelayCommand] private async Task SaveHomePinLimitAsync()
+    {
+        try
+        {
+            await settings.SaveAsync(new Setting{Key=HomePinOptions.SettingKey,Value=HomePinLimit.ToString()});
+            changes.Notify();
+            HomePinMessage=$"已儲存：任務與倒數／正數合計最多 {HomePinLimit} 張卡片。";
+        }
+        catch(Exception ex){HomePinMessage=ex.Message;}
+    }
     public MaintenanceViewModel Maintenance {get;}=maintenance;
     public string ApplicationName => "Cloud Alarm Overlay";
     public string ApplicationAuthor => "Bruce Yang";
@@ -67,6 +80,7 @@ public partial class PreferencesViewModel(ISettingsRepository settings,Notificat
     public ObservableCollection<SoundRow> Sounds {get;}=[];
     public async Task LoadAsync()
     {
+        HomePinLimit=HomePinOptions.ReadLimit((await settings.GetAsync(HomePinOptions.SettingKey))?.Value);
         await emojis.LoadAsync(); SetEmojiItems(emojis.Items); EmojiMessage = "";
         FlashMilliseconds=await preferences.FlashMillisecondsAsync();
         FlashLocked=(await settings.GetAsync("FlashMilliseconds"))?.Locked??false;

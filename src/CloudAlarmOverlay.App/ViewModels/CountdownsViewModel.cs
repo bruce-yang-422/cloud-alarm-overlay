@@ -331,6 +331,15 @@ public partial class CountdownsViewModel(ICountdownRepository repository, TimePr
             if (editing?.Id == current.Id) PinOnHome = !current.IsPinned;
         }, "首頁釘選已更新。");
 
+    public Task<bool> UnpinAsync(CountdownRow row)
+        => MutateAsync(async () =>
+        {
+            var current = (await repository.GetAllAsync()).SingleOrDefault(i => i.Id == row.Item.Id);
+            if (current is null) return;
+            if (current.IsPinned) await repository.SaveAsync(current with { IsPinned = false });
+            if (editing?.Id == current.Id) PinOnHome = false;
+        }, "已取消首頁釘選。");
+
     [RelayCommand(CanExecute = nameof(CanEdit))]
     private async Task ToggleTopAsync(CountdownRow row)
         => await MutateAsync(async () =>
@@ -379,10 +388,11 @@ public partial class CountdownRow(CountdownItem item) : ObservableObject
         (Item.ReminderDays < 0 ? " · 不提醒" : $" · {(Item.ReminderDays == 0 ? "當天" : $"提前 {Item.ReminderDays} 天")} {Item.ReminderMinutes / 60:00}:{Item.ReminderMinutes % 60:00}");
     [ObservableProperty] [NotifyPropertyChangedFor(nameof(TargetLabel), nameof(DateCaption))] private DateTime displayDate;
     public string TargetLabel => DisplayDate.ToString(Item.Mode == "Days" ? "yyyy/MM/dd" : "yyyy/MM/dd HH:mm");
-    public string ModeIcon => Item.Mode == "Days" ? "\uE787" : "\uE823";
+    public virtual string ModeIcon => Item.Mode == "Days" ? "\uE787" : "\uE823";
+    public virtual string PinKind => Item.IsCountUp ? "正數" : "倒數";
     public string ModeLabel => (Item.IsCountUp ? "正數" : "倒數") + (Item.Mode == "Days" ? "日" : "時間");
     public bool ShowProgress => !Item.IsCountUp && !IsScheduleUnavailable;
-    public string DateCaption => (Item.IsCountUp ? "起始：" : "目標：") + TargetLabel;
+    public virtual string DateCaption => (Item.IsCountUp ? "起始：" : "目標：") + TargetLabel;
     [ObservableProperty] private string homeSummary = "";
     public string PinLabel => Item.IsPinned ? "取消釘選" : "釘選首頁";
     public string TopLabel => Item.IsTop ? "取消置頂" : "置頂";
@@ -405,7 +415,7 @@ public partial class CountdownRow(CountdownItem item) : ObservableObject
     [ObservableProperty] private string progressLabel = "";
     public bool HasNextReminderLabel => !string.IsNullOrEmpty(NextReminderLabel);
     [ObservableProperty] [NotifyPropertyChangedFor(nameof(HasNextReminderLabel))] private string nextReminderLabel = "";
-    public void Update(DateTime now, IReadOnlyDictionary<DateOnly,int>? lunarDays = null, IReadOnlyList<Holiday>? holidays = null)
+    public virtual void Update(DateTime now, IReadOnlyDictionary<DateOnly,int>? lunarDays = null, IReadOnlyList<Holiday>? holidays = null)
     {
         DisplayDate = Item.DisplayTarget(now,lunarDays,holidays);
         Remaining = Item.Remaining(now,lunarDays,holidays);

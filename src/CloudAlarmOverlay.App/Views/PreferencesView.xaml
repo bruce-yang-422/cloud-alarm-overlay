@@ -131,6 +131,17 @@
     </StackPanel></Border>
    </StackPanel></ScrollViewer></TabItem>
    <TabItem Header="外觀與資料"><ScrollViewer VerticalScrollBarVisibility="Auto"><views:MaintenanceView xmlns:views="clr-namespace:CloudAlarmOverlay.App.Views" DataContext="{Binding Maintenance}"/></ScrollViewer></TabItem>
+   <TabItem Header="首頁釘選"><ScrollViewer VerticalScrollBarVisibility="Auto"><Border Style="{StaticResource Card}" Padding="20"><StackPanel>
+    <TextBlock Text="首頁釘選卡片" FontSize="20" FontWeight="SemiBold"/>
+    <TextBlock Text="「我的任務」與「倒數／正數」共用名額。例如上限 2 張，釘選 1 個任務後，倒數還可釘選 1 張。" Style="{StaticResource Muted}" TextWrapping="Wrap" Margin="0,8,0,20"/>
+    <TextBlock Text="卡片數量上限（預設 2 張）" Margin="0,0,0,8"/>
+    <StackPanel Orientation="Horizontal">
+     <ComboBox x:Name="HomePinLimitSelector" ItemsSource="{Binding HomePinLimitChoices}" SelectedItem="{Binding HomePinLimit}" Width="120" AutomationProperties.Name="首頁釘選卡片上限"/>
+     <Button Content="儲存上限" Command="{Binding SaveHomePinLimitCommand}" Style="{StaticResource Primary}" Margin="12,0,0,0"/>
+    </StackPanel>
+    <TextBlock Text="可選 2～5 張。降低上限前，請先取消超出的釘選。" Style="{StaticResource Muted}" TextWrapping="Wrap" Margin="0,12,0,0"/>
+    <TextBlock Text="{Binding HomePinMessage}" TextWrapping="Wrap" Margin="0,12,0,0"/>
+   </StackPanel></Border></ScrollViewer></TabItem>
   </TabControl>
   <TextBlock Grid.Row="1" Text="{Binding Message}" TextWrapping="Wrap" Foreground="{adaptive:AdaptiveBrush #3664A0}" Margin="0,8"/>
  </Grid>

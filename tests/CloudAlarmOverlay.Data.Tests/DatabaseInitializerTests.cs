@@ -27,7 +27,8 @@ public sealed class DatabaseInitializerTests : IDisposable
         { "Occurrences", "Id TaskId ScheduledAt State TriggeredAt" },
         { "SyncStates", "Source Fingerprint ConfigFingerprint Status Message LastCheckedAt LastSuccessAt ActiveLogId" },
         { "SystemEvents", "Id Time EventType Message" },
-        { "Countdowns", "Id Title TargetAt Mode IsPinned CreatedAt IsTop Category Repeat ReminderDays ReminderMinutes Notes CompletedAt ReminderChangedAt Direction DisplayFormat Recurrence SkipOnHoliday" }
+        { "Countdowns", "Id Title TargetAt Mode IsPinned CreatedAt IsTop Category Repeat ReminderDays ReminderMinutes Notes CompletedAt ReminderChangedAt Direction DisplayFormat Recurrence SkipOnHoliday" },
+        { "TaskHomePins", "TaskId" }
     };
 
     [Fact]
@@ -53,13 +54,13 @@ public sealed class DatabaseInitializerTests : IDisposable
     }
 
     [Fact]
-    public async Task Fresh_database_has_baseline_schema_and_exactly_sixteen_empty_business_tables()
+    public async Task Fresh_database_has_baseline_schema_and_exactly_seventeen_empty_business_tables()
     {
         Assert.False(File.Exists(_paths.DatabasePath));
         await Initializer.InitializeAsync();
         Assert.True(File.Exists(_paths.DatabasePath));
         Assert.Equal((long)DatabaseInitializer.CurrentSchemaVersion, await ScalarAsync("PRAGMA user_version;"));
-        Assert.Equal(16L, await ScalarAsync(
+        Assert.Equal(17L, await ScalarAsync(
             "SELECT COUNT(*) FROM sqlite_master WHERE type = 'table' AND name NOT LIKE 'sqlite_%';"));
         foreach (var row in TableColumns)
             Assert.Equal(0L, await ScalarAsync($"SELECT COUNT(*) FROM [{row[0]}];"));

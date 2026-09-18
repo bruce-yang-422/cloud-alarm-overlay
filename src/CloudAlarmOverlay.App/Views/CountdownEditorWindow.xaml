@@ -124,7 +124,7 @@
 </StackPanel></Border>
      <TextBlock Text="6. 其他選項" Style="{StaticResource SectionTitle}"/>
      <Border Style="{StaticResource SectionCard}" Margin="0,0,0,8"><StackPanel>
-     <CheckBox Content="釘選到首頁（最多 2 項）" IsChecked="{Binding PinOnHome}" Style="{StaticResource PillSwitch}" Margin="0,0,0,8"/>
+     <CheckBox Content="釘選到首頁（與任務共用名額）" IsChecked="{Binding PinOnHome}" Style="{StaticResource PillSwitch}" Margin="0,0,0,8"/>
      <CheckBox Content="假日不提醒（與任務提醒共用假日資料）" IsChecked="{Binding SkipOnHoliday}" Style="{StaticResource PillSwitch}" Margin="0,0,0,8"/>
      <TextBlock Text="使用一般提醒通知；請保持程式執行。當天提醒不可晚於倒數時間。" Visibility="{Binding HasReminder,Converter={StaticResource BoolVisibility}}" Style="{StaticResource Muted}" FontSize="12" Margin="0,0,0,4"/>
      <TextBlock Text="備註（選填）" Margin="0,0,0,4"/>
@@ -148,7 +148,7 @@
        <TextBlock Text="小提示" FontWeight="SemiBold" Margin="0,0,0,10"/>
        <TextBlock Text="每年國曆適合生日與紀念日；每年農曆適合傳統節日。" Style="{StaticResource Muted}" Margin="0,0,0,10"/>
        <TextBlock Text="正數持續累計已過時間；重複提醒不會重設起始日。" Style="{StaticResource Muted}" Margin="0,0,0,10"/>
-       <TextBlock Text="首頁最多釘選 2 項，預覽內容會隨設定更新。" Style="{StaticResource Muted}"/>
+       <TextBlock Text="任務與倒數／正數共用首頁 2 個釘選名額，預覽內容會隨設定更新。" Style="{StaticResource Muted}"/>
       </StackPanel></Border>
      </StackPanel>
     </Border>

@@ -1,6 +1,6 @@
 {
-  "latestVersion": "1.1.0",
-  "downloadUrl": "https://github.com/bruce-yang-422/cloud-alarm-overlay/releases/download/v1.1.0/CloudAlarmOverlay-v1.1.0-Setup-x64.exe",
-  "sha256": "68bdba0ba5efaad452cc0736cea1cad8a06ce329eb36079ee2188870906f8589",
-  "releaseNote": "Cloud Alarm Overlay v1.1.0：新增指定月份提醒、內建任務產生器及任務詳細預覽；明暗模式與預設／粉紅／若竹色彩可獨立選擇。改善重複任務設定、安裝檔下載、同步紀錄及運作狀態顯示，時間設定簡化為時分，節氣只在當日顯示。\n完整改版說明：https://github.com/bruce-yang-422/cloud-alarm-overlay/releases/tag/v1.1.0"
+  "latestVersion": "1.2.0",
+  "downloadUrl": "https://github.com/bruce-yang-422/cloud-alarm-overlay/releases/download/v1.2.0/CloudAlarmOverlay-v1.2.0-Setup-x64.exe",
+  "sha256": "4f21d0f46ce3717aa05732b055682477c64c123899a341c5a8b73894cead6f3a",
+  "releaseNote": "Cloud Alarm Overlay v1.2.0：新增倒數／正數事件、五種分類、自訂提醒時間、年度國曆／農曆提醒與統計圖表，支援卡片／資料表及鐘面選時。\n任務與倒數共用首頁釘選名額，預設 2 張、設定可選 2～5 張；任務沿用提醒時間，重複任務倒數下一次。超過兩張時在區塊內捲動，精簡圖釘保留變色與動畫，增加任務名稱顯示空間。\n新增薰衣草紫、夕陽橘、極簡銀白，含預設共六種色彩風格；改善首頁捷徑、設定資訊及視窗尺寸。管理者登入固定有效 10 分鐘，安裝時自動關閉舊程式，升級前請先儲存編輯內容；v1.0.0／v1.1.0 可直接覆蓋升級。\n完整改版說明：https://github.com/bruce-yang-422/cloud-alarm-overlay/releases/tag/v1.2.0"
 }

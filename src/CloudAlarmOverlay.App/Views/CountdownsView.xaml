@@ -129,7 +129,7 @@
      </ItemsControl>
     </StackPanel>
    </Border>
-    <TextBlock Text="每月遇到不存在的日期會略過；每年 2/29 在閏年提醒。已完成事件停止重複與提醒，恢復進行即可繼續。首頁最多釘選 2 項，清單置頂不占釘選名額。" Style="{StaticResource Muted}" FontSize="12"/>
+    <TextBlock Text="每月遇到不存在的日期會略過；每年 2/29 在閏年提醒。已完成事件停止重複與提醒，恢復進行即可繼續。任務與倒數／正數共用首頁釘選名額，預設 2 項，可於設定增加至 5 項；清單置頂不占名額。" Style="{StaticResource Muted}" FontSize="12"/>
    </StackPanel></Expander>
   </StackPanel>
  </ScrollViewer>
