@@ -225,7 +225,12 @@
         </ItemsControl>
        </StackPanel>
        <StackPanel Visibility="{Binding IsMonthly,Converter={StaticResource BoolVisibility}}" Margin="0,10,0,0">
-        <TextBlock Text="選擇每月日期" Foreground="{adaptive:AdaptiveBrush #7184A0}" FontSize="12" Margin="0,0,0,10"/>
+        <TextBlock Text="提醒月份（可複選）" Foreground="{adaptive:AdaptiveBrush #7184A0}" FontSize="12" Margin="0,0,0,10"/>
+        <ItemsControl ItemsSource="{Binding Months}">
+         <ItemsControl.ItemsPanel><ItemsPanelTemplate><UniformGrid Columns="4"/></ItemsPanelTemplate></ItemsControl.ItemsPanel>
+         <ItemsControl.ItemTemplate><DataTemplate><CheckBox Content="{Binding Label}" IsChecked="{Binding IsSelected,Mode=TwoWay}" Style="{StaticResource DayCheck}"/></DataTemplate></ItemsControl.ItemTemplate>
+        </ItemsControl>
+        <TextBlock Text="選擇每月日期" Foreground="{adaptive:AdaptiveBrush #7184A0}" FontSize="12" Margin="0,12,0,10"/>
         <ListBox ItemsSource="{Binding MonthDays}" SelectedItem="{Binding MonthDay,Mode=TwoWay}" ItemContainerStyle="{StaticResource ChoiceItem}" Background="Transparent" BorderThickness="0">
          <ListBox.ItemsPanel><ItemsPanelTemplate><UniformGrid Columns="7"/></ItemsPanelTemplate></ListBox.ItemsPanel>
         </ListBox>
@@ -273,13 +278,6 @@
          <controls:TimeWheel x:Name="MinuteWheel" Value="{Binding SelectedMinute,Mode=TwoWay}" AutomationProperties.Name="分鐘"/>
         </UniformGrid>
        </Grid>
-       <StackPanel Visibility="{Binding IsMonthly,Converter={StaticResource BoolVisibility}}" Margin="0,10,0,8">
-        <TextBlock Text="提醒月份（可複選）" Margin="0,0,0,8"/>
-        <ItemsControl ItemsSource="{Binding Months}">
-         <ItemsControl.ItemsPanel><ItemsPanelTemplate><UniformGrid Columns="4"/></ItemsPanelTemplate></ItemsControl.ItemsPanel>
-         <ItemsControl.ItemTemplate><DataTemplate><CheckBox Content="{Binding Label}" IsChecked="{Binding IsSelected,Mode=TwoWay}" Style="{StaticResource DayCheck}"/></DataTemplate></ItemsControl.ItemTemplate>
-        </ItemsControl>
-       </StackPanel>
        <TextBlock Text="可直接輸入或按 ＋ / − · 滾輪輔助調整" Foreground="{adaptive:AdaptiveBrush #7184A0}" FontSize="11" HorizontalAlignment="Center"/>
       </StackPanel>
      </Border>

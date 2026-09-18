@@ -94,16 +94,28 @@ public sealed class MilestoneTwoTests:IDisposable
         var results=await Task.WhenAll(TryCreate("first"),TryCreate("second"));
         Assert.Single(results,x=>x);
     }
-    [Fact] public async Task Idle_timeout_is_monotonic_activity_extends_it_and_expired_session_cannot_be_revived()
+    [Fact] public async Task Admin_session_expires_after_ten_minutes_despite_activity_and_requires_reauthentication()
     {
         await Login();
         var session=Get<AdminSession>();
-        clock.Advance(TimeSpan.FromMinutes(14));Assert.True(session.IsAuthenticated);
-        session.Touch();clock.Advance(TimeSpan.FromMinutes(14));Assert.True(session.IsAuthenticated);
-        clock.Advance(TimeSpan.FromMinutes(1));Assert.True(session.CheckExpiry());
-        session.Touch();Assert.False(session.IsAuthenticated);
+        for(var minute=1;minute<=9;minute++)
+        {
+            clock.Advance(TimeSpan.FromMinutes(1));
+            Assert.Equal("it-admin",session.RequireAdmin());
+            await Get<IAdminSettingsStore>().SaveAsync([new(){Key="FlashMilliseconds",Value="500"}]);
+        }
+        clock.Advance(TimeSpan.FromSeconds(59));Assert.True(session.IsAuthenticated);
+        clock.Advance(TimeSpan.FromSeconds(1));Assert.True(session.CheckExpiry());
+        Assert.False(session.IsAuthenticated);
+        Assert.False(session.CheckExpiry());
         await Assert.ThrowsAsync<UnauthorizedAccessException>(()=>Get<IAdminSettingsStore>().SaveAsync([new(){Key="FlashMilliseconds",Value="500"}]));
         await Assert.ThrowsAsync<UnauthorizedAccessException>(()=>Get<IAuditLogRepository>().GetRangeAsync(DateTime.MinValue,DateTime.MaxValue));
+        var auth=Get<IAuthenticationService>();
+        Assert.False(await auth.AuthenticateAsync("it-admin","wrong"));
+        Assert.False(session.IsAuthenticated);
+        Assert.True(await auth.AuthenticateAsync("it-admin","Testing-1234"));
+        clock.Advance(TimeSpan.FromMinutes(9));Assert.True(session.IsAuthenticated);
+        clock.Advance(TimeSpan.FromMinutes(1));Assert.False(session.IsAuthenticated);
     }
     [Fact] public async Task Locks_are_enforced_below_UI_sounds_cannot_be_locked_and_admin_changes_are_audited()
     {

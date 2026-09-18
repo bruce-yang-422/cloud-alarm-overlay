@@ -23,7 +23,7 @@ public partial class MainWindow:Window
     private readonly DispatcherTimer countdownTimer=new(){Interval=TimeSpan.FromSeconds(1)};
     private readonly IAuthenticationService authentication;
     private readonly TaskBuilderHostService taskBuilderHost;
-    private readonly DispatcherTimer idleTimer=new(){Interval=TimeSpan.FromSeconds(1)};
+    private readonly DispatcherTimer sessionTimer=new(){Interval=TimeSpan.FromSeconds(1)};
     public MainWindow(MainViewModel viewModel,IAuthenticationService authentication,TaskBuilderHostService taskBuilderHost)
     {
         InitializeComponent();DataContext=vm=viewModel;this.authentication=authentication;this.taskBuilderHost=taskBuilderHost;
@@ -40,10 +40,9 @@ public partial class MainWindow:Window
         if (workArea.Height < 1000 || workArea.Width < 1300)
             WindowState = WindowState.Maximized;
         vm.Admin.LoginRequested+=Login;vm.Admin.Session.Changed+=SessionChanged;
-        InputManager.Current.PreProcessInput+=OnInput;
-        idleTimer.Tick+=(_,_)=>vm.Admin.Session.CheckExpiry();idleTimer.Start();
+        sessionTimer.Tick+=(_,_)=>vm.Admin.Session.CheckExpiry();sessionTimer.Start();
         Closing+=(_,e)=>{if(tray is not null&&!allowClose){e.Cancel=true;Hide();}};
-        Closed+=(_,_)=>{idleTimer.Stop();InputManager.Current.PreProcessInput-=OnInput;vm.Admin.LoginRequested-=Login;vm.Admin.Session.Changed-=SessionChanged;refreshTimer.Stop();countdownTimer.Stop();if(signal is not null)signal.Changed-=OnDataChanged;tray?.Dispose();};
+        Closed+=(_,_)=>{sessionTimer.Stop();vm.Admin.LoginRequested-=Login;vm.Admin.Session.Changed-=SessionChanged;refreshTimer.Stop();countdownTimer.Stop();if(signal is not null)signal.Changed-=OnDataChanged;tray?.Dispose();};
     }
     private void TaskTitleDoubleClick(object sender,MouseButtonEventArgs e)
     {
@@ -180,17 +179,13 @@ public partial class MainWindow:Window
         }
         finally{loginOpen=false;}
     }
-    private void OnInput(object sender,PreProcessInputEventArgs e)
-    {
-        if(e.StagingItem.Input is MouseEventArgs or KeyboardEventArgs or TextCompositionEventArgs)vm.Admin.Session.Touch();
-    }
     private void SessionChanged()
     {
         Dispatcher.BeginInvoke(async ()=>{
             await vm.Preferences.Maintenance.AdminSessionChangedAsync();
             if(!vm.Admin.Session.IsAuthenticated&&vm.PageIndex==5)vm.PageIndex=0;
             await vm.Admin.SessionChangedAsync();
-            vm.Status=vm.Admin.Session.IsAuthenticated?"管理者已登入；閒置 15 分鐘後自動登出。":"已登出管理者模式。";
+            vm.Status=vm.Admin.Session.IsAuthenticated?"管理者已登入；登入滿 10 分鐘自動登出，操作不會延長有效時間。":"已登出管理者模式，管理操作需重新輸入密碼。";
         });
     }
     private void OnDataChanged()

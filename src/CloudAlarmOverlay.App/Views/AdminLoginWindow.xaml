@@ -8,7 +8,7 @@
   <ScrollViewer VerticalScrollBarVisibility="Auto"><StackPanel>
    <Image Source="/CloudAlarmOverlay.App;component/Assets/Brand/cloud_alarm_horizontal_banner.png" Width="260" Height="40" HorizontalAlignment="Left" Margin="0,0,0,16"/>
    <TextBlock x:Name="Heading" Text="管理者登入" FontSize="26" FontWeight="SemiBold"/>
-   <TextBlock x:Name="Help" Text="解鎖這台電腦的技術設定。閒置 15 分鐘後自動登出。" TextWrapping="Wrap" Margin="0,12,0,20" Foreground="{adaptive:AdaptiveBrush #697C99}"/>
+   <TextBlock x:Name="Help" Text="解鎖這台電腦的技術設定。登入後固定有效 10 分鐘，操作不會延長；到期需重新輸入密碼。" TextWrapping="Wrap" Margin="0,12,0,20" Foreground="{adaptive:AdaptiveBrush #697C99}"/>
    <Label Target="{Binding ElementName=Username}" Content="帳號"/>
    <TextBox x:Name="Username" Height="44" Padding="9,0" VerticalContentAlignment="Center" MaxLength="50" AutomationProperties.Name="管理者帳號" TextChanged="OnInputChanged"/>
    <Label Target="{Binding ElementName=Password}" Content="密碼"/>

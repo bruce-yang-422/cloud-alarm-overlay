@@ -26,7 +26,10 @@ SetupIconFile=..\src\CloudAlarmOverlay.App\Assets\Brand\cloud_alarm_app.ico
 DisableWelcomePage=no
 ArchitecturesAllowed=x64compatible
 ArchitecturesInstallIn64BitMode=x64compatible
-CloseApplications=yes
+; PrepareToInstall terminates only this installation's process without a password
+; or Restart Manager's close-applications confirmation page.
+CloseApplications=no
+RestartApplications=no
 UninstallDisplayIcon={app}\{#AppExeName}
 VersionInfoDescription=Cloud Alarm Overlay Installer
 VersionInfoProductName={#AppName}
@@ -54,6 +57,13 @@ Filename: "{app}\{#AppExeName}"; Description: "啟動 Cloud Alarm Overlay"; Flag
 ; Uninstall deliberately retains the user's AppData database.
 
 [Code]
+#include "CloseInstalledApp.iss"
+
+function PrepareToInstall(var NeedsRestart: Boolean): String;
+begin
+  Result := CloseInstalledApp(ExpandConstant('{app}\{#AppExeName}'));
+end;
+
 procedure InitializeWizard();
 var
   AboutPage: TWizardPage;
@@ -84,7 +94,8 @@ begin
     '這是一套 Windows 提醒工具，可同步公司 Google Sheets 的任務，也能建立本機提醒。' + #13#10#13#10 +
     '提供一般提醒、重要提醒、緊急提醒與強制通知，並可查看歷史紀錄及使用番茄鐘。' + #13#10#13#10 +
     '首次開啟時，請依公司提供的名單填入裝置代碼與顯示名稱；同步來源由管理者設定。' + #13#10#13#10 +
-    '關閉主視窗後，程式仍會留在右下角系統匣持續提醒。';
+    '關閉主視窗後，程式仍會留在右下角系統匣持續提醒。' + #13#10#13#10 +
+    '按下「安裝」後，安裝程式會直接強制關閉執行中的舊版，不需輸入結束密碼。請先儲存正在編輯的內容。安裝完成後可勾選啟動程式，既有任務與設定會保留。';
   Description.AdjustHeight;
 end;
 

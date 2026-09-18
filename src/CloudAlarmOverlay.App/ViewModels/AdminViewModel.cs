@@ -57,7 +57,7 @@ public partial class AdminViewModel(AdminSession session,IAdminSettingsStore sto
         if(!IsAuthenticated)
         {
             Audit.Clear();Logs.Clear();Events.Clear();Message="已登出管理者模式。";
-            if(old is not null)await auditService.RecordAsync(new AuditLogEntry{UserId=old,Action="管理者登出／閒置逾時",CreatedAt=DateTime.Now});
+            if(old is not null)await auditService.RecordAsync(new AuditLogEntry{UserId=old,Action="管理者登出／登入期限屆滿",CreatedAt=DateTime.Now});
             return;
         }
         await LoadAsync();

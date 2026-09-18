@@ -189,7 +189,7 @@ public sealed class MilestoneTwoTests
                 Assert.StartsWith("AuditLog_",dialogs.Filename);
                 Assert.StartsWith("CreatedAt,UserId,Action,OldValue,NewValue\r\n",dialogs.Csv);
                 Assert.Contains("FlashMilliseconds",dialogs.Csv);
-                vm.OpenAdminCommand.Execute("0");clock.Advance(TimeSpan.FromMinutes(15));
+                vm.OpenAdminCommand.Execute("0");clock.Advance(TimeSpan.FromMinutes(10));
                 Assert.True(vm.Admin.Session.CheckExpiry());await Dispatcher.Yield(DispatcherPriority.ApplicationIdle);
                 Assert.False(vm.Preferences.Maintenance.CanEditUpdateUrl);
                 Assert.Equal(0,vm.PageIndex);Assert.False(vm.Admin.IsAuthenticated);Assert.Empty(vm.Admin.Audit);
