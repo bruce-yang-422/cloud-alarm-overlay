@@ -45,6 +45,7 @@ public static class CompositionRoot
         services.AddSingleton<EmojiLibrary>();
         services.AddSingleton<AdminViewModel>();
         services.AddSingleton<PomodoroViewModel>();
+        services.AddSingleton<CountdownsViewModel>();
         services.AddSingleton<MainViewModel>();
         services.AddSingleton<MainWindow>();
     }

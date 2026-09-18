@@ -26,17 +26,40 @@ public sealed class DatabaseInitializerTests : IDisposable
         { "AuditLogs", "Id UserId Action OldValue NewValue CreatedAt" },
         { "Occurrences", "Id TaskId ScheduledAt State TriggeredAt" },
         { "SyncStates", "Source Fingerprint ConfigFingerprint Status Message LastCheckedAt LastSuccessAt ActiveLogId" },
-        { "SystemEvents", "Id Time EventType Message" }
+        { "SystemEvents", "Id Time EventType Message" },
+        { "Countdowns", "Id Title TargetAt Mode IsPinned CreatedAt IsTop Category Repeat ReminderDays ReminderMinutes Notes CompletedAt ReminderChangedAt Direction DisplayFormat Recurrence SkipOnHoliday" }
     };
 
     [Fact]
-    public async Task Fresh_database_has_baseline_schema_and_exactly_fifteen_empty_business_tables()
+    public async Task Version_seven_upgrade_preserves_all_countdown_fields_and_allows_five_categories()
+    {
+        for (var version = 1; version <= 7; version++)
+        {
+            using var stream = typeof(DatabaseInitializer).Assembly.GetManifestResourceStream($"CloudAlarmOverlay.Data.Migrations.V{version}.sql")!;
+            using var reader = new StreamReader(stream);
+            await ExecuteAsync(await reader.ReadToEndAsync());
+        }
+        await ExecuteAsync("PRAGMA user_version=7;");
+        await ExecuteAsync("""
+            INSERT INTO Countdowns VALUES ('kept','舊事件','2026-09-20T09:00:00','Time',1,'2026-09-18T00:00:00',1,'生活','Yearly',3,570,'備註','2026-09-21T00:00:00','2026-09-18T00:00:00','Up','YearsMonthsDays','LunarDate:3:23:Both',1);
+            """);
+        var before = await ScalarAsync("SELECT json_array(Id,Title,TargetAt,Mode,IsPinned,CreatedAt,IsTop,Category,Repeat,ReminderDays,ReminderMinutes,Notes,CompletedAt,ReminderChangedAt,Direction,DisplayFormat,Recurrence,SkipOnHoliday) FROM Countdowns;");
+        await Initializer.InitializeAsync();
+        Assert.Equal(before, await ScalarAsync("SELECT json_array(Id,Title,TargetAt,Mode,IsPinned,CreatedAt,IsTop,Category,Repeat,ReminderDays,ReminderMinutes,Notes,CompletedAt,ReminderChangedAt,Direction,DisplayFormat,Recurrence,SkipOnHoliday) FROM Countdowns;"));
+        await ExecuteAsync("UPDATE Countdowns SET Category='旅行';");
+        await ExecuteAsync("UPDATE Countdowns SET Category='其他';");
+        Assert.Equal("其他", await ScalarAsync("SELECT Category FROM Countdowns;"));
+        Assert.Equal("ok", await ScalarAsync("PRAGMA integrity_check;"));
+    }
+
+    [Fact]
+    public async Task Fresh_database_has_baseline_schema_and_exactly_sixteen_empty_business_tables()
     {
         Assert.False(File.Exists(_paths.DatabasePath));
         await Initializer.InitializeAsync();
         Assert.True(File.Exists(_paths.DatabasePath));
-        Assert.Equal(2L, await ScalarAsync("PRAGMA user_version;"));
-        Assert.Equal(15L, await ScalarAsync(
+        Assert.Equal((long)DatabaseInitializer.CurrentSchemaVersion, await ScalarAsync("PRAGMA user_version;"));
+        Assert.Equal(16L, await ScalarAsync(
             "SELECT COUNT(*) FROM sqlite_master WHERE type = 'table' AND name NOT LIKE 'sqlite_%';"));
         foreach (var row in TableColumns)
             Assert.Equal(0L, await ScalarAsync($"SELECT COUNT(*) FROM [{row[0]}];"));
@@ -97,11 +120,11 @@ public sealed class DatabaseInitializerTests : IDisposable
         await ExecuteAsync("""
             CREATE TABLE LegacyData (Value TEXT);
             INSERT INTO LegacyData VALUES ('keep');
-            PRAGMA user_version=5;
+            PRAGMA user_version=99;
             """);
         var error = await Assert.ThrowsAsync<InvalidOperationException>(() => Initializer.InitializeAsync());
         Assert.Contains("newer than supported schema", error.Message);
-        Assert.Equal(5L, await ScalarAsync("PRAGMA user_version;"));
+        Assert.Equal(99L, await ScalarAsync("PRAGMA user_version;"));
         Assert.Equal("keep", await ScalarAsync("SELECT Value FROM LegacyData;"));
         Assert.Equal(0L, await ScalarAsync("SELECT COUNT(*) FROM sqlite_master WHERE name = 'Tasks';"));
     }
@@ -143,7 +166,7 @@ public sealed class DatabaseInitializerTests : IDisposable
         await Initializer.InitializeAsync();
         await ExecuteAsync("ALTER TABLE Employees DROP COLUMN Department;");
         await Assert.ThrowsAsync<SqliteException>(() => Initializer.InitializeAsync());
-        Assert.Equal(2L, await ScalarAsync("PRAGMA user_version;"));
+        Assert.Equal((long)DatabaseInitializer.CurrentSchemaVersion, await ScalarAsync("PRAGMA user_version;"));
     }
 
     [Fact]
@@ -161,7 +184,7 @@ public sealed class DatabaseInitializerTests : IDisposable
     {
         await Task.WhenAll(Enumerable.Range(0, 4)
             .Select(_ => Task.Run(() => new DatabaseInitializer(Factory).InitializeAsync())));
-        Assert.Equal(2L, await ScalarAsync("PRAGMA user_version;"));
+        Assert.Equal((long)DatabaseInitializer.CurrentSchemaVersion, await ScalarAsync("PRAGMA user_version;"));
         Assert.Equal("ok", await ScalarAsync("PRAGMA integrity_check;"));
     }
 
@@ -200,7 +223,7 @@ public sealed class DatabaseInitializerTests : IDisposable
             "SELECT COUNT(*) FROM sqlite_master WHERE name NOT LIKE 'sqlite_%';"));
         // A clean retry must succeed without repairing partial DDL.
         await Initializer.InitializeAsync();
-        Assert.Equal(2L, await ScalarAsync("PRAGMA user_version;"));
+        Assert.Equal((long)DatabaseInitializer.CurrentSchemaVersion, await ScalarAsync("PRAGMA user_version;"));
     }
 
     [Fact]
@@ -222,7 +245,7 @@ public sealed class DatabaseInitializerTests : IDisposable
             """);
         await Initializer.InitializeAsync();
         await Initializer.InitializeAsync();
-        Assert.Equal(2L, await ScalarAsync("PRAGMA user_version;"));
+        Assert.Equal((long)DatabaseInitializer.CurrentSchemaVersion, await ScalarAsync("PRAGMA user_version;"));
         Assert.Equal("既有任務", await ScalarAsync("SELECT Title FROM Tasks;"));
         Assert.Equal("TEST-KEEP", await ScalarAsync("SELECT DeviceId FROM Devices;"));
         Assert.Equal("hash-keep", await ScalarAsync("SELECT PasswordHash FROM Users;"));
@@ -231,6 +254,71 @@ public sealed class DatabaseInitializerTests : IDisposable
         Assert.Equal(DBNull.Value, await ScalarAsync("SELECT TaskSnapshotJson FROM AcknowledgementLogs;"));
         Assert.Equal("Legacy", await ScalarAsync("SELECT EventKind FROM SyncLogs;"));
         Assert.Equal("ok", await ScalarAsync("PRAGMA integrity_check;"));
+    }
+
+    [Fact]
+    public async Task Released_v2_upgrades_without_changing_existing_rows_and_can_reopen_countdowns()
+    {
+        foreach (var migration in new[] { "V1", "V2" })
+        {
+            using var stream = typeof(DatabaseInitializer).Assembly.GetManifestResourceStream($"CloudAlarmOverlay.Data.Migrations.{migration}.sql")!;
+            using var reader = new StreamReader(stream);
+            await ExecuteAsync(await reader.ReadToEndAsync());
+        }
+        await ExecuteAsync("""
+            PRAGMA user_version=2;
+            INSERT INTO Devices(DeviceId,DisplayName) VALUES('KEEP','使用者');
+            INSERT INTO Settings(Key,Value) VALUES('ThemeColorStyle','粉紅色');
+            INSERT INTO Tasks(Id,Title,ScheduledAt,Source,Level,CreatedAt,UpdatedAt)
+            VALUES('existing','既有任務','2026-09-18T09:00:00','本機','一般提醒','2026-09-18','2026-09-18');
+            """);
+        await Initializer.InitializeAsync();
+        await ExecuteAsync("INSERT INTO Countdowns(Id,Title,TargetAt,Mode,IsPinned,CreatedAt) VALUES('pinned','中秋節','2026-09-25T00:00:00','Days',1,'2026-09-18T00:00:00');");
+        await Initializer.InitializeAsync();
+        Assert.Equal((long)DatabaseInitializer.CurrentSchemaVersion, await ScalarAsync("PRAGMA user_version;"));
+        Assert.Equal("KEEP", await ScalarAsync("SELECT DeviceId FROM Devices;"));
+        Assert.Equal("粉紅色", await ScalarAsync("SELECT Value FROM Settings;"));
+        Assert.Equal("既有任務", await ScalarAsync("SELECT Title FROM Tasks;"));
+        Assert.Equal(1L, await ScalarAsync("SELECT IsPinned FROM Countdowns;"));
+        Assert.Equal("ok", await ScalarAsync("PRAGMA integrity_check;"));
+    }
+
+    [Fact]
+    public async Task V3_upgrade_limits_legacy_home_pins_without_deleting_countdowns()
+    {
+        foreach(var migration in new[]{"V1","V2","V3"})
+        {
+            using var stream=typeof(DatabaseInitializer).Assembly.GetManifestResourceStream($"CloudAlarmOverlay.Data.Migrations.{migration}.sql")!;
+            using var reader=new StreamReader(stream);
+            await ExecuteAsync(await reader.ReadToEndAsync());
+        }
+        await ExecuteAsync("""
+            PRAGMA user_version=3;
+            INSERT INTO Countdowns VALUES
+            ('late','晚','2026-10-01','Days',1,'2026-09-18'),
+            ('first','早','2026-09-20','Days',1,'2026-09-18'),
+            ('second','中','2026-09-25','Days',1,'2026-09-18');
+            """);
+        await Initializer.InitializeAsync();await Initializer.InitializeAsync();
+        Assert.Equal(3L,await ScalarAsync("SELECT COUNT(*) FROM Countdowns;"));
+        Assert.Equal(2L,await ScalarAsync("SELECT COUNT(*) FROM Countdowns WHERE IsPinned=1;"));
+        Assert.Equal(0L,await ScalarAsync("SELECT IsPinned FROM Countdowns WHERE Id='late';"));
+        Assert.Equal(0L,await ScalarAsync("SELECT SUM(IsTop) FROM Countdowns;"));
+        Assert.Equal(3L,await ScalarAsync("SELECT COUNT(*) FROM Countdowns WHERE Category='工作' AND Repeat='None' AND ReminderDays=-1 AND ReminderMinutes=540 AND CompletedAt IS NULL AND Notes='';"));
+    }
+
+    [Fact]
+    public async Task V5_countdowns_upgrade_with_default_direction_and_format_without_losing_rows()
+    {
+        foreach (var migration in new[] { "V1", "V2", "V3", "V4", "V5" })
+        {
+            using var stream = typeof(DatabaseInitializer).Assembly.GetManifestResourceStream($"CloudAlarmOverlay.Data.Migrations.{migration}.sql")!;
+            using var reader = new StreamReader(stream);
+            await ExecuteAsync(await reader.ReadToEndAsync());
+        }
+        await ExecuteAsync("PRAGMA user_version=5; INSERT INTO Countdowns(Id,Title,TargetAt,Mode,IsPinned,CreatedAt) VALUES('old','原有事件','2026-09-25','Days',1,'2026-09-18');");
+        await Initializer.InitializeAsync(); await Initializer.InitializeAsync();
+        Assert.Equal(1L, await ScalarAsync("SELECT COUNT(*) FROM Countdowns WHERE Id='old' AND Title='原有事件' AND IsPinned=1 AND Direction='Down' AND DisplayFormat='Days';"));
     }
 
     private sealed class ShadowingFactory(ISqliteConnectionFactory inner) : ISqliteConnectionFactory

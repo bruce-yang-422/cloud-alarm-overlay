@@ -1,4 +1,4 @@
-using System.Globalization;
+﻿using System.Globalization;
 using CloudAlarmOverlay.Core.Models;
 using CloudAlarmOverlay.Core.Repositories;
 using CloudAlarmOverlay.Core.Services;
@@ -8,7 +8,7 @@ namespace CloudAlarmOverlay.BackgroundServices;
 
 public sealed class AlarmWorker(ITaskRepository tasks, ITaskSchedulingService schedule, IRuntimeStore runtime,
     IDeviceIdentityService identity, IAlarmService alarms, ISettingsRepository settings, ChangeSignal signal,
-    RuntimeState state, IAlarmHeartbeat heartbeat, ILogger<AlarmWorker> logger) : BackgroundService
+    RuntimeState state, IAlarmHeartbeat heartbeat, ILogger<AlarmWorker> logger, ICountdownRepository countdowns, TimeProvider clock, ILunarCalendarRepository lunar, IHolidayRepository holidays) : BackgroundService
 {
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
@@ -16,7 +16,7 @@ public sealed class AlarmWorker(ITaskRepository tasks, ITaskSchedulingService sc
         try {await runtime.RecoverAsync(stoppingToken);}
         catch(Exception ex){heartbeat.Fail(ex.Message);throw;}
         var previous = (await settings.GetAsync("AlarmCheckpoint", stoppingToken))?.Value;
-        var cursor = DateTime.TryParse(previous, CultureInfo.InvariantCulture, DateTimeStyles.RoundtripKind, out var saved) ? saved : DateTime.Now;
+        var cursor = DateTime.TryParse(previous, CultureInfo.InvariantCulture, DateTimeStyles.RoundtripKind, out var saved) ? saved : clock.GetLocalNow().DateTime;
         bool startup = true;
         try
         {
@@ -24,7 +24,7 @@ public sealed class AlarmWorker(ITaskRepository tasks, ITaskSchedulingService sc
             {
                 try
                 {
-                    var now = DateTime.Now;
+                    var now = clock.GetLocalNow().DateTime;
                     var device = await identity.GetLocalAsync(stoppingToken);
                     DateTime next = now.AddMinutes(1);
                     if (device is not null)
@@ -47,13 +47,32 @@ public sealed class AlarmWorker(ITaskRepository tasks, ITaskSchedulingService sc
                             }
                             if (occurrence is { } future && future < next) next = future;
                         }
+                        var lunarDays=(await lunar.GetAllAsync(stoppingToken)).ToDictionary(e=>e.Date,e=>e.LunarDay);
+                        var holidayList=await holidays.GetAllAsync(stoppingToken);
+                        foreach (var item in await countdowns.GetAllAsync(stoppingToken))
+                        {
+                            var occurrence = item.NextReminder(cursor,lunarDays,holidayList);
+                            while (occurrence is {} at && at <= now)
+                            {
+                                var task = item.ReminderTask(at);
+                                var id = OccurrenceIdentity.For(task.Id, at);
+                                if (await runtime.ClaimAsync(id, task, at, stoppingToken))
+                                {
+                                    if (startup || (state.ResumedAt > cursor && at < state.ResumedAt))
+                                        await runtime.MissedAsync(id, task, at, device, startup ? "NotLaunched" : "Overdue_Unacked", stoppingToken);
+                                    else pending.Add(DispatchAsync(task, stoppingToken));
+                                }
+                                occurrence = item.NextReminder(at,lunarDays,holidayList);
+                            }
+                            if (occurrence is {} future && future < next) next = future;
+                        }
                         await runtime.MarkOverdueAsync(stoppingToken);
                         await settings.SaveAsync(new Setting { Key = "AlarmCheckpoint", Value = now.ToString("O", CultureInfo.InvariantCulture) }, stoppingToken);
                     }
                     pending.RemoveAll(t => t.IsCompleted);
                     cursor = now; startup = false;
                     heartbeat.Tick();
-                    var delay = next - DateTime.Now;
+                    var delay = next - clock.GetLocalNow().DateTime;
                     await signal.WaitAsync(delay > TimeSpan.Zero ? delay : TimeSpan.Zero, stoppingToken);
                 }
                 catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested) { break; }

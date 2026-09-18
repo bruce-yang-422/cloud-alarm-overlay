@@ -4,8 +4,13 @@
     <OutputType>WinExe</OutputType>
     <UseWPF>true</UseWPF>
     <ApplicationIcon>Assets/Brand/cloud_alarm_app.ico</ApplicationIcon>
+    <AppLastUpdated Condition="'$(AppLastUpdated)' == ''">$([System.DateTime]::Now.ToString('yyyy-MM-dd'))</AppLastUpdated>
   </PropertyGroup>
   <ItemGroup>
+    <AssemblyAttribute Include="System.Reflection.AssemblyMetadataAttribute">
+      <_Parameter1>AppLastUpdated</_Parameter1>
+      <_Parameter2>$(AppLastUpdated)</_Parameter2>
+    </AssemblyAttribute>
     <Resource Include="Assets/Emoji/*.png" />
     <Content Include="Assets/Emoji/LICENSE.txt" CopyToOutputDirectory="PreserveNewest" />
     <Resource Include="Assets/Brand/*.png" />

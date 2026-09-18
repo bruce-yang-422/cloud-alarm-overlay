@@ -1,0 +1,50 @@
+{
+  "prompt_set": "Cloud Alarm Overlay - Home & Countdown/Count-up feature screenshots",
+  "target_model": "gpt-image-2.5",
+  "shared_style": {
+    "app_name": "Cloud Alarm Overlay",
+    "platform": "Windows desktop application (WPF), light theme",
+    "ui_language": "Traditional Chinese (繁體中文) labels throughout, no other language mixed in",
+    "design_language": "Modern flat Fluent-style design, soft rounded cards (12-16px corner radius), subtle drop shadow, generous white space, left sidebar navigation",
+    "color_palette": {
+      "primary_blue": "#0766FF",
+      "accent_blue_light_bg": "#E6F0FF",
+      "text_dark_navy": "#16243E",
+      "muted_gray_text": "#697C99",
+      "page_background": "#F7FAFE",
+      "card_background": "#FFFFFF",
+      "card_border": "#DEE6F1",
+      "success_green": "#099666",
+      "warning_orange": "#F07822",
+      "danger_red": "#D72540",
+      "danger_bg": "#FFF3F5",
+      "category_work_blue": "#309EDE",
+      "category_life_green": "#39A67F",
+      "category_holiday_pink": "#E46C80"
+    },
+    "typography": "Clean sans-serif (Segoe UI style), semibold headings, generous line height, small muted captions under headings",
+    "iconography": "Simple line icons (Segoe Fluent/MDL2 style): bell, calendar, clock, pin, gear, ring/donut chart",
+    "camera_and_render": "Flat 2D UI screenshot mockup rendered as if captured from a real desktop app window, not a photo, no 3D perspective, no mockup device frame, crisp vector-like edges, 16:9 or 16:10 aspect ratio",
+    "negative_constraints": "no watermarks, no placeholder lorem ipsum, no English UI text mixed randomly, no distorted or garbled Chinese characters, no cropped cards, no overlapping elements, no cursor artifacts"
+  },
+  "images": [
+    {
+      "id": "home_dashboard",
+      "title": "首頁 Home Dashboard",
+      "aspect_ratio": "16:9",
+      "prompt": "A clean flat UI screenshot mockup of a Windows desktop app called 'Cloud Alarm Overlay', light theme, Traditional Chinese labels. Layout: left vertical sidebar (white, light blue highlight on active item) with app logo (blue cloud with checkmark) and title 'Cloud Alarm Overlay' at top, followed by nav items with icons: 首頁 (home, highlighted/active in blue), 我的任務 (list), 歷史紀錄 (clock-history), 番茄鐘 (timer), 倒數日/時間 (stopwatch), 設定 (gear), 管理者專區 (lock). Main content area on light blue-white background (#F7FAFE). Top info strip: a soft rounded card with four columns showing 國曆日期 '2026/09/18 週五', 農曆日期 '八月初八', 現在時間 large bold monospace '13:05:12', 節氣 '-'. Below, a two-column grid of rounded white cards with soft borders and shadows: LEFT large card titled '🔔 下一個提醒' containing a pink-tinted alert box with a red '緊急提醒' pill badge, bold task title '確認今日工作進度', muted subtitle '目前沒有補充說明。', a grey '本機' source badge, a middle column showing calendar icon, date '2026/09/18（週五）', large bold time '14:05', and a right column with a circular red progress ring (24-hour dial style) showing '剩餘 59分59秒' centered inside. RIGHT sidebar card titled '釘選倒數' with a '管理 →' link button top-right, caption '已釘選 0 / 2 項 · 依目標時間排序', an empty-state message '把期待的日子釘選在這裡。' and a blue rounded primary button '＋ 新增倒數'. Below that row, a full-width card titled '📊 今日任務概況' with three equal rounded stat tiles side by side, each with a small icon, label, and large bold number: 今天總任務 '2 項' in blue, 待處理 '2 項' in orange, 已確認完成 '0 項' in green. Below, two cards side by side: LEFT '即時操作' with a large blue primary button '＋ 新增本機任務' and a secondary button '⟳ 立即同步'; RIGHT '⟳ 雲端同步狀態' with two small status rows 'Sheet A' and 'Sheet B' each showing '未設定 · 尚未設定同步來源'. At the bottom, a wide card titled '🕐 即將到來的任務' with a '查看全部任務 →' link and a simple data table with columns 時間, 任務標題, 來源, 提醒等級, 狀態, 備註, showing two sample rows with time-stamps and a red '緊急提醒' badge and blue '一般提醒' badge. Overall mood: calm, organized, productivity dashboard, soft shadows, rounded 12-16px corners, ample padding, high clarity, flat design, no 3D effects, no mockup frame, no text distortion."
+    },
+    {
+      "id": "countdown_list_view",
+      "title": "倒數／正數 List & Stats View",
+      "aspect_ratio": "16:9",
+      "prompt": "A clean flat UI screenshot mockup of a Windows desktop app called 'Cloud Alarm Overlay', light theme, Traditional Chinese labels, showing the '倒數／正數' (Countdown/Count-up) feature page content area only (no sidebar needed, but may include a thin left nav edge). Page header: large bold title '倒數／正數' with muted subtitle '讓期待有刻度，讓重要時刻一目了然。', and a blue rounded primary button top-right '＋ 新增倒數'. Below, a two-column stats row of rounded white cards with soft shadow: LEFT card '倒數統計' with a year dropdown selector top-right, a 4-column mini stat grid showing bold numbers with small muted labels underneath: blue '12 全部', green '7 進行中', navy '3 已完成', red '2 已逾期', followed by a thin horizontal progress bar labeled '已經過 72%' representing year progress. RIGHT card '分類統計' with a small circular donut/ring chart divided into three colored segments (blue #309EDE for 工作, green #39A67F for 生活, pink #E46C80 for 節日) with a bold total number centered inside the ring, and a legend list to its right with colored dot bullets: '工作 5', '生活 4', '節日 3'. Below the stats row, a section header '我的倒數' with a segmented pill toggle control top-right (卡片 / 表格 view switch) and a row of filter pill tabs below it (全部, 工作, 生活, 節日, 進行中, 已完成, 已逾期). Main content: a responsive grid of 4-6 rounded countdown event cards (14px corner radius, white background, thin left blue accent bar). Each card contains: top row with a small rounded blue-tinted icon badge (calendar/star icon) on the left, event title in bold ('日本旅行', '結婚紀念日', '專案上線', '生日', '馬拉松比賽', '年終獎金入帳'), small muted target-date caption underneath, and pin/top icons top-right corner on some cards; a row with a small blue category pill badge (工作/生活/節日) and mode label; a light-blue rounded inset panel showing a large bold blue countdown number/text like '還有 45 天', '已過 128 天', '還有 3 天', with a thin horizontal progress bar underneath and a small muted percentage caption; a muted next-reminder caption line; bottom row with small icon buttons (pin, top, delete) on the right and text buttons '編輯' and '完成' on the left. Cards have varied countdown states: some counting down (blue, '還有 N 天'), one count-up/anniversary style (different tone, '已過 N 天'), one near-due highlighted subtly. Below the card grid, a collapsed expander row labeled '時間分布與使用提示'. Overall mood: calm productivity app, soft rounded cards, generous padding, consistent blue accent color, flat 2D design, no 3D effects, no mockup device frame, crisp legible Traditional Chinese text, no distortion."
+    },
+    {
+      "id": "countdown_editor_modal",
+      "title": "新增/編輯倒數 Editor Dialog",
+      "aspect_ratio": "4:3",
+      "prompt": "A clean flat UI screenshot mockup of a Windows desktop app dialog window called 'Cloud Alarm Overlay', light theme, Traditional Chinese labels, titled '新增倒數 / 紀念事件 · 記下每個值得期待的日子' with a rounded blue-tinted icon badge (pencil/edit icon) at top-left of the header. Two-column layout: LEFT wide scrollable form column with numbered section headers and rounded card sections: '1. 基本資訊' with a text input labeled '事件名稱' and a segmented pill selector for category (工作/生活/節日); '2. 日期與時間' inside a soft rounded bordered card with three inline fields: dropdown '時間精度' (日期 / 日期與時間), a date-picker field '目標日期' with calendar icon, and a small time text field '時間（24 小時制）'; '3. 重複與提醒' card with dropdowns '重複設定' (不重複/每週/每月/每年) and '提醒設定' (提前天數), plus a row of small rounded weekday pill checkboxes (一 二 三 四 五 六 日) some selected in blue; '4. 顯示設定' card with dropdowns '計數方向' (倒數/正數) and '顯示方式' (天數/週+天/月+天/年+月+天); '5. 其他選項' with a blue pill-style toggle switch checkbox '釘選到首頁（最多 2 項）', and a collapsed expander '進階設定 · 備註、假日與閏月'. RIGHT narrower preview panel on light blue-gray background titled '預覽效果', containing a rounded white preview card with a decorative light-blue header banner (simple abstract mountain/cloud illustration in blue tones), below it a centered bold event title placeholder, a large bold blue countdown value placeholder like '還有 128 天', a small rounded category pill badge, muted date/repeat/reminder caption lines, an italic muted tagline '重要的日子，從現在開始記住。', and a bordered tips box '小提示' with three short muted bullet lines. Bottom bar of the dialog: a muted status text on the left, and two buttons on the right: outlined '取消' button and a solid blue primary '儲存' button. Flat 2D design, soft rounded corners, consistent blue accent, no 3D effects, no mockup device frame, crisp legible Traditional Chinese text, no distortion."
+    }
+  ]
+}

@@ -1,4 +1,4 @@
-using System.Collections.ObjectModel;
+﻿using System.Collections.ObjectModel;
 using System.Globalization;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -9,9 +9,12 @@ using CloudAlarmOverlay.Core.Services;
 namespace CloudAlarmOverlay.App.ViewModels;
 public partial class MainViewModel(ITaskRepository tasks,ITaskService taskService,ITaskSchedulingService scheduling,
     IAckLogRepository history,ISyncLogRepository syncLogs,ISyncService sync,SyncConfiguration configuration,
-    IDeviceIdentityService identity,IAlarmPresenter presenter,IUserDialogs dialogs,ILunarCalendarRepository lunar,AdminViewModel admin,PreferencesViewModel preferences,PomodoroViewModel pomodoro,IAlarmHeartbeat heartbeat):ObservableObject
+    IDeviceIdentityService identity,IAlarmPresenter presenter,IUserDialogs dialogs,ILunarCalendarRepository lunar,AdminViewModel admin,PreferencesViewModel preferences,PomodoroViewModel pomodoro,IAlarmHeartbeat heartbeat,CountdownsViewModel countdowns):ObservableObject
 {
     public PomodoroViewModel Pomodoro=>pomodoro;
+    public CountdownsViewModel Countdowns=>countdowns;
+    [RelayCommand] private void OpenCountdowns()=>PageIndex=6;
+    [RelayCommand] private void OpenPomodoro()=>PageIndex=3;
     [ObservableProperty] private int historyTabIndex;
     public AdminViewModel Admin=>admin;
     public PreferencesViewModel Preferences=>preferences;
@@ -34,12 +37,13 @@ public partial class MainViewModel(ITaskRepository tasks,ITaskService taskServic
         PageIndex=value;
     }
     public string Title=>"Cloud Alarm Overlay";
-    public string[] Pages {get;}=["首頁","我的任務","歷史紀錄","番茄鐘","設定","管理者專區"];
+    public string[] Pages {get;}=["首頁","我的任務","歷史紀錄","番茄鐘","設定","管理者專區","倒數／正數"];
     public NavigationItem TaskBuilderNavigationItem {get;} = new("任務產生器", "\uE943", -1);
     public NavigationItem[] NavigationItems {get;} =
     [
         new("首頁", "\uE80F", 0), new("我的任務", "\uE8FD", 1),
         new("歷史紀錄", "\uE81C", 2), new("番茄鐘", "\uE916", 3),
+        new("倒數／正數", "\uE823", 6),
         new("設定", "\uE713", 4),
         new("管理者專區", "\uE72E", 5)
     ];
@@ -159,6 +163,7 @@ public partial class MainViewModel(ITaskRepository tasks,ITaskService taskServic
     public void UpdateCountdown()
     {
         UpdateClock(DateTime.Now);
+        Countdowns.Update(DateTime.Now);
         if(nextReminderAt is not {} at){Countdown="—";CountdownLabel="—";RemainingHours=0;return;}
         var remaining=at-DateTime.Now;
         if(remaining<TimeSpan.Zero)remaining=TimeSpan.Zero;
@@ -207,6 +212,7 @@ public partial class MainViewModel(ITaskRepository tasks,ITaskService taskServic
         try
         {
             await RefreshHealthAsync();
+            await Countdowns.LoadAsync();
             await RefreshCalendarAsync(DateTime.Now);
             allTasks=await tasks.GetAllAsync();FilterTasks();
             CalendarWarning=allTasks.Any(t=>t.Enabled&&t.Recurrence.StartsWith("LunarDay:",StringComparison.Ordinal))

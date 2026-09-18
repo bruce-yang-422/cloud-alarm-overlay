@@ -1,0 +1,7 @@
+ALTER TABLE Countdowns ADD COLUMN Category TEXT NOT NULL DEFAULT '工作' CHECK(Category IN ('工作','生活','節日'));
+ALTER TABLE Countdowns ADD COLUMN Repeat TEXT NOT NULL DEFAULT 'None' CHECK(Repeat IN ('None','Weekly','Monthly','Yearly'));
+ALTER TABLE Countdowns ADD COLUMN ReminderDays INTEGER NOT NULL DEFAULT -1 CHECK(ReminderDays IN (-1,0,1,3,7));
+ALTER TABLE Countdowns ADD COLUMN ReminderMinutes INTEGER NOT NULL DEFAULT 540 CHECK(ReminderMinutes BETWEEN 0 AND 1439);
+ALTER TABLE Countdowns ADD COLUMN Notes TEXT NOT NULL DEFAULT '';
+ALTER TABLE Countdowns ADD COLUMN CompletedAt TEXT NULL;
+ALTER TABLE Countdowns ADD COLUMN ReminderChangedAt TEXT NOT NULL DEFAULT '0001-01-01T00:00:00';

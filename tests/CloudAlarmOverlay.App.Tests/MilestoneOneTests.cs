@@ -91,6 +91,17 @@ public sealed class MilestoneOneTests
                         using var file = File.Create(Path.Combine(screenshotDirectory, $"milestone1-page-{page}.png")); png.Save(file);
                     }
                 }
+                if (screenshotDirectory is not null)
+                {
+                    // Keep the app information screenshot alongside the release UI captures.
+                    var preferencesView = FindVisual<PreferencesView>(window)!;
+                    ((System.Windows.Controls.TabControl)preferencesView.FindName("SettingsTabs")).SelectedIndex = 3;
+                    await Dispatcher.Yield(DispatcherPriority.ApplicationIdle); window.UpdateLayout();
+                    var content = (FrameworkElement)window.Content;
+                    var bitmap = new RenderTargetBitmap((int)Math.Ceiling(content.ActualWidth), (int)Math.Ceiling(content.ActualHeight), 96, 96, PixelFormats.Pbgra32);
+                    bitmap.Render(content); var png = new PngBitmapEncoder(); png.Frames.Add(BitmapFrame.Create(bitmap));
+                    using var file = File.Create(Path.Combine(screenshotDirectory, "settings-device-info.png")); png.Save(file);
+                }
                 window.StartTray(host.Services.GetRequiredService<ChangeSignal>(), () => Task.CompletedTask);
                 window.Close(); Assert.False(window.IsVisible);
                 window.Open(); Assert.True(window.IsVisible);
@@ -187,6 +198,13 @@ public sealed class MilestoneOneTests
             }
             finally { alarm?.Finish(false); window?.ForceClose(); Directory.Delete(paths.DataDirectory, true); }
         });
+    }
+    private static T? FindVisual<T>(DependencyObject node) where T : DependencyObject
+    {
+        if (node is T match) return match;
+        for (var i = 0; i < VisualTreeHelper.GetChildrenCount(node); i++)
+            if (FindVisual<T>(VisualTreeHelper.GetChild(node, i)) is {} found) return found;
+        return null;
     }
     internal static Task RunSta(Func<Task> work)
     {

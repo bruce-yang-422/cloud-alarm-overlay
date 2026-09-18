@@ -1,5 +1,6 @@
 using System.Collections.ObjectModel;
 using System.Text.Json;
+using System.Reflection;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CloudAlarmOverlay.Core.Models;
@@ -9,6 +10,11 @@ namespace CloudAlarmOverlay.App.ViewModels;
 public partial class PreferencesViewModel(ISettingsRepository settings,NotificationPreferences preferences,ISoundService sound,CloudAlarmOverlay.App.Services.EmojiLibrary emojis,MaintenanceViewModel maintenance):ObservableObject
 {
     public MaintenanceViewModel Maintenance {get;}=maintenance;
+    public string ApplicationName => "Cloud Alarm Overlay";
+    public string ApplicationAuthor => "Bruce Yang";
+    public string ApplicationVersion => typeof(PreferencesViewModel).Assembly.GetName().Version?.ToString(3) ?? "未提供";
+    public string ApplicationLastUpdated => typeof(PreferencesViewModel).Assembly
+        .GetCustomAttributes<AssemblyMetadataAttribute>().FirstOrDefault(a => a.Key == "AppLastUpdated")?.Value ?? "未提供";
     public ObservableCollection<string> EmojiItems { get; } = [];
     [ObservableProperty] private string newEmoji = "";
     [ObservableProperty] private string? selectedEmoji;

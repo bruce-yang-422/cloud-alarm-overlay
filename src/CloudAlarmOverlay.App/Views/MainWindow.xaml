@@ -3,6 +3,7 @@
     <ResourceDictionary>
       <ResourceDictionary.MergedDictionaries>
         <ResourceDictionary Source="../Styles/LightTheme.xaml" />
+        <ResourceDictionary Source="../Styles/CountdownStyles.xaml" />
       </ResourceDictionary.MergedDictionaries>
                 <DataTemplate x:Key="NavigationItemTemplate">
                   <Button Click="Navigate" AutomationProperties.Name="{Binding Title}" HorizontalContentAlignment="Stretch">
@@ -44,6 +45,22 @@
                     </Grid>
                   </Button>
                 </DataTemplate>
+      <Style x:Key="HomeShortcut" TargetType="Button" BasedOn="{StaticResource {x:Type Button}}">
+        <Setter Property="Padding" Value="6,14"/><Setter Property="Margin" Value="0,0,8,0"/><Setter Property="FontSize" Value="14"/><Setter Property="FontWeight" Value="SemiBold"/>
+        <Setter Property="Template"><Setter.Value><ControlTemplate TargetType="Button">
+          <Border x:Name="Tile" Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding Foreground}" BorderThickness="0" CornerRadius="12" Padding="{TemplateBinding Padding}">
+            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+          </Border>
+          <ControlTemplate.Triggers>
+            <Trigger Property="IsMouseOver" Value="True"><Setter TargetName="Tile" Property="Opacity" Value="0.85"/></Trigger>
+            <Trigger Property="IsKeyboardFocused" Value="True"><Setter TargetName="Tile" Property="BorderThickness" Value="1"/></Trigger>
+            <Trigger Property="IsEnabled" Value="False"><Setter TargetName="Tile" Property="Opacity" Value="0.45"/></Trigger>
+          </ControlTemplate.Triggers>
+        </ControlTemplate></Setter.Value></Setter>
+      </Style>
+      <Style x:Key="HomeShortcutIcon" TargetType="TextBlock">
+        <Setter Property="FontFamily" Value="Segoe MDL2 Assets"/><Setter Property="FontSize" Value="27"/><Setter Property="HorizontalAlignment" Value="Center"/><Setter Property="Margin" Value="0,0,0,12"/>
+      </Style>
       <DataTemplate x:Key="HealthIndicator">
        <StackPanel Orientation="Horizontal" ToolTip="{Binding Detail}">
         <TextBlock x:Name="StateIcon" Text="…" FontWeight="Bold" Margin="0,0,4,0" Foreground="{adaptive:AdaptiveBrush #64748B}"/>
@@ -128,8 +145,9 @@
                 <Grid.RowDefinitions>
                   <RowDefinition Height="Auto" />
                   <RowDefinition Height="Auto" />
+                  <RowDefinition Height="Auto" />
                 </Grid.RowDefinitions>
-                <Border xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:controls="clr-namespace:CloudAlarmOverlay.App.Controls" Style="{StaticResource Card}" Padding="14">
+                <Border x:Name="NextReminderCard" xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:controls="clr-namespace:CloudAlarmOverlay.App.Controls" Style="{StaticResource Card}" Padding="14">
                   <Grid>
                     <Grid.RowDefinitions>
                       <RowDefinition Height="Auto" />
@@ -188,7 +206,42 @@
                     </Border>
                   </Grid>
                 </Border>
-                <Border xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" Grid.Column="2" Style="{StaticResource Card}" Padding="14">
+                <Border x:Name="PinnedCountdownCard" Grid.Column="2" Grid.RowSpan="2" Style="{StaticResource Card}" Padding="12" VerticalAlignment="Top">
+                  <StackPanel>
+                    <DockPanel Margin="0,0,0,8">
+                      <Button DockPanel.Dock="Right" Content="管理 →" Command="{Binding OpenCountdownsCommand}" FontSize="12" Padding="8,5" Margin="6,0,0,0"/>
+                      <TextBlock Text="釘選倒數／正數" FontSize="17" FontWeight="SemiBold"/>
+                    </DockPanel>
+                    <TextBlock Text="{Binding Countdowns.Pinned.Count,StringFormat=已釘選 {0} / 2 項 · 依目標時間排序}" Style="{StaticResource Muted}" FontSize="12" Margin="0,0,0,8"/>
+                    <StackPanel Visibility="{Binding Countdowns.IsPinnedEmpty,Converter={StaticResource BoolVisibility}}">
+                      <TextBlock Text="把期待的日子釘選在這裡。" Style="{StaticResource Muted}" TextWrapping="Wrap" Margin="0,0,0,8"/>
+                      <Button Content="＋ 新增倒數" Command="{Binding OpenCountdownsCommand}" Style="{StaticResource Primary}" HorizontalAlignment="Left"/>
+                    </StackPanel>
+                    <ScrollViewer MaxHeight="320" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+                      <ItemsControl ItemsSource="{Binding Countdowns.Pinned}">
+                        <ItemsControl.ItemTemplate><DataTemplate>
+                          <Border x:Name="PinnedCounterItem" Background="{adaptive:AdaptiveBrush #F6FAFF}" BorderBrush="{adaptive:AdaptiveBrush #E2ECF7}" BorderThickness="1" CornerRadius="12" Padding="10" Margin="0,0,0,6">
+                            <StackPanel>
+                              <DockPanel Margin="0,0,0,4">
+                                <Button DockPanel.Dock="Right" Content="&#xE77A;" FontFamily="Segoe MDL2 Assets" Command="{Binding DataContext.Countdowns.TogglePinCommand,RelativeSource={RelativeSource AncestorType=Window}}" CommandParameter="{Binding}" ToolTip="取消首頁釘選（保留倒數項目）" AutomationProperties.Name="取消釘選" Background="Transparent" Padding="4" Margin="6,0,0,0"/>
+                                <TextBlock DockPanel.Dock="Left" Text="&#xE787;" FontFamily="Segoe MDL2 Assets" FontSize="17" Foreground="{adaptive:AdaptiveBrush #0766FF}" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                                <TextBlock Text="{Binding Title}" FontSize="16" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" ToolTip="{Binding Title}" VerticalAlignment="Center" Foreground="{adaptive:AdaptiveBrush #16243E}"/>
+                              </DockPanel>
+                              <TextBlock Text="{Binding HomeSummary}" TextWrapping="Wrap" MaxHeight="60" FontSize="23" FontWeight="SemiBold" Foreground="{adaptive:AdaptiveBrush #16243E}" TextTrimming="CharacterEllipsis" ToolTip="{Binding HomeSummary}" Margin="0,3,0,5"/>
+                              <Grid Margin="0,0,0,4" Visibility="{Binding ShowProgress,Converter={StaticResource BoolVisibility}}" ToolTip="從建立到目前目標的時間經過比例，不代表事件完成度。">
+                                <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                                <ProgressBar Style="{StaticResource CountdownBar}" Height="4" Value="{Binding ElapsedPercent}" Maximum="100" VerticalAlignment="Center" AutomationProperties.Name="釘選倒數已經過比例"/>
+                                <TextBlock Grid.Column="1" Text="{Binding HomeElapsedLabel}" Style="{StaticResource Muted}" FontSize="11" Margin="8,0,0,0"/>
+                              </Grid>
+                              <TextBlock Text="{Binding DateCaption}" Style="{StaticResource Muted}" FontSize="11" Margin="0"/>
+                            </StackPanel>
+                          </Border>
+                        </DataTemplate></ItemsControl.ItemTemplate>
+                      </ItemsControl>
+                    </ScrollViewer>
+                  </StackPanel>
+                </Border>
+                <Border x:Name="TodaySummaryCard" Grid.Row="1" Style="{StaticResource Card}" Padding="14">
                   <Grid>
                     <Grid.RowDefinitions>
                       <RowDefinition Height="Auto" />
@@ -232,31 +285,29 @@
                     </UniformGrid>
                   </Grid>
                 </Border>
-                <Border xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" Grid.Row="1" Style="{StaticResource Card}" Padding="14">
+                <Border xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" Grid.Row="2" Style="{StaticResource Card}" Padding="14">
                   <StackPanel>
-                    <TextBlock Text="即時操作" FontSize="17" FontWeight="SemiBold" Margin="0,0,0,10" />
-                    <UniformGrid Columns="2">
-                      <Button Content="＋ 新增本機任務" Command="{Binding NewTaskCommand}" Style="{StaticResource Primary}" Padding="10,8" />
-                      <Button Content="⟳ 立即同步" Command="{Binding SyncCommand}" Padding="10,8" Margin="0" />
+                    <TextBlock Text="常用功能" FontSize="17" FontWeight="SemiBold" Margin="0,0,0,10" />
+                    <UniformGrid Columns="3">
+                      <Button x:Name="HomeNewTask" Command="{Binding NewTaskCommand}" Style="{StaticResource HomeShortcut}" Background="{adaptive:AdaptiveBrush #E6F0FF}" Foreground="{adaptive:AdaptiveBrush #0766FF}" AutomationProperties.Name="新增任務" ToolTip="開啟新增本機任務視窗">
+                        <StackPanel><TextBlock Text="&#xE710;" Style="{StaticResource HomeShortcutIcon}"/><TextBlock Text="新增任務" HorizontalAlignment="Center"/></StackPanel>
+                      </Button>
+                      <Button x:Name="HomeCountdown" Command="{Binding OpenCountdownsCommand}" Style="{StaticResource HomeShortcut}" Background="{adaptive:AdaptiveBrush #F0F5FB}" Foreground="{adaptive:AdaptiveBrush #3664A0}" AutomationProperties.Name="新增倒數" ToolTip="前往倒數／正數功能頁">
+                        <StackPanel><TextBlock Text="&#xE787;" Style="{StaticResource HomeShortcutIcon}"/><TextBlock Text="新增倒數" HorizontalAlignment="Center"/></StackPanel>
+                      </Button>
+                      <Button x:Name="HomePomodoro" Command="{Binding OpenPomodoroCommand}" Style="{StaticResource HomeShortcut}" Background="{adaptive:AdaptiveBrush #FFF3F5}" Foreground="{adaptive:AdaptiveBrush #B13C5A}" Margin="0" AutomationProperties.Name="番茄鐘" ToolTip="前往番茄鐘功能頁">
+                        <StackPanel><TextBlock Text="&#xE916;" Style="{StaticResource HomeShortcutIcon}"/><TextBlock Text="番茄鐘" HorizontalAlignment="Center"/></StackPanel>
+                      </Button>
                     </UniformGrid>
-                    <Grid Margin="0,10,0,0">
-                      <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="Auto" />
-                        <ColumnDefinition Width="*" />
-                      </Grid.ColumnDefinitions>
-                      <TextBlock Text="提醒預覽" FontSize="12" Foreground="{adaptive:AdaptiveBrush #697C99}" Margin="0,0,10,0" />
-                      <UniformGrid Grid.Column="1" Columns="4">
-                        <Button Content="一般提醒" Command="{Binding PreviewCommand}" CommandParameter="一般提醒" FontSize="12" Padding="6,5" />
-                        <Button Content="重要提醒" Command="{Binding PreviewCommand}" CommandParameter="重要提醒" FontSize="12" Padding="6,5" />
-                        <Button Content="緊急提醒" Command="{Binding PreviewCommand}" CommandParameter="緊急提醒" FontSize="12" Padding="6,5" />
-                        <Button Content="強制通知" Command="{Binding PreviewCommand}" CommandParameter="強制通知" FontSize="12" Padding="6,5" />
-                      </UniformGrid>
-                    </Grid>
+
                   </StackPanel>
                 </Border>
-                <Border xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" Grid.Row="1" Grid.Column="2" Style="{StaticResource Card}" Padding="14">
+                <Border xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" Grid.Row="2" Grid.Column="2" Style="{StaticResource Card}" Padding="14">
                   <StackPanel>
-                    <TextBlock Text="⟳ 雲端同步狀態" FontSize="17" FontWeight="SemiBold" Margin="0,0,0,10" />
+                    <DockPanel Margin="0,0,0,10">
+                      <Button DockPanel.Dock="Right" Content="立即同步" Command="{Binding SyncCommand}" Padding="7,4" FontSize="12" Margin="8,0,0,0"/>
+                      <TextBlock Text="⟳ 雲端同步狀態" FontSize="17" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                    </DockPanel>
                     <Border Background="{adaptive:AdaptiveBrush #F2F7FF}" CornerRadius="7" Padding="10,9" Margin="0,0,0,8">
                       <Grid>
                         <Grid.ColumnDefinitions>
@@ -402,6 +453,9 @@
         </TabItem>
         <TabItem xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:views="clr-namespace:CloudAlarmOverlay.App.Views" Header="管理者">
           <views:AdminView Visibility="{Binding Admin.IsAuthenticated,Converter={StaticResource BoolVisibility}}" />
+        </TabItem>
+        <TabItem Header="倒數日／時間" xmlns:views="clr-namespace:CloudAlarmOverlay.App.Views">
+          <views:CountdownsView DataContext="{Binding Countdowns}"/>
         </TabItem>
       </TabControl>
     </DockPanel>

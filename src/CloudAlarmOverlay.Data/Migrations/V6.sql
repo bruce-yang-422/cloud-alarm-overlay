@@ -1,0 +1,2 @@
+ALTER TABLE Countdowns ADD COLUMN Direction TEXT NOT NULL DEFAULT 'Down';
+ALTER TABLE Countdowns ADD COLUMN DisplayFormat TEXT NOT NULL DEFAULT 'Days';

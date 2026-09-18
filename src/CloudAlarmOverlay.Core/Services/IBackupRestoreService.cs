@@ -12,5 +12,5 @@ public interface IBackupRestoreService
     Task<BackupResult> RestoreAsync(string path, bool replaceAdministrator, BackupCredentials? administrator, CancellationToken cancellationToken = default);
 }
 public sealed record BackupCredentials(string Username, string Password);
-public sealed record BackupPreview(string DeviceId, string? DisplayName, int Tasks, int History, bool ContainsAdministrator);
-public sealed record BackupResult(int ImportedTasks, int SkippedTasks, int ImportedHistory);
+public sealed record BackupPreview(string DeviceId, string? DisplayName, int Tasks, int History, bool ContainsAdministrator, int Countdowns = 0);
+public sealed record BackupResult(int ImportedTasks, int SkippedTasks, int ImportedHistory, int ImportedCountdowns = 0, int SkippedCountdowns = 0);

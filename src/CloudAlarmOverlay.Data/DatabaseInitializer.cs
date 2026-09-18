@@ -5,7 +5,7 @@ namespace CloudAlarmOverlay.Data;
 
 public sealed class DatabaseInitializer(ISqliteConnectionFactory connections) : IDatabaseInitializer
 {
-    public const int CurrentSchemaVersion = 2;
+    public const int CurrentSchemaVersion = 8;
 
     public async Task InitializeAsync(CancellationToken cancellationToken = default)
     {
@@ -45,6 +45,54 @@ public sealed class DatabaseInitializer(ISqliteConnectionFactory connections) : 
             using var reader=new StreamReader(upgrade);
             await ExecuteNonQueryAsync(connection,transaction,await reader.ReadToEndAsync(cancellationToken),cancellationToken);
             await ExecuteNonQueryAsync(connection,transaction,"PRAGMA user_version = 2;",cancellationToken);
+        }
+        if(version<3)
+        {
+            using var upgrade=typeof(DatabaseInitializer).Assembly.GetManifestResourceStream("CloudAlarmOverlay.Data.Migrations.V3.sql")
+                ?? throw new InvalidOperationException("Embedded schema V3.sql was not found.");
+            using var reader=new StreamReader(upgrade);
+            await ExecuteNonQueryAsync(connection,transaction,await reader.ReadToEndAsync(cancellationToken),cancellationToken);
+            await ExecuteNonQueryAsync(connection,transaction,"PRAGMA user_version = 3;",cancellationToken);
+        }
+        if(version<4)
+        {
+            using var upgrade=typeof(DatabaseInitializer).Assembly.GetManifestResourceStream("CloudAlarmOverlay.Data.Migrations.V4.sql")
+                ?? throw new InvalidOperationException("Embedded schema V4.sql was not found.");
+            using var reader=new StreamReader(upgrade);
+            await ExecuteNonQueryAsync(connection,transaction,await reader.ReadToEndAsync(cancellationToken),cancellationToken);
+            await ExecuteNonQueryAsync(connection,transaction,"PRAGMA user_version = 4;",cancellationToken);
+        }
+        if(version<5)
+        {
+            using var upgrade=typeof(DatabaseInitializer).Assembly.GetManifestResourceStream("CloudAlarmOverlay.Data.Migrations.V5.sql")
+                ?? throw new InvalidOperationException("Embedded schema V5.sql was not found.");
+            using var reader=new StreamReader(upgrade);
+            await ExecuteNonQueryAsync(connection,transaction,await reader.ReadToEndAsync(cancellationToken),cancellationToken);
+            await ExecuteNonQueryAsync(connection,transaction,"PRAGMA user_version = 5;",cancellationToken);
+        }
+        if(version<6)
+        {
+            using var upgrade=typeof(DatabaseInitializer).Assembly.GetManifestResourceStream("CloudAlarmOverlay.Data.Migrations.V6.sql")
+                ?? throw new InvalidOperationException("Embedded schema V6.sql was not found.");
+            using var reader=new StreamReader(upgrade);
+            await ExecuteNonQueryAsync(connection,transaction,await reader.ReadToEndAsync(cancellationToken),cancellationToken);
+            await ExecuteNonQueryAsync(connection,transaction,"PRAGMA user_version = 6;",cancellationToken);
+        }
+        if(version<7)
+        {
+            using var upgrade=typeof(DatabaseInitializer).Assembly.GetManifestResourceStream("CloudAlarmOverlay.Data.Migrations.V7.sql")
+                ?? throw new InvalidOperationException("Embedded schema V7.sql was not found.");
+            using var reader=new StreamReader(upgrade);
+            await ExecuteNonQueryAsync(connection,transaction,await reader.ReadToEndAsync(cancellationToken),cancellationToken);
+            await ExecuteNonQueryAsync(connection,transaction,"PRAGMA user_version = 7;",cancellationToken);
+        }
+        if(version<8)
+        {
+            using var upgrade=typeof(DatabaseInitializer).Assembly.GetManifestResourceStream("CloudAlarmOverlay.Data.Migrations.V8.sql")
+                ?? throw new InvalidOperationException("Embedded schema V8.sql was not found.");
+            using var reader=new StreamReader(upgrade);
+            await ExecuteNonQueryAsync(connection,transaction,await reader.ReadToEndAsync(cancellationToken),cancellationToken);
+            await ExecuteNonQueryAsync(connection,transaction,"PRAGMA user_version = 8;",cancellationToken);
         }
         // Fail before displaying the main window if an expected table/column is missing.
         using (var validation = connection.CreateCommand())
@@ -96,5 +144,6 @@ public sealed class DatabaseInitializer(ISqliteConnectionFactory connections) : 
         SELECT Id, Time, Status, Message, RecordCount, Source, LastSeenAt, RepeatCount, EventKind FROM SyncLogs LIMIT 0;
         SELECT Id, UserId, Action, OldValue, NewValue, CreatedAt FROM AuditLogs LIMIT 0;
         SELECT Id, Time, EventType, Message FROM SystemEvents LIMIT 0;
+        SELECT Id, Title, TargetAt, Mode, IsPinned, CreatedAt, IsTop, Category, Repeat, ReminderDays, ReminderMinutes, Notes, CompletedAt, ReminderChangedAt, Direction, DisplayFormat, Recurrence, SkipOnHoliday FROM Countdowns LIMIT 0;
         """;
 }

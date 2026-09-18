@@ -28,13 +28,14 @@ public partial class BackupMaintenanceView : UserControl
         {
             vm.RequireAdministrator();
             var preview=await vm.Backups.InspectAsync(file.FileName);
-            var text=$"還原裝置：{preview.DeviceId}／{preview.DisplayName}\n任務 {preview.Tasks} 筆，歷史 {preview.History} 筆。\n裝置身分及未鎖定的個人設定會覆蓋，重複任務與歷史保留本機版本。";
+            var text=$"還原裝置：{preview.DeviceId}／{preview.DisplayName}\n任務 {preview.Tasks} 筆，歷史 {preview.History} 筆，倒數 {preview.Countdowns} 筆。\n裝置身分及未鎖定的個人設定會覆蓋，重複任務、歷史與倒數保留本機版本。";
+            text+="\n首頁釘選最多 2 項，超出名額的倒數仍會匯入，但不釘選到首頁。";
             if(preview.ContainsAdministrator)text+="\n此備份含管理者帳密，會取代目前帳密；請先在此頁填入目前帳密驗證。";
             if(MessageBox.Show(text,"確認還原備份",MessageBoxButton.OKCancel,MessageBoxImage.Question)!=MessageBoxResult.OK)return;
             vm.RequireAdministrator();
             var result=await vm.Backups.RestoreAsync(file.FileName,preview.ContainsAdministrator,preview.ContainsAdministrator?Credentials():null);
             await vm.InitializeAsync();
-            vm.Message=$"已匯入 {result.ImportedTasks} 筆任務，略過 {result.SkippedTasks} 筆重複，匯入 {result.ImportedHistory} 筆歷史。請重新啟動以更新全部畫面。";
+            vm.Message=$"已匯入 {result.ImportedTasks} 筆任務，略過 {result.SkippedTasks} 筆重複，匯入 {result.ImportedHistory} 筆歷史、{result.ImportedCountdowns} 筆倒數（略過 {result.SkippedCountdowns} 筆重複倒數）。請重新啟動以更新全部畫面。";
         }
         catch(Exception ex){vm.Message="還原失敗："+ex.Message;}
         finally {AdminPassword.Clear();vm.Busy=false;IsEnabled=true;}

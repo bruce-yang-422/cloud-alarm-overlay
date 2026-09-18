@@ -11,7 +11,8 @@ public sealed class BackupImportWindow : Window
         Resources.MergedDictionaries.Add(new ResourceDictionary{Source=new Uri("/CloudAlarmOverlay.App;component/Styles/LightTheme.xaml",UriKind.Relative)});
         var panel=new StackPanel{Margin=new Thickness(24)};Content=panel;
         panel.Children.Add(new TextBlock{Text=$"{preview.DeviceId} · {preview.DisplayName}",FontSize=20,TextWrapping=TextWrapping.Wrap});
-        panel.Children.Add(new TextBlock{Text=$"任務 {preview.Tasks} 筆，歷史 {preview.History} 筆。\n個人設定及身分會還原，重複任務保留本機版本。",TextWrapping=TextWrapping.Wrap,Margin=new Thickness(0,12,0,12)});
+        panel.Children.Add(new TextBlock{Text=$"任務 {preview.Tasks} 筆，歷史 {preview.History} 筆，倒數 {preview.Countdowns} 筆。\n個人設定及身分會還原，重複任務與倒數保留本機版本。",TextWrapping=TextWrapping.Wrap,Margin=new Thickness(0,12,0,12)});
+        panel.Children.Add(new TextBlock{Text="首頁釘選最多 2 項，還原後超出名額的倒數仍會匯入，但不釘選到首頁。",TextWrapping=TextWrapping.Wrap});
         var name=new TextBox{Text="admin"};var password=new PasswordBox{Padding=new Thickness(10)};
         if(preview.ContainsAdministrator)
         {

@@ -1,4 +1,4 @@
-using System.Globalization;
+﻿using System.Globalization;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CloudAlarmOverlay.Core.Models;
@@ -16,7 +16,7 @@ public partial class TaskEditorViewModel : ObservableObject
     protected override void OnPropertyChanged(System.ComponentModel.PropertyChangedEventArgs e)
     {
         base.OnPropertyChanged(e);
-        if(ready && e.PropertyName is nameof(Date) or nameof(SelectedHour) or nameof(SelectedMinute) or nameof(Repeat) or nameof(RepeatDays) or nameof(SkipOnHoliday) or nameof(Enabled))
+        if(ready && e.PropertyName is nameof(Date) or nameof(SelectedHour) or nameof(SelectedMinute) or nameof(Repeat) or nameof(RepeatDays) or nameof(SkipOnHoliday) or nameof(Enabled) or nameof(LunarMonth) or nameof(LunarDate) or nameof(IncludeLeapMonth) or nameof(AnnualMonth) or nameof(AnnualDay))
             _=RefreshNextReminderAsync();
     }
     public async Task RefreshNextReminderAsync()
@@ -49,11 +49,21 @@ public partial class TaskEditorViewModel : ObservableObject
     [ObservableProperty] private string repeatDays="1,2,3,4,5";
     [ObservableProperty] private string error="";
     public string[] Levels {get;}=[AlarmLevels.Low,AlarmLevels.Mid,AlarmLevels.High];
-    public string[] Repeats {get;}=["不重複","每天","每個工作日","每週","每月","農曆"];
+    public string[] Repeats {get;}=["不重複","每天","每個工作日","每週","每月","每年（國曆）","農曆","每年（農曆）"];
     public string ScheduleHeading=>Repeat=="不重複"?"提醒時間":"開始日期與提醒時間";
     public bool RequiresDays=>Repeat is "每週" or "每月" or "農曆";
     public bool IsWeekly=>Repeat=="每週";
     public bool IsMonthly=>Repeat=="每月";
+    public bool IsAnnual=>Repeat=="每年（國曆）";
+    public int[] AnnualMonths {get;}=Enumerable.Range(1,12).ToArray();
+    [ObservableProperty] private int annualMonth=1;
+    [ObservableProperty] private int annualDay=1;
+    public bool IsLunarDate=>Repeat is "每年（農曆）" or "指定農曆月日";
+    public int[] LunarMonths {get;}=Enumerable.Range(1,12).ToArray();
+    public int[] LunarDates {get;}=Enumerable.Range(1,30).ToArray();
+    [ObservableProperty] private int lunarMonth=1;
+    [ObservableProperty] private int lunarDate=1;
+    [ObservableProperty] private bool includeLeapMonth;
     public bool IsLunar=>Repeat=="農曆";
     public DayChoice[] Weekdays {get;}=Enumerable.Range(1,7).Select(i=>new DayChoice(i,new[]{"週一","週二","週三","週四","週五","週六","週日"}[i-1])).ToArray();
     public DayChoice[] LunarDays {get;}=Enumerable.Range(1,30).Select(i=>new DayChoice(i,LunarLabel(i))).ToArray();
@@ -79,9 +89,10 @@ public partial class TaskEditorViewModel : ObservableObject
     }
     partial void OnRepeatChanged(string value)
     {
+        if(IsAnnual){AnnualMonth=(Date??DateTime.Today).Month;AnnualDay=(Date??DateTime.Today).Day;}
         RepeatDays=value=="每月"?(Date??DateTime.Today).Day.ToString(CultureInfo.InvariantCulture):value=="農曆"?"1,15":"1,2,3,4,5";
         OnRepeatDaysChanged(RepeatDays);
-        OnPropertyChanged(nameof(ScheduleHeading));OnPropertyChanged(nameof(RequiresDays));OnPropertyChanged(nameof(IsWeekly));OnPropertyChanged(nameof(IsMonthly));OnPropertyChanged(nameof(IsLunar));
+        OnPropertyChanged(nameof(ScheduleHeading));OnPropertyChanged(nameof(RequiresDays));OnPropertyChanged(nameof(IsWeekly));OnPropertyChanged(nameof(IsMonthly));OnPropertyChanged(nameof(IsLunar));OnPropertyChanged(nameof(IsLunarDate));OnPropertyChanged(nameof(IsAnnual));
     }
     public TaskEditorViewModel(ITaskService service,AlarmTask? task,bool copy,ITaskSchedulingService? scheduling=null)
     {
@@ -101,10 +112,12 @@ public partial class TaskEditorViewModel : ObservableObject
         SelectedHour=original.ScheduledAt.Hour;SelectedMinute=original.ScheduledAt.Minute;Level=original.Level;Enabled=original.Enabled;SkipOnHoliday=original.SkipOnHoliday;
         if(Level==AlarmLevels.Max)Level=AlarmLevels.High;
         var parts=original.Recurrence.Split(':');RepeatDays=parts.Length>1?parts[1]:"1,2,3,4,5";
-        Repeat=parts[0] switch{"Daily"=>"每天","Weekly"=>parts[1]=="1,2,3,4,5"?"每個工作日":"每週","Monthly"=>"每月","LunarDay"=>"農曆",_=>"不重複"};
+        Repeat=parts[0] switch{"Daily"=>"每天","Weekly"=>parts[1]=="1,2,3,4,5"?"每個工作日":"每週","Monthly"=>parts.Length==3&&!parts[2].Contains(',')?"每年（國曆）":"每月","LunarDay"=>"農曆","LunarDate"=>"每年（農曆）",_=>"不重複"};
         if(parts.Length>1)RepeatDays=parts[1];
         if(parts[0]=="Monthly"&&parts.Length==3)
             foreach(var month in Months)month.IsSelected=parts[2].Split(',').Contains(month.Value.ToString(CultureInfo.InvariantCulture));
+        if(IsAnnual){AnnualMonth=int.Parse(parts[2]);AnnualDay=int.Parse(parts[1]);}
+        if(parts[0]=="LunarDate"){LunarMonth=int.Parse(parts[1]);LunarDate=int.Parse(parts[2]);IncludeLeapMonth=parts.Length==4&&parts[3]=="Both";}
         ready=true;
         _=RefreshNextReminderAsync();
     }
@@ -115,10 +128,14 @@ public partial class TaskEditorViewModel : ObservableObject
         if(SelectedHour is <0 or >23 || SelectedMinute is <0 or >59)throw new ArgumentException("請選擇有效的提醒時間。");
         var months=Months.Where(m=>m.IsSelected).Select(m=>m.Value).ToArray();
         if(IsMonthly&&months.Length==0)throw new ArgumentException("請至少選擇一個月份。");
+        if(IsAnnual && (AnnualMonth is <1 or >12 || AnnualDay<1 || AnnualDay>DateTime.DaysInMonth(2000,AnnualMonth)))
+            throw new ArgumentException("請選擇有效的國曆月日；2 月 29 日只在閏年提醒。");
         var recurrence=Repeat switch
         {
             "每天"=>"Daily", "每個工作日"=>"Weekly:1,2,3,4,5", "每週"=>"Weekly:"+RepeatDays.Replace(" ",""),
             "每月"=>"Monthly:"+RepeatDays.Trim()+(months.Length==12?"":":"+string.Join(",",months)),
+            "每年（國曆）"=>$"Monthly:{AnnualDay}:{AnnualMonth}",
+            "每年（農曆）" or "指定農曆月日"=>$"LunarDate:{LunarMonth}:{LunarDate}:"+(IncludeLeapMonth?"Both":"Regular"),
             "農曆"=>"LunarDay:"+RepeatDays.Replace(" ",""), _=>"None"
         };
         CloudAlarmOverlay.Core.Recurrence.RecurrenceRule.Validate(recurrence);
