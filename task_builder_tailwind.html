@@ -43,11 +43,19 @@
     ::-webkit-scrollbar-track { background: #f1f5f9; }
     ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 9999px; }
     ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
-    .clock-grid { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 6px; }
-    .clock-choice { min-height: 36px; padding: 6px; border: 1px solid #cbd5e1; border-radius: 8px; background: white; color: #334155; font-size: 12px; font-variant-numeric: tabular-nums; cursor: pointer; }
+    .clock-choice { min-height: 32px; padding: 5px; border: 1px solid #e2e8f0; border-radius: 7px; background: white; color: #334155; font-size: 12px; font-variant-numeric: tabular-nums; cursor: pointer; }
     .clock-choice:hover { background: #ecfdf5; border-color: #059669; }
     .clock-choice[aria-pressed="true"] { background: #047857; border-color: #047857; color: white; font-weight: 700; }
     .clock-choice:focus-visible { outline: 2px solid #059669; outline-offset: 2px; }
+    .clock-grid { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 5px; }
+    .clock-popover { position: fixed; inset: auto; margin: 0; width: 304px; max-width: calc(100vw - 16px); padding: 14px; border: 1px solid #cbd5e1; border-radius: 14px; background: white; color: #0f172a; box-shadow: 0 12px 36px #0f172a26; overflow-y: auto; }
+    .clock-popover::backdrop { background: transparent; }
+    .clock-popover > * + * { margin-top: 12px; }
+    .clock-input-wrap { position: relative; }
+    .clock-input-wrap #field-clock { padding-right: 32px; }
+    .clock-toggle { position: absolute; right: 1px; top: 1px; bottom: 1px; width: 30px; border-radius: 0 7px 7px 0; color: #047857; cursor: pointer; }
+    .clock-toggle:hover, .clock-toggle[aria-expanded="true"] { background: #d1fae5; }
+    .clock-toggle:focus-visible { outline: 2px solid #059669; }
   </style>
 </head>
 <body class="bg-slate-50 text-slate-900 font-sans min-h-screen antialiased">
@@ -156,7 +164,7 @@
             <!-- Row 1: Id, Date, Clock directly in 3 columns without nested clipping -->
             <div class="grid grid-cols-12 gap-2.5">
               <!-- Id: 3 cols is plenty for TB-001 -->
-              <div class="col-span-3">
+              <div class="col-span-12 sm:col-span-3">
                 <label class="block text-xs font-semibold text-slate-700 mb-1.5">編號 <span class="font-mono text-[10px] text-slate-400">Id</span></label>
                 <input type="text" id="field-id" required
                   class="w-full px-2 py-2 text-xs font-mono font-medium rounded-lg border border-slate-200 bg-slate-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all text-center"
@@ -164,53 +172,28 @@
               </div>
 
               <!-- Date: 5 cols gives full room for YYYY/MM/DD + calendar icon -->
-              <div class="col-span-5">
+              <div class="col-span-7 sm:col-span-5">
                 <label class="block text-xs font-semibold text-slate-700 mb-1.5"><span id="date-label">提醒日期</span> <span class="font-mono text-[10px] text-slate-400">Date</span></label>
                 <input type="date" id="field-date" required
                   class="w-full px-2.5 py-2 text-xs font-mono rounded-lg border border-slate-200 bg-slate-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all">
               </div>
 
               <!-- Time: direct 24-hour entry, keyboard adjustment and shared mouse picker -->
-              <div class="col-span-4">
+              <div class="col-span-5 sm:col-span-4">
                 <label for="field-clock" class="block text-xs font-semibold text-slate-700 mb-1.5">時間 <span class="font-mono text-[10px] text-slate-400">Time</span></label>
-                <input type="text" id="field-clock" required inputmode="numeric" autocomplete="off" spellcheck="false"
-                  placeholder="HH:mm" aria-describedby="clock-input-help clock-input-error"
-                  oninput="syncClockPicker()" onblur="normalizeClockInput()" onkeydown="handleClockKeydown(event)"
-                  class="w-full px-2 py-2 text-xs font-mono rounded-lg border border-slate-200 bg-slate-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all">
+                <div class="clock-input-wrap">
+                  <input type="text" id="field-clock" required inputmode="numeric" autocomplete="off" spellcheck="false"
+                    placeholder="HH:mm" aria-describedby="clock-input-error"
+                    oninput="syncClockPicker()" onblur="normalizeClockInput()" onkeydown="handleClockKeydown(event)"
+                    class="w-full px-2 py-2 text-xs font-mono rounded-lg border border-slate-200 bg-slate-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all">
+                  <button type="button" id="clock-picker" class="clock-toggle" popovertarget="clock-popover"
+                    aria-label="選擇時間" aria-haspopup="dialog" aria-controls="clock-popover" aria-expanded="false" title="選擇時間">▾</button>
+                </div>
               </div>
             </div>
 
-            <p id="clock-input-help" class="text-xs text-slate-500">輸入 14:30 或 1430；← → 切換時／分，↑ ↓ 調整，Shift＋↑ ↓ 快調 5 格，Enter 確認。也可展開下方直接點選。</p>
             <p id="clock-input-error" class="text-xs text-rose-600" hidden>請輸入有效的 24 小時時間，例如 09:30 或 0930（00:00～23:59）。</p>
-
-            <details id="clock-picker" class="rounded-xl border border-emerald-200 bg-emerald-50/40" ontoggle="syncClockPicker()">
-              <summary class="cursor-pointer px-3 py-2.5 text-xs font-semibold text-emerald-800 select-none">
-                快速選時 <span id="clock-selection" class="font-mono ml-2" aria-live="polite">09:00</span>
-              </summary>
-              <div class="px-3 pb-3 space-y-3">
-                <p class="text-xs text-slate-500">採 24 小時制，點選立即套用；只調整時間，不變更日期。</p>
-                <div role="group" aria-labelledby="clock-hours-label">
-                  <p id="clock-hours-label" class="text-xs font-semibold text-slate-700 mb-2">小時</p>
-                  <div id="clock-hours" class="clock-grid"></div>
-                </div>
-                <div role="group" aria-labelledby="clock-minutes-label">
-                  <p id="clock-minutes-label" class="text-xs font-semibold text-slate-700 mb-2">分鐘（每 5 分鐘）</p>
-                  <div id="clock-minutes" class="clock-grid"></div>
-                </div>
-                <div role="group" aria-label="微調分鐘" class="grid grid-cols-4 gap-1.5">
-                  <button type="button" class="clock-choice" onclick="adjustClock(-5)">−5 分</button>
-                  <button type="button" class="clock-choice" onclick="adjustClock(-1)">−1 分</button>
-                  <button type="button" class="clock-choice" onclick="adjustClock(1)">＋1 分</button>
-                  <button type="button" class="clock-choice" onclick="adjustClock(5)">＋5 分</button>
-                </div>
-                <div role="group" aria-labelledby="clock-presets-label">
-                  <p id="clock-presets-label" class="text-xs font-semibold text-slate-700 mb-2">常用時間</p>
-                  <div id="clock-presets" class="grid grid-cols-3 gap-1.5"></div>
-                </div>
-              </div>
-            </details>
-
-            <p id="recurrence-date-hint" class="text-xs text-slate-500">不重複：提醒日期與時間不可早於現在。</p>
+            <p id="recurrence-date-hint" class="text-xs text-slate-500" hidden>不重複：提醒日期與時間不可早於現在。</p>
 
             <!-- Row 2: Title -->
             <div>
@@ -975,6 +958,34 @@
     </div>
   </div>
 
+  <div id="clock-popover" class="clock-popover" popover="auto" role="dialog" aria-labelledby="clock-popover-title">
+    <div class="flex items-center justify-between">
+      <span id="clock-popover-title" class="text-xs font-semibold text-slate-600">選擇時間</span>
+      <span id="clock-draft-time" class="font-mono text-base font-semibold text-emerald-700" aria-live="polite"></span>
+    </div>
+    <div role="group" aria-labelledby="clock-presets-label">
+      <p id="clock-presets-label" class="text-xs text-slate-500 mb-1.5">接下來</p>
+      <div id="clock-presets" class="grid grid-cols-3 gap-1.5"></div>
+    </div>
+    <div role="group" aria-labelledby="clock-hours-label">
+      <p id="clock-hours-label" class="text-xs text-slate-500 mb-1.5">小時</p>
+      <div id="clock-hours" class="clock-grid"></div>
+    </div>
+    <div role="group" aria-labelledby="clock-minutes-label">
+      <p id="clock-minutes-label" class="text-xs text-slate-500 mb-1.5">分鐘 <span class="text-[10px]">· 點選即套用</span></p>
+      <div id="clock-minutes" class="clock-grid"></div>
+    </div>
+    <div class="flex items-center gap-1.5" role="group" aria-label="精細調整時間">
+      <button type="button" class="clock-choice flex-1" onclick="adjustClockDraft(-1)">−1 分</button>
+      <button type="button" class="clock-choice flex-1" onclick="adjustClockDraft(1)">＋1 分</button>
+      <button type="button" class="flex-1 rounded-lg bg-emerald-700 py-2 text-xs font-semibold text-white hover:bg-emerald-800" onclick="applyClockPopover()">套用</button>
+    </div>
+    <details class="text-xs text-slate-500" ontoggle="positionClockPopover()">
+      <summary class="cursor-pointer">操作說明</summary>
+      <p id="clock-input-help" class="mt-2 leading-relaxed">點小時再點分鐘即可套用。精細調整後按「套用」。點外面或 Esc 取消。也可輸入 14:30 或 1430；← → 切換時／分，↑ ↓ 調整，Shift 快調 5 格，Enter 確認。跨午夜的建議會將今天的日期改為明天。</p>
+    </details>
+  </div>
+
   <script>
     const HEADERS_EN = [
       "Id", "Time", "Title", "Level", "Enabled", "Description",
@@ -1034,29 +1045,152 @@
       return `${h}:${m}`;
     }
 
+    let clockDraft = { hour: 0, minute: 0 };
+
     function initClockPicker() {
-      const addChoice = (container, label, value, action) => {
+      ['hour', 'minute'].forEach(part => {
+        const container = document.getElementById(part === 'hour' ? 'clock-hours' : 'clock-minutes');
+        const count = part === 'hour' ? 24 : 60;
+        const step = part === 'hour' ? 1 : 5;
+        for (let value = 0; value < count; value += step) {
+          const button = document.createElement('button');
+          button.type = 'button';
+          button.className = 'clock-choice';
+          button.dataset.part = part;
+          button.dataset.clockValue = String(value);
+          button.textContent = String(value).padStart(2, '0');
+          button.setAttribute('aria-label', `${value} ${part === 'hour' ? '時' : '分'}`);
+          button.addEventListener('click', () => {
+            clockDraft[part] = value;
+            renderClockDraft();
+            if (part === 'minute') applyClockPopover();
+          });
+          container.appendChild(button);
+        }
+      });
+      const popover = document.getElementById('clock-popover');
+      popover.addEventListener('beforetoggle', event => {
+        document.getElementById('clock-picker').setAttribute('aria-expanded', String(event.newState === 'open'));
+        if (event.newState === 'open') {
+          const [hour, minute] = getClockParts().map(Number);
+          clockDraft = { hour, minute };
+          renderClockDraft();
+          syncClockPicker();
+        }
+      });
+      popover.addEventListener('toggle', event => {
+        if (event.newState !== 'open') return;
+        positionClockPopover();
+        document.querySelector('#clock-hours button[aria-pressed="true"]').focus({ preventScroll: true });
+      });
+      window.addEventListener('resize', positionClockPopover);
+      window.addEventListener('scroll', positionClockPopover, true);
+      window.visualViewport?.addEventListener('resize', positionClockPopover);
+      window.visualViewport?.addEventListener('scroll', positionClockPopover);
+      document.addEventListener('visibilitychange', () => { if (!document.hidden) syncClockPicker(); });
+      setInterval(() => {
+        if (!document.hidden && !popover.matches(':popover-open')) refreshClockPresets();
+      }, 30000);
+      syncClockPicker();
+    }
+
+    function positionClockPopover() {
+      const popover = document.getElementById('clock-popover');
+      if (!popover.matches(':popover-open')) return;
+      const viewport = window.visualViewport;
+      const left = viewport?.offsetLeft || 0;
+      const top = viewport?.offsetTop || 0;
+      const width = viewport?.width || window.innerWidth;
+      const height = viewport?.height || window.innerHeight;
+      const anchor = document.getElementById('field-clock').getBoundingClientRect();
+      popover.style.maxWidth = `${width - 16}px`;
+      popover.style.maxHeight = `${height - 16}px`;
+      const bounds = popover.getBoundingClientRect();
+      const below = anchor.bottom + 6;
+      const above = anchor.top - bounds.height - 6;
+      const y = below + bounds.height <= top + height - 8 ? below : above >= top + 8 ? above : top + 8;
+      popover.style.left = `${Math.max(left + 8, Math.min(anchor.right - bounds.width, left + width - bounds.width - 8))}px`;
+      popover.style.top = `${y}px`;
+    }
+
+    function renderClockDraft() {
+      document.getElementById('clock-draft-time').textContent = `${String(clockDraft.hour).padStart(2, '0')}:${String(clockDraft.minute).padStart(2, '0')}`;
+      document.querySelectorAll('#clock-hours button, #clock-minutes button').forEach(button => {
+        button.setAttribute('aria-pressed', String(Number(button.dataset.clockValue) === clockDraft[button.dataset.part]));
+      });
+    }
+
+    function adjustClockDraft(delta) {
+      const total = (clockDraft.hour * 60 + clockDraft.minute + delta + 1440) % 1440;
+      clockDraft = { hour: Math.floor(total / 60), minute: total % 60 };
+      renderClockDraft();
+    }
+
+    function closeClockPopover() {
+      const popover = document.getElementById('clock-popover');
+      if (popover.matches(':popover-open')) popover.hidePopover();
+      document.getElementById('clock-picker').focus({ preventScroll: true });
+    }
+
+    function applyClockPopover() {
+      setClock(`${String(clockDraft.hour).padStart(2, '0')}:${String(clockDraft.minute).padStart(2, '0')}`);
+      closeClockPopover();
+    }
+
+    function getSuggestedClockTimes(now = new Date()) {
+      const first = new Date(now);
+      first.setSeconds(0, 0);
+      first.setMinutes(Math.floor(first.getMinutes() / 5) * 5 + 5);
+      const second = new Date(first);
+      second.setMinutes(second.getMinutes() + 5);
+      const times = [first, second];
+      while (times.length < 6) {
+        const next = new Date(times[times.length - 1]);
+        next.setMinutes(Math.floor(next.getMinutes() / 15) * 15 + 15);
+        times.push(next);
+      }
+      return times;
+    }
+
+    function clockDateString(date) {
+      return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+    }
+
+    function clockTimeString(date) {
+      return `${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`;
+    }
+
+    function setDefaultClock() {
+      const next = getSuggestedClockTimes()[0];
+      document.getElementById('field-date').value = clockDateString(next);
+      document.getElementById('field-clock').value = clockTimeString(next);
+    }
+
+    function refreshClockPresets() {
+      const container = document.getElementById('clock-presets');
+      const now = new Date();
+      const today = clockDateString(now);
+      const times = getSuggestedClockTimes(now);
+      const key = `${today}:${times[0].getTime()}`;
+      if (container.dataset.suggestionKey === key) return;
+      container.dataset.suggestionKey = key;
+      container.replaceChildren();
+      times.slice(0, 3).forEach(date => {
+        const value = clockTimeString(date);
+        const day = clockDateString(date);
         const button = document.createElement('button');
         button.type = 'button';
         button.className = 'clock-choice';
-        button.textContent = label;
+        button.textContent = `${day > today ? '明天 ' : ''}${value}`;
         button.dataset.clockValue = value;
-        button.setAttribute('aria-label', container === 'clock-hours' ? `${label} 時` : container === 'clock-minutes' ? `${label} 分` : label);
-        button.addEventListener('click', action);
-        document.getElementById(container).appendChild(button);
-      };
-      for (let hour = 0; hour < 24; hour++) {
-        const value = String(hour).padStart(2, '0');
-        addChoice('clock-hours', value, value, () => setClock(`${value}:${getClockParts()[1]}`));
-      }
-      for (let minute = 0; minute < 60; minute += 5) {
-        const value = String(minute).padStart(2, '0');
-        addChoice('clock-minutes', value, value, () => setClock(`${getClockParts()[0]}:${value}`));
-      }
-      ['08:30', '09:00', '12:00', '13:30', '17:00', '18:00'].forEach(value => {
-        addChoice('clock-presets', value, value, () => setClock(value));
+        button.addEventListener('click', () => {
+          const input = document.getElementById('field-date');
+          if (input.value <= today && day > today) input.value = day;
+          setClock(value);
+          closeClockPopover();
+        });
+        container.appendChild(button);
       });
-      syncClockPicker();
     }
 
     function parseClockInput(value) {
@@ -1103,7 +1237,7 @@
     }
 
     function getClockParts() {
-      return (parseClockInput(document.getElementById('field-clock').value) || '09:00').split(':');
+      return (parseClockInput(document.getElementById('field-clock').value) || clockTimeString(getSuggestedClockTimes()[0])).split(':');
     }
 
     function setClock(value) {
@@ -1121,6 +1255,7 @@
     }
 
     function syncClockPicker() {
+      refreshClockPresets();
       const input = document.getElementById('field-clock');
       const value = parseClockInput(input.value) || '';
       const invalid = input.value !== '' && !value;
@@ -1128,9 +1263,7 @@
       input.setAttribute('aria-invalid', String(invalid));
       document.getElementById('clock-input-error').hidden = !invalid;
       markFieldError('field-clock', invalid);
-      const [hour, minute] = value.split(':');
-      document.getElementById('clock-selection').textContent = value || (invalid ? '請檢查時間' : '尚未選擇');
-      [['clock-hours', hour], ['clock-minutes', minute], ['clock-presets', value]].forEach(([id, selected]) => {
+      [['clock-presets', value]].forEach(([id, selected]) => {
         document.querySelectorAll(`#${id} button`).forEach(button => {
           button.setAttribute('aria-pressed', String(button.dataset.clockValue === selected));
         });
@@ -1138,8 +1271,7 @@
     }
 
     window.addEventListener('DOMContentLoaded', () => {
-      document.getElementById('field-date').value = getTodayString();
-      document.getElementById('field-clock').value = "09:00";
+      setDefaultClock();
       initClockPicker();
       suggestNextId();
       updateMergedEmptyState();
@@ -1170,6 +1302,7 @@
         if (type === 'LUNAR') selectLunarPreset([1, 15]);
       }
       document.getElementById('date-label').textContent = type === 'ONCE' ? '提醒日期' : '開始日期';
+      document.getElementById('recurrence-date-hint').hidden = type === 'ONCE';
       document.getElementById('recurrence-date-hint').textContent = type === 'ONCE'
         ? '不重複：提醒日期與時間不可早於現在。'
         : '重複提醒：日期作為起算日，可早於今天；程式依規則安排下一次提醒。';
@@ -1344,7 +1477,7 @@
       if (!validateForm(editIdx)) return;
 
       const selDate = document.getElementById('field-date').value;
-      const selClock = document.getElementById('field-clock').value || "09:00";
+      const selClock = document.getElementById('field-clock').value;
       const formattedTime = `${selDate} ${selClock}`;
 
       const item = {
@@ -1422,8 +1555,7 @@
       document.getElementById('form-mode-title').innerText = "新增排程任務";
       document.getElementById('btn-submit-label').innerText = "加入到右側清單";
       document.getElementById('btn-cancel-edit').classList.add('hidden');
-      document.getElementById('field-date').value = getTodayString();
-      document.getElementById('field-clock').value = "09:00";
+      setDefaultClock();
       syncClockPicker();
       document.querySelector('input[name="level"][value="一般提醒"]').checked = true;
       document.querySelector('input[name="rec_type"][value="ONCE"]').checked = true;
