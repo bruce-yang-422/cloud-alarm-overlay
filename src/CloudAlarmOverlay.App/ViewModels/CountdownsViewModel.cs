@@ -10,7 +10,7 @@ using CloudAlarmOverlay.Core.Services;
 
 namespace CloudAlarmOverlay.App.ViewModels;
 
-public partial class CountdownsViewModel(ICountdownRepository repository, TimeProvider clock, IUserDialogs dialogs, ChangeSignal changes, ILunarCalendarRepository? lunar = null, IHolidayRepository? holidays = null) : ObservableObject
+public partial class CountdownsViewModel(ICountdownRepository repository, TimeProvider clock, IUserDialogs dialogs, ChangeSignal changes, IHolidayRepository? holidays = null) : ObservableObject
 {
     private bool CanShareImage(CountdownRow? row)=>!IsBusy && row is not null && row.CanShare;
     [RelayCommand(CanExecute=nameof(CanShareImage))] private async Task ShareImageAsync(CountdownRow row)
@@ -20,7 +20,6 @@ public partial class CountdownsViewModel(ICountdownRepository repository, TimePr
     }
     private readonly SemaphoreSlim gate = new(1, 1);
     private CountdownItem? editing;
-    private IReadOnlyDictionary<DateOnly,int> lunarCache = new Dictionary<DateOnly,int>();
     private IReadOnlyList<Holiday> holidayCache = [];
     public ObservableCollection<CountdownRow> Items { get; } = [];
     public ObservableCollection<CountdownRow> Pinned { get; } = [];
@@ -193,14 +192,13 @@ public partial class CountdownsViewModel(ICountdownRepository repository, TimePr
 
     private async Task ReloadAsync()
     {
-        lunarCache=lunar is null?new Dictionary<DateOnly,int>():(await lunar.GetAllAsync()).ToDictionary(e=>e.Date,e=>e.LunarDay);
         holidayCache=holidays is null?[]:await holidays.GetAllAsync();
         var saved = await repository.GetAllAsync();
         Items.Clear(); Pinned.Clear();
         var now = clock.GetLocalNow().DateTime;
         foreach (var item in saved.OrderBy(i => i.TargetAt).ThenBy(i => i.Title).ThenBy(i => i.Id))
         {
-            var row = new CountdownRow(item); row.Update(now,lunarCache,holidayCache);
+            var row = new CountdownRow(item); row.Update(now,null,holidayCache);
             Items.Add(row);
             if (item.IsPinned) Pinned.Add(row);
         }
@@ -212,7 +210,7 @@ public partial class CountdownsViewModel(ICountdownRepository repository, TimePr
     public void Update(DateTime now)
     {
         dashboardNow = now;
-        foreach (var row in Items) row.Update(now,lunarCache,holidayCache);
+        foreach (var row in Items) row.Update(now,null,holidayCache);
         UpdateDashboard();
     }
 
@@ -281,7 +279,7 @@ public partial class CountdownsViewModel(ICountdownRepository repository, TimePr
         };
         item.Validate();
         var row = new CountdownRow(item);
-        row.Update(now, lunarCache, holidayCache);
+        row.Update(now, null, holidayCache);
         return row;
     }
 
@@ -427,7 +425,7 @@ public partial class CountdownRow(CountdownItem item) : ObservableObject
         DisplayDate = Item.DisplayTarget(now,lunarDays,holidays);
         Remaining = Item.Remaining(now,lunarDays,holidays);
         NextReminderLabel = Item.IsCompleted ? "已完成，提醒已停止" : Item.ReminderDays < 0 ? "" :
-            Item.NextReminder(now,lunarDays,holidays) is {} next ? $"下次提醒：{next:yyyy/MM/dd HH:mm}" : "沒有待發提醒，請檢查開始日期、農曆資料與規則";
+            Item.NextReminder(now,lunarDays,holidays) is {} next ? $"下次提醒：{next:yyyy/MM/dd HH:mm}" : "沒有待發提醒，請檢查開始日期、曆法支援範圍與規則";
         var at = Item.Mode == "Days" ? now.Date : now;
         var start = Item.Mode == "Days" ? Item.CreatedAt.Date : Item.CreatedAt;
         IsScheduleUnavailable = !Item.IsCompleted && !Item.IsCountUp && Item.EffectiveRecurrence!="None" && Item.NextTarget(at,lunarDays,holidays) is null;

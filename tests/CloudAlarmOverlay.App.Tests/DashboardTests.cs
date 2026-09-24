@@ -49,7 +49,7 @@ public sealed class DashboardTests
             Assert.Equal("明日提醒", vm.NextTitle);
             Assert.Equal("請帶報表", vm.NextDescription);
             Assert.Equal("14:00", vm.NextClock);
-            Assert.Equal("農曆 八月十五", vm.NextLunar);
+            Assert.Equal("農曆 "+MainViewModel.LocalLunarDate(next), vm.NextLunar);
             Assert.True(vm.RemainingHours > 0);
             vm.OpenTasksCommand.Execute(null);
             Assert.Equal(1, vm.PageIndex);

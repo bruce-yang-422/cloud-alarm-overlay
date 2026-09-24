@@ -6,6 +6,28 @@
         <ResourceDictionary Source="../Styles/CountdownStyles.xaml" />
         <ResourceDictionary Source="../Styles/PinButtonStyles.xaml" />
       </ResourceDictionary.MergedDictionaries>
+      <Style x:Key="TaskMenuItem" TargetType="MenuItem">
+        <Setter Property="Foreground" Value="{adaptive:AdaptiveBrush #16243E}"/>
+        <Setter Property="Padding" Value="14,9"/>
+        <Setter Property="Template"><Setter.Value><ControlTemplate TargetType="MenuItem">
+          <Border x:Name="ItemBorder" Padding="{TemplateBinding Padding}" Background="Transparent" CornerRadius="4">
+            <ContentPresenter ContentSource="Header" RecognizesAccessKey="True"/>
+          </Border>
+          <ControlTemplate.Triggers>
+            <Trigger Property="IsHighlighted" Value="True"><Setter TargetName="ItemBorder" Property="Background" Value="{adaptive:AdaptiveBrush #E6F0FF}"/></Trigger>
+            <Trigger Property="IsEnabled" Value="False"><Setter Property="Opacity" Value="0.45"/></Trigger>
+          </ControlTemplate.Triggers>
+        </ControlTemplate></Setter.Value></Setter>
+      </Style>
+      <Style x:Key="TaskMenu" TargetType="ContextMenu">
+        <Style.Resources><Style TargetType="MenuItem" BasedOn="{StaticResource TaskMenuItem}"/></Style.Resources>
+        <Setter Property="Background" Value="{adaptive:AdaptiveBrush #FFFFFF}"/>
+        <Setter Property="Foreground" Value="{adaptive:AdaptiveBrush #16243E}"/>
+        <Setter Property="BorderBrush" Value="{adaptive:AdaptiveBrush #D6E1EF}"/>
+        <Setter Property="Template"><Setter.Value><ControlTemplate TargetType="ContextMenu">
+          <Border Padding="5" CornerRadius="7" BorderThickness="1" Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}"><StackPanel IsItemsHost="True"/></Border>
+        </ControlTemplate></Setter.Value></Setter>
+      </Style>
                 <DataTemplate x:Key="NavigationItemTemplate">
                   <Button Click="Navigate" AutomationProperties.Name="{Binding Title}" HorizontalContentAlignment="Stretch">
                     <Button.Style>
@@ -64,14 +86,24 @@
         <Setter Property="FontFamily" Value="Segoe MDL2 Assets"/><Setter Property="FontSize" Value="27"/><Setter Property="HorizontalAlignment" Value="Center"/><Setter Property="Margin" Value="0,0,0,12"/>
       </Style>
       <DataTemplate x:Key="HealthIndicator">
-       <StackPanel Orientation="Horizontal" ToolTip="{Binding Detail}">
-        <TextBlock x:Name="StateIcon" Text="…" FontWeight="Bold" Margin="0,0,4,0" Foreground="{adaptive:AdaptiveBrush #64748B}"/>
-        <TextBlock Text="{Binding Label}" FontSize="12"/>
+       <StackPanel Orientation="Horizontal" ToolTip="{Binding Detail}" VerticalAlignment="Center">
+        <Ellipse x:Name="StateDot" Width="7" Height="7" Margin="0,0,6,0" VerticalAlignment="Center" Fill="{adaptive:AdaptiveBrush #8391A5}"/>
+        <TextBlock Text="{Binding Label}" FontSize="11" VerticalAlignment="Center"/>
        </StackPanel>
        <DataTemplate.Triggers>
-        <DataTrigger Binding="{Binding Severity}" Value="Healthy"><Setter TargetName="StateIcon" Property="Text" Value="✓"/><Setter TargetName="StateIcon" Property="Foreground" Value="{adaptive:AdaptiveBrush #18964A}"/></DataTrigger>
-        <DataTrigger Binding="{Binding Severity}" Value="Error"><Setter TargetName="StateIcon" Property="Text" Value="!"/><Setter TargetName="StateIcon" Property="Foreground" Value="{adaptive:AdaptiveBrush #BA3D45}"/></DataTrigger>
-        <DataTrigger Binding="{Binding Severity}" Value="Stopped"><Setter TargetName="StateIcon" Property="Text" Value="×"/></DataTrigger>
+        <DataTrigger Binding="{Binding Severity}" Value="Healthy"><Setter TargetName="StateDot" Property="Fill" Value="{adaptive:AdaptiveBrush #18964A}"/></DataTrigger>
+        <DataTrigger Binding="{Binding Severity}" Value="Error"><Setter TargetName="StateDot" Property="Fill" Value="{adaptive:AdaptiveBrush #BA3D45}"/></DataTrigger>
+        <DataTrigger Binding="{Binding Severity}" Value="Stopped"><Setter TargetName="StateDot" Property="Fill" Value="{adaptive:AdaptiveBrush #DE624E}"/></DataTrigger>
+       </DataTemplate.Triggers>
+      </DataTemplate>
+      <DataTemplate x:Key="OverallHealthBadge">
+       <Border x:Name="Badge" Background="{adaptive:AdaptiveBrush #EEF3F9}" CornerRadius="12" Padding="7,4" ToolTip="{Binding Detail}">
+        <ContentControl Content="{Binding}" ContentTemplate="{StaticResource HealthIndicator}"/>
+       </Border>
+       <DataTemplate.Triggers>
+        <DataTrigger Binding="{Binding Severity}" Value="Healthy"><Setter TargetName="Badge" Property="Background" Value="{adaptive:AdaptiveBrush #E3F6ED}"/></DataTrigger>
+        <DataTrigger Binding="{Binding Severity}" Value="Error"><Setter TargetName="Badge" Property="Background" Value="{adaptive:AdaptiveBrush #FFF0EE}"/></DataTrigger>
+        <DataTrigger Binding="{Binding Severity}" Value="Stopped"><Setter TargetName="Badge" Property="Background" Value="{adaptive:AdaptiveBrush #FFF4E8}"/></DataTrigger>
        </DataTemplate.Triggers>
       </DataTemplate>
     </ResourceDictionary>
@@ -98,12 +130,30 @@
         </StackPanel>
         <StackPanel DockPanel.Dock="Bottom">
           <ContentControl x:Name="TaskBuilderNavigation" Content="{Binding TaskBuilderNavigationItem}" ContentTemplate="{StaticResource NavigationItemTemplate}" Margin="0,16,0,12"/>
-          <Border Background="{adaptive:AdaptiveBrush #EAF4FF}" Padding="12" CornerRadius="8">
+          <Border x:Name="ConnectionStatusCard" Background="{adaptive:AdaptiveBrush #FFFFFF}" BorderBrush="{adaptive:AdaptiveBrush #E1E8F1}" BorderThickness="1" Padding="10,10,10,2" CornerRadius="12">
             <StackPanel>
-              <StackPanel Orientation="Horizontal"><TextBlock Text="本機排程：" FontSize="12"/><ContentControl Content="{Binding LocalScheduleHealth}" ContentTemplate="{StaticResource HealthIndicator}"/></StackPanel>
-              <StackPanel Orientation="Horizontal" Margin="0,5,0,0"><TextBlock Text="Sheet A：" FontSize="12"/><ContentControl Content="{Binding SheetAHealth}" ContentTemplate="{StaticResource HealthIndicator}"/></StackPanel>
-              <StackPanel Orientation="Horizontal" Margin="0,5,0,0"><TextBlock Text="Sheet B：" FontSize="12"/><ContentControl Content="{Binding SheetBHealth}" ContentTemplate="{StaticResource HealthIndicator}"/></StackPanel>
-              <TextBlock Text="{Binding DeviceLabel}" TextWrapping="Wrap" Style="{StaticResource Muted}" Margin="0,6,0,0" />
+              <DockPanel Margin="0,0,0,9"><ContentControl x:Name="OverallHealthStatus" DockPanel.Dock="Right" Content="{Binding OverallHealth}" ContentTemplate="{StaticResource OverallHealthBadge}"/><TextBlock Text="連線狀態" FontWeight="SemiBold" FontSize="12" VerticalAlignment="Center"/></DockPanel>
+              <Border BorderBrush="{adaptive:AdaptiveBrush #E8EDF4}" BorderThickness="0,1,0,0" Padding="0,9">
+                <Grid><Grid.ColumnDefinitions><ColumnDefinition Width="20"/><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                <TextBlock Text="&#xE7F4;" FontFamily="Segoe MDL2 Assets" FontSize="16" Foreground="{adaptive:AdaptiveBrush #7C8DA5}" VerticalAlignment="Center"/>
+                <TextBlock Grid.Column="1" Text="本機排程" FontSize="11" VerticalAlignment="Center"/>
+                <ContentControl Grid.Column="2" Content="{Binding LocalScheduleHealth}" ContentTemplate="{StaticResource HealthIndicator}" VerticalAlignment="Center"/>
+                </Grid>
+              </Border>
+              <Border BorderBrush="{adaptive:AdaptiveBrush #E8EDF4}" BorderThickness="0,1,0,0" Padding="0,9">
+                <Grid><Grid.ColumnDefinitions><ColumnDefinition Width="20"/><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                <TextBlock Text="&#xE8A5;" FontFamily="Segoe MDL2 Assets" FontSize="16" Foreground="{adaptive:AdaptiveBrush #7C8DA5}" VerticalAlignment="Center"/>
+                <TextBlock Grid.Column="1" Text="Sheet A" FontSize="11" VerticalAlignment="Center"/>
+                <ContentControl Grid.Column="2" Content="{Binding SheetAHealth}" ContentTemplate="{StaticResource HealthIndicator}" VerticalAlignment="Center"/>
+                </Grid>
+              </Border>
+              <Border BorderBrush="{adaptive:AdaptiveBrush #E8EDF4}" BorderThickness="0,1,0,0" Padding="0,9">
+                <Grid><Grid.ColumnDefinitions><ColumnDefinition Width="20"/><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                <TextBlock Text="&#xE8A5;" FontFamily="Segoe MDL2 Assets" FontSize="16" Foreground="{adaptive:AdaptiveBrush #7C8DA5}" VerticalAlignment="Center"/>
+                <TextBlock Grid.Column="1" Text="Sheet B" FontSize="11" VerticalAlignment="Center"/>
+                <ContentControl Grid.Column="2" Content="{Binding SheetBHealth}" ContentTemplate="{StaticResource HealthIndicator}" VerticalAlignment="Center"/>
+                </Grid>
+              </Border>
             </StackPanel>
           </Border>
           <Image Source="/CloudAlarmOverlay.App;component/Assets/Brand/cloud_alarm_wordmark.png" Width="160" Height="22" Stretch="Uniform" Margin="0,18,0,0" AutomationProperties.Name="Cloud Alarm Overlay" />
@@ -395,48 +445,72 @@
         </TabItem>
         <TabItem Header="我的任務">
           <DockPanel>
-            <StackPanel DockPanel.Dock="Top">
-              <TextBlock Text="我的任務" Style="{StaticResource Heading}" />
-              <TextBlock Text="管理本機提醒；雲端任務會自動同步，僅供檢視。" Style="{StaticResource Muted}" Margin="0,0,0,10" />
-              <Grid>
-                <Grid.ColumnDefinitions>
-                  <ColumnDefinition Width="*" />
-                  <ColumnDefinition Width="Auto" />
-                </Grid.ColumnDefinitions>
-                <TextBox Text="{Binding Search,UpdateSourceTrigger=PropertyChanged}" ToolTip="搜尋任務名稱或說明" Margin="0,0,8,8" Height="34" VerticalContentAlignment="Center" />
-                <Button Grid.Column="1" Content="＋ 新增任務" Command="{Binding NewTaskCommand}" Style="{StaticResource Primary}" Margin="0,0,0,8" />
-              </Grid>
-              <WrapPanel Margin="0,0,0,8">
-                <TextBlock Text="任務來源" Foreground="{adaptive:AdaptiveBrush #697C99}" Margin="0,0,12,0" VerticalAlignment="Center"/>
-                <ListBox ItemsSource="{Binding Sources}" SelectedItem="{Binding SourceFilter}" Style="{StaticResource SegmentedSelector}" AutomationProperties.Name="依任務來源篩選">
-                  <ListBox.ItemTemplate><DataTemplate>
-                    <TextBlock x:Name="SourceLabel" Text="{Binding}"/>
+            <StackPanel DockPanel.Dock="Top" x:Name="TaskToolbar">
+              <DockPanel Margin="0,0,0,10">
+                <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
+                  <Button Content="＋ 新增任務" Command="{Binding NewTaskCommand}" Style="{StaticResource Primary}" Margin="0,0,8,0"/>
+                  <Button x:Name="TaskToolsButton" Content="資料工具 ▾" Click="OpenTaskMenu" Margin="0">
+                    <Button.ContextMenu>
+                      <ContextMenu Style="{StaticResource TaskMenu}" DataContext="{Binding PlacementTarget.DataContext,RelativeSource={RelativeSource Self}}">
+                        <MenuItem Header="匯入 CSV…" Command="{Binding ImportTasksCommand}"/>
+                        <MenuItem Header="匯出本機任務 CSV…" Command="{Binding ExportLocalTasksCommand}"/>
+                        <MenuItem Header="下載範本 CSV…" Command="{Binding DownloadTaskTemplateCommand}"/>
+                      </ContextMenu>
+                    </Button.ContextMenu>
+                  </Button>
+                </StackPanel>
+                <TextBlock Text="我的任務" Style="{StaticResource Heading}" Margin="0" VerticalAlignment="Center"
+                           ToolTip="管理本機提醒；雲端任務會自動同步，僅供檢視。"/>
+              </DockPanel>
+              <Grid Margin="0,0,0,6">
+                <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                <Grid Margin="0,0,10,0">
+                  <TextBox x:Name="TaskSearchBox" Text="{Binding Search,UpdateSourceTrigger=PropertyChanged}" Margin="0" Height="36" VerticalContentAlignment="Center" AutomationProperties.Name="搜尋任務名稱或說明"/>
+                  <TextBlock Text="搜尋任務名稱或說明" IsHitTestVisible="False" Margin="12,0" VerticalAlignment="Center">
+                    <TextBlock.Style><Style TargetType="TextBlock" BasedOn="{StaticResource Muted}"><Setter Property="Visibility" Value="Collapsed"/><Style.Triggers><DataTrigger Binding="{Binding Search}" Value=""><Setter Property="Visibility" Value="Visible"/></DataTrigger></Style.Triggers></Style></TextBlock.Style>
+                  </TextBlock>
+                </Grid>
+                <ComboBox Grid.Column="1" Width="150" Margin="0,0,8,0" ItemsSource="{Binding Sources}" SelectedItem="{Binding SourceFilter}" AutomationProperties.Name="依任務來源篩選" ToolTip="依任務來源篩選">
+                  <ComboBox.ItemTemplate><DataTemplate><TextBlock x:Name="SourceLabel" Text="{Binding}"/>
                     <DataTemplate.Triggers>
-                      <DataTrigger Binding="{Binding}" Value="全部來源"><Setter TargetName="SourceLabel" Property="Text" Value="全部"/></DataTrigger>
-                      <DataTrigger Binding="{Binding}" Value="本機"><Setter TargetName="SourceLabel" Property="Text" Value="本機任務"/><Setter TargetName="SourceLabel" Property="ToolTip" Value="這台電腦建立的提醒"/></DataTrigger>
-                      <DataTrigger Binding="{Binding}" Value="SheetA"><Setter TargetName="SourceLabel" Property="Text" Value="公司共用"/><Setter TargetName="SourceLabel" Property="ToolTip" Value="SheetA · 公司共用任務，僅供檢視"/></DataTrigger>
-                      <DataTrigger Binding="{Binding}" Value="SheetB"><Setter TargetName="SourceLabel" Property="Text" Value="團隊共用"/><Setter TargetName="SourceLabel" Property="ToolTip" Value="SheetB · 團隊共用任務，僅供檢視"/></DataTrigger>
+                      <DataTrigger Binding="{Binding}" Value="全部來源"><Setter TargetName="SourceLabel" Property="Text" Value="全部來源"/></DataTrigger>
+                      <DataTrigger Binding="{Binding}" Value="本機"><Setter TargetName="SourceLabel" Property="Text" Value="本機任務"/></DataTrigger>
+                      <DataTrigger Binding="{Binding}" Value="SheetA"><Setter TargetName="SourceLabel" Property="Text" Value="公司共用"/></DataTrigger>
+                      <DataTrigger Binding="{Binding}" Value="SheetB"><Setter TargetName="SourceLabel" Property="Text" Value="團隊共用"/></DataTrigger>
                     </DataTemplate.Triggers>
-                  </DataTemplate></ListBox.ItemTemplate>
-                </ListBox>
-              </WrapPanel>
-              <WrapPanel Margin="0,0,0,8">
-                <Button Content="編輯" ToolTip="{Binding SelectionHint}" ToolTipService.ShowOnDisabled="True" Command="{Binding EditTaskCommand}" />
-                <Button Content="複製" ToolTip="{Binding SelectionHint}" ToolTipService.ShowOnDisabled="True" Command="{Binding CopyTaskCommand}" />
-                <Button Content="啟用／停用" ToolTip="{Binding SelectionHint}" ToolTipService.ShowOnDisabled="True" Command="{Binding ToggleTaskCommand}" />
-                <Button Content="刪除" ToolTip="{Binding SelectionHint}" ToolTipService.ShowOnDisabled="True" Command="{Binding DeleteTaskCommand}" />
-                <Button Content="匯出完整觸發日誌" Command="{Binding ExportTaskTriggerLogCommand}" ToolTip="匯出此任務每一次排定觸發的完整紀錄，含未產生簽收結果的觸發失敗情形" />
-                <Button Content="重新整理" Command="{Binding RefreshCommand}" /><Button Content="全選結果" Click="SelectAllTasks"/>
-              </WrapPanel>
-              <WrapPanel Margin="0,0,0,8" Visibility="{Binding HasTaskSelection,Converter={StaticResource BoolVisibility}}">
- <Button Content="取消選取" Click="ClearTaskSelection"/>
- <Button Content="批次複製成本機" Command="{Binding BatchTasksCommand}" CommandParameter="copy"/>
- <Button Content="啟用所選本機" Command="{Binding BatchTasksCommand}" CommandParameter="enable"/>
- <Button Content="停用所選本機" Command="{Binding BatchTasksCommand}" CommandParameter="disable"/>
- <Button Content="刪除所選本機" Command="{Binding BatchTasksCommand}" CommandParameter="delete"/>
-</WrapPanel>
-<TextBlock Text="{Binding SelectionSummary}" Style="{StaticResource Muted}" Visibility="{Binding HasTaskSelection,Converter={StaticResource BoolVisibility}}"/>
-<WrapPanel><Button Content="匯入 CSV" Command="{Binding ImportTasksCommand}"/><Button Content="匯出本機任務 CSV" Command="{Binding ExportLocalTasksCommand}"/><Button Content="下載範本 CSV" Command="{Binding DownloadTaskTemplateCommand}"/></WrapPanel><TextBlock Text="{Binding SelectionHint}" Style="{StaticResource Muted}" Margin="0,4,0,8"/><TextBlock Text="沒有符合條件的任務。按「新增任務」建立本機提醒。" Style="{StaticResource Muted}" Visibility="{Binding IsTasksEmpty,Converter={StaticResource BoolVisibility}}" Margin="0,12" />
+                  </DataTemplate></ComboBox.ItemTemplate>
+                </ComboBox>
+                <Button Grid.Column="2" Content="↻" Command="{Binding RefreshCommand}" ToolTip="重新整理任務" AutomationProperties.Name="重新整理任務" Margin="0" Padding="12,4"/>
+              </Grid>
+              <DockPanel x:Name="TaskSelectionToolbar" Height="44" Margin="0,0,0,4">
+                <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" Visibility="{Binding HasTaskSelection,Converter={StaticResource BoolVisibility}}">
+                  <Button Content="編輯" Command="{Binding EditTaskCommand}" Visibility="{Binding CanEditSelectedTask,Converter={StaticResource BoolVisibility}}" Padding="12,5" Margin="0,0,6,0"/>
+                  <Button Content="複製" Command="{Binding CopyTaskCommand}" Visibility="{Binding CanCopySelectedTask,Converter={StaticResource BoolVisibility}}" Padding="12,5" Margin="0,0,6,0" ToolTip="複製為本機任務"/>
+                  <Button x:Name="TaskActionsButton" Content="更多操作 ▾" Click="OpenTaskMenu" Padding="12,5" Margin="0,0,6,0" Visibility="{Binding CanCopySelectedTask,Converter={StaticResource BoolVisibility}}">
+                    <Button.ContextMenu><ContextMenu Style="{StaticResource TaskMenu}" DataContext="{Binding PlacementTarget.DataContext,RelativeSource={RelativeSource Self}}">
+                      <MenuItem Header="啟用／停用" Command="{Binding ToggleTaskCommand}"/>
+                      <MenuItem Header="匯出完整觸發日誌…" Command="{Binding ExportTaskTriggerLogCommand}"/>
+                      <Separator/>
+                      <MenuItem Header="刪除任務…" Command="{Binding DeleteTaskCommand}"/>
+                    </ContextMenu></Button.ContextMenu>
+                  </Button>
+                  <Button x:Name="TaskBatchButton" Content="批次操作 ▾" Click="OpenTaskMenu" Padding="12,5" Margin="0,0,6,0" Visibility="{Binding HasMultipleTaskSelection,Converter={StaticResource BoolVisibility}}">
+                    <Button.ContextMenu><ContextMenu Style="{StaticResource TaskMenu}" DataContext="{Binding PlacementTarget.DataContext,RelativeSource={RelativeSource Self}}">
+                      <MenuItem Header="複製所選任務成本機" Command="{Binding BatchTasksCommand}" CommandParameter="copy"/>
+                      <MenuItem Header="啟用所選本機任務" Command="{Binding BatchTasksCommand}" CommandParameter="enable"/>
+                      <MenuItem Header="停用所選本機任務" Command="{Binding BatchTasksCommand}" CommandParameter="disable"/>
+                      <Separator/>
+                      <MenuItem Header="刪除所選本機任務…" Command="{Binding BatchTasksCommand}" CommandParameter="delete"/>
+                    </ContextMenu></Button.ContextMenu>
+                  </Button>
+                  <Button Content="取消選取" Click="ClearTaskSelection" Padding="10,5" Margin="0"/>
+                </StackPanel>
+                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                  <Button Content="全選" Click="SelectAllTasks" Padding="10,5" Margin="0,0,8,0" ToolTip="選取目前篩選結果"/>
+                  <TextBlock Text="{Binding CompactSelectionSummary}" ToolTip="{Binding SelectionHint}" Style="{StaticResource Muted}" VerticalAlignment="Center"/>
+                </StackPanel>
+              </DockPanel>
+              <TextBlock Text="沒有符合條件的任務。按「新增任務」建立本機提醒。" Style="{StaticResource Muted}" Visibility="{Binding IsTasksEmpty,Converter={StaticResource BoolVisibility}}" Margin="0,6"/>
             </StackPanel>
             <DataGrid x:Name="TaskGrid" ItemsSource="{Binding Tasks}" SelectionMode="Extended" SelectionUnit="FullRow" SelectionChanged="TaskSelectionChanged">
               <DataGrid.CellStyle><Style TargetType="DataGridCell" BasedOn="{StaticResource {x:Type DataGridCell}}">
@@ -454,27 +528,27 @@
                   <Trigger Property="IsSelected" Value="True"><Setter Property="Background" Value="{adaptive:AdaptiveBrush #E6F0FF}"/></Trigger>
                 </Style.Triggers>
               </Style></DataGrid.RowStyle>
-              <DataGrid.Columns><DataGridTemplateColumn Header="選取" Width="44">
+              <DataGrid.Columns><DataGridTemplateColumn Header="選取" Width="48" MinWidth="48">
  <DataGridTemplateColumn.CellTemplate><DataTemplate>
   <CheckBox Style="{StaticResource TaskSelectionCheckBox}" HorizontalAlignment="Center" PreviewMouseLeftButtonDown="TaskCheckMouseDown" PreviewKeyDown="TaskCheckKeyDown" IsChecked="{Binding IsSelected,RelativeSource={RelativeSource AncestorType=DataGridRow},Mode=OneWay}" AutomationProperties.Name="選取任務"/>
  </DataTemplate></DataGridTemplateColumn.CellTemplate>
 </DataGridTemplateColumn>
-<DataGridTemplateColumn Header="權限" Width="44">
+<DataGridTemplateColumn Header="權限" Width="40" MinWidth="40">
  <DataGridTemplateColumn.CellTemplate><DataTemplate>
   <TextBlock Text="&#xE72E;" FontFamily="Segoe MDL2 Assets" HorizontalAlignment="Center" ToolTip="雲端唯讀：不能編輯、刪除或切換啟用；可複製成本機任務。">
    <TextBlock.Style><Style TargetType="TextBlock" BasedOn="{StaticResource {x:Type TextBlock}}"><Style.Triggers><DataTrigger Binding="{Binding IsLocal}" Value="True"><Setter Property="Visibility" Value="Collapsed"/></DataTrigger></Style.Triggers></Style></TextBlock.Style>
   </TextBlock>
  </DataTemplate></DataGridTemplateColumn.CellTemplate>
 </DataGridTemplateColumn>
-                <DataGridTemplateColumn Header="任務名稱" Width="*" MinWidth="220"><DataGridTemplateColumn.CellTemplate><DataTemplate>
+                <DataGridTemplateColumn Header="任務名稱" Width="*" MinWidth="180"><DataGridTemplateColumn.CellTemplate><DataTemplate>
                  <Grid><Grid.ColumnDefinitions><ColumnDefinition/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
                   <TextBlock Text="{Binding Title}" TextTrimming="CharacterEllipsis" Background="Transparent" Padding="4,0" Cursor="Hand" ToolTip="{Binding Title}" AutomationProperties.HelpText="連按兩下查看詳細訊息" MouseLeftButtonDown="TaskTitleDoubleClick"/>
                   <Button Grid.Column="1" Style="{StaticResource TaskPinButton}" Tag="{Binding IsPinned}" Command="{Binding DataContext.ToggleTaskPinCommand,RelativeSource={RelativeSource AncestorType=Window}}" CommandParameter="{Binding}" Margin="3,2,2,2" ToolTip="{Binding PinLabel}" AutomationProperties.Name="{Binding PinLabel}"/>
                  </Grid>
                 </DataTemplate></DataGridTemplateColumn.CellTemplate></DataGridTemplateColumn>
-                <DataGridTextColumn Header="日期 / 時間" Binding="{Binding Time}" Width="136" MinWidth="136" />
+                <DataGridTextColumn Header="日期 / 時間" Binding="{Binding Time}" Width="128" MinWidth="128" />
                 <DataGridTemplateColumn Header="等級" CellTemplate="{StaticResource LevelBadge}" Width="90" MinWidth="90" />
-                <DataGridTextColumn Header="重複" Binding="{Binding Recurrence}" Width="102" MinWidth="90" />
+                <DataGridTextColumn Header="重複" Binding="{Binding Recurrence}" Width="90" MinWidth="90" />
                 <DataGridTemplateColumn Header="狀態" Width="148" MinWidth="148"><DataGridTemplateColumn.CellTemplate><DataTemplate>
                   <Grid><Grid.ColumnDefinitions><ColumnDefinition Width="58"/><ColumnDefinition/></Grid.ColumnDefinitions>
                     <CheckBox Style="{StaticResource PillSwitch}" IsChecked="{Binding Task.Enabled,Mode=OneWay}" IsEnabled="{Binding IsLocal}" VerticalAlignment="Center" Margin="0"
@@ -482,7 +556,7 @@
                     <StackPanel Grid.Column="1"><TextBlock Text="{Binding State}"/><TextBlock Text="{Binding StateOrigin}" FontSize="11" Foreground="{adaptive:AdaptiveBrush #70568F}"/></StackPanel>
                   </Grid>
                 </DataTemplate></DataGridTemplateColumn.CellTemplate></DataGridTemplateColumn>
-                <DataGridTemplateColumn Header="來源" CellTemplate="{StaticResource SourceBadge}" Width="72" />
+                <DataGridTemplateColumn Header="來源" CellTemplate="{StaticResource SourceBadge}" Width="76" MinWidth="76" />
               </DataGrid.Columns>
             </DataGrid>
           </DockPanel>

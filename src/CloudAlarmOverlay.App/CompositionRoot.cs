@@ -34,6 +34,8 @@ public static class CompositionRoot
         services.AddHostedService<AlarmWorker>();
         services.AddHostedService<PomodoroWorker>();
         services.AddHostedService<WeatherWorker>();
+        services.AddSingleton<RuntimeLogCleanup>();
+        services.AddHostedService<RuntimeLogCleanupWorker>();
         services.AddSingleton<WeatherViewModel>();
         services.AddSingleton<AlarmPresenter>();
         services.AddSingleton<IAlarmPresenter>(provider=>provider.GetRequiredService<AlarmPresenter>());

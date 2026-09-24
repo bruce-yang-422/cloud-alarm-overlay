@@ -232,6 +232,17 @@ public sealed class Version110UiTests
         using var client = new HttpClient { BaseAddress = url };
         var html = await client.GetStringAsync(url);
         Assert.Contains("panel-monthly", html);
+        Assert.DoesNotContain("https://cdn", html);
+        Assert.DoesNotContain("https://unpkg", html);
+        foreach (var asset in new[] { "tailwind.css", "lucide.min.js", "xlsx.full.min.js", "noto-sans-tc/index.css" })
+        {
+            using var resource = await client.GetAsync("/task-builder-assets/" + asset);
+            Assert.Equal(HttpStatusCode.OK, resource.StatusCode);
+            Assert.NotEmpty(await resource.Content.ReadAsByteArrayAsync());
+            Assert.NotEqual("text/html", resource.Content.Headers.ContentType?.MediaType);
+        }
+        Assert.Equal(HttpStatusCode.NotFound, (await client.GetAsync("/task-builder-assets/missing.js")).StatusCode);
+        Assert.Equal(HttpStatusCode.NotFound, (await client.GetAsync("/task-builder-assets/%2e%2e%5cappsettings.json")).StatusCode);
         Assert.DoesNotContain("docs.google.com/spreadsheets", html);
         Assert.Equal(HttpStatusCode.Conflict, (await client.GetAsync("/api/employees-csv")).StatusCode);
         await fixture.Get<IAuthenticationService>().EnsureDefaultAdministratorAsync();

@@ -145,6 +145,27 @@ public sealed class TaskBuilderHostService(ILogger<TaskBuilderHostService> logge
         }
         if (path == "/api/tasks-csv") { await ServeCsvAsync(context, sheetB: true); return; }
         if (path == "/api/employees-csv") { await ServeCsvAsync(context, sheetB: false); return; }
+        if (path.StartsWith("/task-builder-assets/", StringComparison.Ordinal))
+        {
+            var relative = path[1..];
+            // Only simple packaged asset names; never allow encoded paths or traversal.
+            if (relative.Split('/').Any(segment => segment.Length == 0 || segment is "." or ".." ||
+                segment.Any(c => !char.IsAsciiLetterOrDigit(c) && c is not '-' and not '_' and not '.')))
+            { context.Response.StatusCode=404; context.Response.Close(); return; }
+            var asset = Path.Combine(Path.GetDirectoryName(filePath)!, relative.Replace('/', Path.DirectorySeparatorChar));
+            var contentType = Path.GetExtension(asset) switch
+            {
+                ".css" => "text/css; charset=utf-8",
+                ".js" => "text/javascript; charset=utf-8",
+                ".woff2" => "font/woff2",
+                ".txt" => "text/plain; charset=utf-8",
+                _ => null
+            };
+            if (contentType is null || !File.Exists(asset))
+            { context.Response.StatusCode=404; context.Response.Close(); return; }
+            await ServeFileAsync(context, asset, contentType);
+            return;
+        }
         if (path != "/" && path != "/"+FileName) { context.Response.StatusCode=404; context.Response.Close(); return; }
         await ServeFileAsync(context, filePath);
     }
@@ -183,13 +204,13 @@ public sealed class TaskBuilderHostService(ILogger<TaskBuilderHostService> logge
         await response.OutputStream.WriteAsync(bytes);
     }
 
-    private static async Task ServeFileAsync(HttpListenerContext context, string filePath)
+    private static async Task ServeFileAsync(HttpListenerContext context, string filePath, string contentType = "text/html; charset=utf-8")
     {
         var response = context.Response;
         try
         {
             var bytes = await File.ReadAllBytesAsync(filePath);
-            response.ContentType = "text/html; charset=utf-8";
+            response.ContentType = contentType;
             response.ContentLength64 = bytes.Length;
             await response.OutputStream.WriteAsync(bytes);
         }

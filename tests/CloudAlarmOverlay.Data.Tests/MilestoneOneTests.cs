@@ -106,14 +106,14 @@ public sealed class MilestoneOneTests : IDisposable
         Assert.Equal(DateTime.Parse(expected, CultureInfo.InvariantCulture), await Get<ITaskSchedulingService>().GetNextOccurrenceAsync(task, new DateTime(2026, 9, 15)));
     }
     [Fact]
-    public async Task Holidays_makeup_and_lunar_missing_data_have_conservative_behavior()
+    public async Task Holidays_makeup_and_lunar_recurrence_work_without_sheet_data()
     {
         await Get<IHolidayRepository>().ReplaceCacheAsync([new Holiday { Date = new(2026, 9, 19), Type = "補班日" }, new Holiday { Date = new(2026, 9, 18), Type = "國定假日" }]);
         var task = TaskAt(new(2026, 9, 15, 9, 0, 0)) with { Recurrence = "Weekly:1,2,3,4,5", SkipOnHoliday = true };
         Assert.Equal(new DateTime(2026, 9, 19, 9, 0, 0), await Get<ITaskSchedulingService>().GetNextOccurrenceAsync(task, new(2026, 9, 18)));
-        Assert.Null(await Get<ITaskSchedulingService>().GetNextOccurrenceAsync(task with { Recurrence = "LunarDay:1,15" }, new(2026, 9, 18)));
+        Assert.Equal(new DateTime(2026, 9, 25, 9, 0, 0),await Get<ITaskSchedulingService>().GetNextOccurrenceAsync(task with { Recurrence = "LunarDay:1,15" }, new(2026, 9, 18)));
         await Get<ILunarCalendarRepository>().ReplaceCacheAsync([new LunarCalendarEntry { Date = new(2026, 9, 20), LunarDay = 15 }]);
-        Assert.Equal(new DateTime(2026, 9, 20, 9, 0, 0), await Get<ITaskSchedulingService>().GetNextOccurrenceAsync(task with { Recurrence = "LunarDay:1,15" }, new(2026, 9, 18)));
+        Assert.Equal(new DateTime(2026, 9, 25, 9, 0, 0), await Get<ITaskSchedulingService>().GetNextOccurrenceAsync(task with { Recurrence = "LunarDay:1,15" }, new(2026, 9, 18)));
         Assert.Null(await Get<ITaskSchedulingService>().GetNextOccurrenceAsync(task with { Recurrence = "None" }, new(2026, 9, 18)));
     }
     [Fact]

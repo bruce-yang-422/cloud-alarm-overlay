@@ -4,29 +4,31 @@
 </ResourceDictionary></UserControl.Resources>
 <Grid Margin="0,4,0,0"><Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
 <ScrollViewer x:Name="HeaderScroll" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
-<StackPanel>
-<DockPanel Margin="0,0,0,18"><Button Content="匯出紀錄" Command="{Binding ExportCommand}" DockPanel.Dock="Right" HorizontalAlignment="Right" Padding="16,10" Margin="12,0,0,0" ToolTip="匯出目前篩選的全部紀錄為 CSV"/><StackPanel><TextBlock Text="專注歷程" FontSize="22" FontWeight="SemiBold"/><TextBlock Text="回顧專注與休息，掌握自己的工作節奏。" Foreground="{adaptive:AdaptiveBrush #71829A}" Margin="0,5,0,0"/></StackPanel></DockPanel>
-<UniformGrid Columns="3" Margin="0,0,0,16">
-<Border Background="{adaptive:AdaptiveBrush #EDF7F2}" CornerRadius="12" Padding="18,14" Margin="0,0,10,0"><StackPanel><TextBlock Text="完成專注" Foreground="{adaptive:AdaptiveBrush #477C65}" FontSize="12"/><TextBlock FontSize="28" Foreground="{adaptive:AdaptiveBrush #246D50}" FontWeight="SemiBold" Margin="0,5,0,0"><Run Text="{Binding FilteredCompleted,Mode=OneWay}"/><Run Text=" 輪" FontSize="13"/></TextBlock></StackPanel></Border>
-<Border Background="{adaptive:AdaptiveBrush #EEF4FC}" CornerRadius="12" Padding="18,14" Margin="0,0,10,0"><StackPanel><TextBlock Text="累積專注" Foreground="{adaptive:AdaptiveBrush #53749E}" FontSize="12"/><TextBlock FontSize="28" Foreground="{adaptive:AdaptiveBrush #2F619B}" FontWeight="SemiBold" Margin="0,5,0,0"><Run Text="{Binding FilteredMinutes,Mode=OneWay}"/><Run Text=" 分鐘" FontSize="13"/></TextBlock></StackPanel></Border>
-<Border Background="{adaptive:AdaptiveBrush #FFF4E8}" CornerRadius="12" Padding="18,14"><StackPanel><TextBlock Text="中斷紀錄" Foreground="{adaptive:AdaptiveBrush #967040}" FontSize="12"/><TextBlock FontSize="28" Foreground="{adaptive:AdaptiveBrush #996323}" FontWeight="SemiBold" Margin="0,5,0,0"><Run Text="{Binding FilteredInterrupted,Mode=OneWay}"/><Run Text=" 次" FontSize="13"/></TextBlock></StackPanel></Border>
+<StackPanel x:Name="PomodoroHistoryToolbar">
+<DockPanel Margin="0,0,0,12"><Button Content="匯出紀錄" Command="{Binding ExportCommand}" DockPanel.Dock="Right" HorizontalAlignment="Right" Padding="14,7" Margin="12,0,0,0" ToolTip="匯出目前篩選的全部紀錄為 CSV"/><StackPanel><TextBlock Text="專注歷程" FontSize="22" FontWeight="SemiBold"/><TextBlock Text="回顧專注與休息，掌握自己的工作節奏。" Foreground="{adaptive:AdaptiveBrush #71829A}" Margin="0,5,0,0"/></StackPanel></DockPanel>
+<UniformGrid x:Name="PomodoroSummaryCards" Columns="3" Height="64" Margin="0,0,0,12" ToolTip="統計依目前篩選條件計算。">
+<Border Background="{adaptive:AdaptiveBrush #EDF7F2}" CornerRadius="12" Padding="14,10" Margin="0,0,10,0"><DockPanel><TextBlock Text="完成專注" Foreground="{adaptive:AdaptiveBrush #246D50}" FontSize="12" VerticalAlignment="Center"/><TextBlock FontSize="26" Foreground="{adaptive:AdaptiveBrush #246D50}" FontWeight="SemiBold" HorizontalAlignment="Right" VerticalAlignment="Center"><Run Text="{Binding FilteredCompleted,Mode=OneWay}"/><Run Text=" 輪" FontSize="12"/></TextBlock></DockPanel></Border>
+<Border Background="{adaptive:AdaptiveBrush #EEF4FC}" CornerRadius="12" Padding="14,10" Margin="0,0,10,0"><DockPanel><TextBlock Text="累積專注" Foreground="{adaptive:AdaptiveBrush #2F619B}" FontSize="12" VerticalAlignment="Center"/><TextBlock FontSize="26" Foreground="{adaptive:AdaptiveBrush #2F619B}" FontWeight="SemiBold" HorizontalAlignment="Right" VerticalAlignment="Center"><Run Text="{Binding FilteredMinutes,Mode=OneWay}"/><Run Text=" 分鐘" FontSize="12"/></TextBlock></DockPanel></Border>
+<Border Background="{adaptive:AdaptiveBrush #FFF4E8}" CornerRadius="12" Padding="14,10" Margin="0"><DockPanel><TextBlock Text="中斷紀錄" Foreground="{adaptive:AdaptiveBrush #996323}" FontSize="12" VerticalAlignment="Center"/><TextBlock FontSize="26" Foreground="{adaptive:AdaptiveBrush #996323}" FontWeight="SemiBold" HorizontalAlignment="Right" VerticalAlignment="Center"><Run Text="{Binding FilteredInterrupted,Mode=OneWay}"/><Run Text=" 次" FontSize="12"/></TextBlock></DockPanel></Border>
 </UniformGrid>
-<Border Background="{adaptive:AdaptiveBrush #F8FAFD}" BorderBrush="{adaptive:AdaptiveBrush #E5EBF3}" BorderThickness="1" CornerRadius="12" Padding="12" Margin="0,0,0,16"><StackPanel>
-<DockPanel Margin="0,0,0,12"><Button Content="重設篩選" Command="{Binding ClearFiltersCommand}" DockPanel.Dock="Right" HorizontalAlignment="Right" Foreground="{adaptive:AdaptiveBrush #61758F}" Background="Transparent" Padding="6" Margin="0"/><TextBlock Text="篩選紀錄" FontWeight="SemiBold"/></DockPanel>
-<WrapPanel>
-<StackPanel Margin="0,0,18,12"><TextBlock Text="日期範圍" Foreground="{adaptive:AdaptiveBrush #71829A}" FontSize="12" Margin="0,0,0,6"/><StackPanel Orientation="Horizontal"><DatePicker SelectedDate="{Binding From}" Width="148" Height="40" AutomationProperties.Name="開始日期"/><TextBlock Text="—" Foreground="{adaptive:AdaptiveBrush #A0ADBC}" Margin="10,0"/><DatePicker SelectedDate="{Binding To}" Width="148" Height="40" AutomationProperties.Name="結束日期"/></StackPanel></StackPanel>
-<StackPanel Margin="0,0,18,12"><TextBlock Text="階段" Foreground="{adaptive:AdaptiveBrush #71829A}" FontSize="12" Margin="0,0,0,6"/><ListBox ItemsSource="{Binding Phases}" SelectedItem="{Binding PhaseFilter}" Style="{StaticResource SegmentedSelector}" AutomationProperties.Name="篩選階段"/></StackPanel>
-<StackPanel Margin="0,0,0,4"><TextBlock Text="結果" Foreground="{adaptive:AdaptiveBrush #71829A}" FontSize="12" Margin="0,0,0,6"/><ListBox ItemsSource="{Binding Results}" SelectedItem="{Binding ResultFilter}" Style="{StaticResource SegmentedSelector}" AutomationProperties.Name="篩選結果"/></StackPanel>
-</WrapPanel>
-<TextBlock Text="統計依目前篩選條件計算。" Foreground="{adaptive:AdaptiveBrush #8190A4}" FontSize="11"/>
-<TextBlock Text="{Binding Error}" Foreground="{adaptive:AdaptiveBrush #C54D4D}" TextWrapping="Wrap"/>
+<Border Background="{adaptive:AdaptiveBrush #F8FAFD}" BorderBrush="{adaptive:AdaptiveBrush #E5EBF3}" BorderThickness="1" CornerRadius="10" Padding="10,8" Margin="0,0,0,12"><StackPanel>
+<DockPanel LastChildFill="False">
+<Button Content="重設" Command="{Binding ClearFiltersCommand}" DockPanel.Dock="Right" Padding="10,5" Height="36" ToolTip="恢復最近 30 天、全部階段與結果"/>
+<ListBox x:Name="PomodoroPhasePicker" ItemsSource="{Binding Phases}" SelectedItem="{Binding PhaseFilter}" Style="{StaticResource SegmentedSelector}" AutomationProperties.Name="篩選階段" Margin="0,0,14,0"/>
+<ComboBox x:Name="PomodoroResultPicker" ItemsSource="{Binding Results}" SelectedItem="{Binding ResultFilter}" Width="130" Height="36" AutomationProperties.Name="篩選結果"><ComboBox.ItemTemplate><DataTemplate><TextBlock><Run Text="結果："/><Run Text="{Binding Mode=OneWay}"/></TextBlock></DataTemplate></ComboBox.ItemTemplate></ComboBox>
+</DockPanel>
+<Expander x:Name="PomodoroDateFilters" IsExpanded="False" Margin="0,8,0,0" Foreground="{adaptive:AdaptiveBrush #61758F}">
+<Expander.Header><TextBlock FontSize="12"><TextBlock.Text><MultiBinding StringFormat="日期：{0:yyyy/MM/dd} – {1:yyyy/MM/dd} · 調整日期"><Binding Path="From"/><Binding Path="To"/></MultiBinding></TextBlock.Text></TextBlock></Expander.Header>
+<StackPanel Orientation="Horizontal" Margin="20,8,0,4"><DatePicker SelectedDate="{Binding From}" Width="148" Height="38" AutomationProperties.Name="開始日期"/><TextBlock Text="—" Margin="10,0"/><DatePicker SelectedDate="{Binding To}" Width="148" Height="38" AutomationProperties.Name="結束日期"/></StackPanel>
+</Expander>
+<TextBlock Text="{Binding Error}" Foreground="{adaptive:AdaptiveBrush #C54D4D}" TextWrapping="Wrap"><TextBlock.Style><Style TargetType="TextBlock"><Style.Triggers><DataTrigger Binding="{Binding Error}" Value=""><Setter Property="Visibility" Value="Collapsed"/></DataTrigger></Style.Triggers></Style></TextBlock.Style></TextBlock>
 </StackPanel></Border>
 </StackPanel></ScrollViewer>
 <Grid Grid.Row="1">
-<DataGrid ItemsSource="{Binding History}"><DataGrid.Columns>
+<DataGrid x:Name="PomodoroHistoryGrid" ItemsSource="{Binding History}"><DataGrid.Columns>
 <DataGridTextColumn Header="階段" Binding="{Binding Phase}" Width="*"/>
-<DataGridTextColumn Header="開始時間" Binding="{Binding Started}" Width="175"/>
-<DataGridTextColumn Header="結束時間" Binding="{Binding Ended}" Width="175"/>
+<DataGridTextColumn Header="開始時間" Binding="{Binding Started}" Width="175" MinWidth="175"/>
+<DataGridTextColumn Header="結束時間" Binding="{Binding Ended}" Width="175" MinWidth="175"/>
 <DataGridTextColumn Header="預定時長" Binding="{Binding Planned}" Width="100"/>
 <DataGridTemplateColumn Header="結果" Width="90"><DataGridTemplateColumn.CellTemplate><DataTemplate>
 <Border x:Name="ResultBadge" Background="{adaptive:AdaptiveBrush #EDF7F2}" CornerRadius="6" Padding="10,5" HorizontalAlignment="Left"><TextBlock x:Name="ResultLabel" Text="{Binding Result}" Foreground="{adaptive:AdaptiveBrush #246D50}" FontSize="12"/></Border>
@@ -35,5 +37,5 @@
 </DataGrid.Columns></DataGrid>
 <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Visibility="{Binding IsHistoryEmpty,Converter={StaticResource BoolVisibility}}" IsHitTestVisible="False"><TextBlock Text="尚無符合的紀錄" FontSize="16" FontWeight="SemiBold" HorizontalAlignment="Center"/><TextBlock Text="調整篩選條件，或開始一輪新的專注。" Foreground="{adaptive:AdaptiveBrush #71829A}" Margin="0,8,0,0"/></StackPanel>
 </Grid>
-<DockPanel Grid.Row="2" Margin="0,14,0,0"><TextBlock Text="{Binding PageLabel}" Foreground="{adaptive:AdaptiveBrush #71829A}" VerticalAlignment="Center"/><StackPanel Orientation="Horizontal" HorizontalAlignment="Right"><Button Content="← 上一頁" Command="{Binding PreviousCommand}" IsEnabled="{Binding CanPrevious}"/><Button Content="下一頁 →" Command="{Binding NextPageCommand}" IsEnabled="{Binding CanNext}" Margin="8,0,0,0"/></StackPanel></DockPanel>
+<DockPanel Grid.Row="2" Margin="0,8,0,0"><TextBlock Text="{Binding PageLabel}" Foreground="{adaptive:AdaptiveBrush #71829A}" VerticalAlignment="Center"/><StackPanel Orientation="Horizontal" HorizontalAlignment="Right"><Button Content="← 上一頁" Command="{Binding PreviousCommand}" IsEnabled="{Binding CanPrevious}"/><Button Content="下一頁 →" Command="{Binding NextPageCommand}" IsEnabled="{Binding CanNext}" Margin="8,0,0,0"/></StackPanel></DockPanel>
 </Grid></UserControl>

@@ -17,5 +17,6 @@
   "QuietPeriods": [],
   "LockQuiet": false,
   "WeatherDefaultDistrictCode": "65000010",
-  "UpdateManifestUrl": "https://example.com/version.json"
+  "UpdateManifestUrl": "https://example.com/version.json",
+  "RuntimeLogRetentionDays": 30
 }

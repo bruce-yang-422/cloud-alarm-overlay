@@ -29,7 +29,7 @@ public sealed class CountdownShareTests
         Assert.Equal("已到期",CountdownShareSnapshot.Create(Item with{TargetAt=Now.Date.AddDays(-1)},Now).Value);
         Assert.Equal("已完成",CountdownShareSnapshot.Create(Item with{CompletedAt=Now},Now).Value);
         Assert.Equal("尚未開始",CountdownShareSnapshot.Create(Item with{Direction="Up"},Now).Value);
-        var unknown=CountdownShareSnapshot.Create(Item with{Recurrence="LunarDay:1"},Now);
+        var unknown=CountdownShareSnapshot.Create(Item with{TargetAt=new DateTime(2200,1,1),Recurrence="LunarDay:1"},Now);
         Assert.Equal("待確認日期",unknown.Value);Assert.Equal("尚無可用目標日期",unknown.DateCaption);
     }
     [Fact] public void Recurrence_holidays_and_lunar_data_use_the_existing_calendar()
@@ -39,7 +39,7 @@ public sealed class CountdownShareTests
         Assert.Equal("1",snapshot.Value);Assert.Equal("目標日期  2026.09.25",snapshot.DateCaption);
         var lunar=Item with{TargetAt=Now.Date,Recurrence="LunarDay:1"};
         snapshot=CountdownShareSnapshot.Create(lunar,Now,new Dictionary<DateOnly,int>{{DateOnly.FromDateTime(Now.AddDays(3)),1}});
-        Assert.Equal("3",snapshot.Value);
+        Assert.Equal("16",snapshot.Value);Assert.Equal("目標日期  2026.10.10",snapshot.DateCaption);
     }
     [Fact] public void Completed_countup_freezes_at_completion_and_private_notes_are_not_in_snapshot()
     {

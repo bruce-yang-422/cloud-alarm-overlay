@@ -26,9 +26,10 @@
  <StackPanel Margin="0,0,0,12">
  <WrapPanel>
   <Button Content="匯入 JSON 設定" Command="{Binding ImportAdminSettingsCommand}"/>
+  <Button Content="匯出目前設定" Command="{Binding Admin.ExportCurrentSettingsCommand}"/>
   <Button Content="下載 JSON 範本" Command="{Binding Admin.ExportSettingsTemplateCommand}"/>
  </WrapPanel>
- <TextBlock Text="選檔後驗證並儲存設定；未提供的項目保留原值。範本不含目前設定或密碼，請妥善保管填妥的 JSON 檔。" Style="{StaticResource Muted}" TextWrapping="Wrap" Margin="0,4,0,12"/>
+ <TextBlock Text="匯出使用目前已儲存的設定，請先儲存畫面上的修改。下載範本只提供範例。匯入驗證成功後儲存，未提供的項目保留原值；JSON 含連線資訊，請妥善保管。" Style="{StaticResource Muted}" TextWrapping="Wrap" Margin="0,4,0,12"/>
  <WrapPanel>
   <TextBlock Text="{Binding Admin.LinkState}" VerticalAlignment="Center" Margin="0,0,12,0"/>
   <Button Content="{Binding Admin.LinkToggleText}" Command="{Binding Admin.ToggleLinksCommand}"/>
@@ -106,6 +107,14 @@
  </StackPanel>
 </Grid></ScrollViewer></TabItem>
  <TabItem Header="本機設定"><ScrollViewer VerticalScrollBarVisibility="Auto"><StackPanel DataContext="{Binding Admin}">
+ <Border Style="{StaticResource Card}"><StackPanel>
+  <TextBlock Text="日誌自動清理" FontSize="20" FontWeight="SemiBold"/>
+  <TextBlock Text="保留最近幾天的程式執行日誌（含今天），預設 30 天。啟動後及每小時自動檢查；任務歷史、同步紀錄、操作稽核與備份不受影響。" Style="{StaticResource Muted}" TextWrapping="Wrap" Margin="0,6,0,10"/>
+  <WrapPanel><TextBlock Text="保留天數（1–365）" VerticalAlignment="Center" Margin="0,0,10,0"/>
+   <TextBox Text="{Binding LogRetentionDaysText,UpdateSourceTrigger=PropertyChanged}" Width="90" MaxLength="3" AutomationProperties.Name="執行日誌保留天數"/>
+   <Button Content="儲存保留天數" Command="{Binding SaveLogRetentionCommand}" Margin="10,0,0,0"/>
+  </WrapPanel>
+ </StackPanel></Border>
  <Border Style="{StaticResource Card}"><StackPanel>
   <TextBlock Text="管理者帳號與密碼" FontSize="20" FontWeight="SemiBold"/>
   <TextBlock Text="輸入目前密碼驗證。新密碼留空可只修改帳號；儲存後需重新登入。" Style="{StaticResource Muted}" TextWrapping="Wrap" Margin="0,6,0,12"/>

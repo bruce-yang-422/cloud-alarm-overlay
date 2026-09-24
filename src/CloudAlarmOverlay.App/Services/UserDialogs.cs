@@ -17,9 +17,19 @@ public interface IUserDialogs
     void ExportNamed(string contents,string filename)=>Export(contents);
     Task<string?> OpenSettingsJsonAsync()=>Task.FromResult<string?>(null);
     void ExportSettingsTemplate() { }
+    bool ExportSettingsJson(string contents, Action authorize)=>false;
 }
 public sealed class UserDialogs(ITaskService tasks,EmojiLibrary emojis,ITaskSchedulingService scheduling,LocalTaskCsvService csv,CountdownShareService shares):IUserDialogs
 {
+    public bool ExportSettingsJson(string contents, Action authorize)
+    {
+        authorize();
+        var picker=new SaveFileDialog{Filter="JSON 設定檔|*.json",FileName="cao-settings.local.json",DefaultExt=".json",AddExtension=true};
+        if(picker.ShowDialog()!=true)return false;
+        authorize();
+        File.WriteAllText(picker.FileName,contents,new UTF8Encoding(false));
+        return true;
+    }
     public async Task<string?> OpenSettingsJsonAsync()
     {
         var picker=new OpenFileDialog{Filter="JSON 設定檔|*.json",Multiselect=false};

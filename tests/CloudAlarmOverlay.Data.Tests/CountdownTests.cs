@@ -234,7 +234,7 @@ public sealed class CountdownTests : IDisposable
             if(expected is not {} at)break;
             after=at;
         }
-        if(rule=="LunarDay:1,15") Assert.Null(item.NextReminder(after));
+        if(rule=="LunarDay:1,15") Assert.NotNull(item.NextReminder(after));
     }
 
     [Fact]

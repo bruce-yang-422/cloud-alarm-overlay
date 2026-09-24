@@ -8,6 +8,9 @@ public sealed record TaiwanWeatherDistrict(string Code, string County, string Di
     public string DistrictLabel => $"{District}（{PostalCode}）";
     public override string ToString() => DistrictLabel;
     public WeatherLocation Location => new($"{County}／{District}", Latitude, Longitude);
+    // CWA Info_Town.js uses seven-digit IDs, distinct from MOI's eight-digit codes.
+    public string CwaTownId => Code[..2] is "63" or "64" or "65" or "66" or "67" or "68"
+        ? Code[..2] + Code[4..7] + "00" : Code[..7];
 }
 
 public static class TaiwanWeatherLocations

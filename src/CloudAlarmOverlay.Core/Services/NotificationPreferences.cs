@@ -25,6 +25,7 @@ public sealed class NotificationPreferences(ISettingsRepository settings)
         JsonSerializer.Deserialize<SoundPreference>((await settings.GetAsync("Sound:"+level,ct))?.Value??"{}")??new();
     public static void Validate(Setting setting)
     {
+        if(setting.Key==LogRetentionPolicy.Key)LogRetentionPolicy.Validate(setting.Value);
         if(setting.Key=="AllowUrgentSnooze" && setting.Value is not ("true" or "false")) throw new ArgumentException("稍後提醒政策無效。");
         if(setting.Key=="WeatherDefaultLocation" && setting.Value is not null) (JsonSerializer.Deserialize<WeatherLocation>(setting.Value) ?? throw new ArgumentException("天氣地點無效。")).Validate();
         if(setting.Key=="WeatherOptions") (JsonSerializer.Deserialize<WeatherOptions>(setting.Value ?? "{}") ?? new()).Location?.Validate();

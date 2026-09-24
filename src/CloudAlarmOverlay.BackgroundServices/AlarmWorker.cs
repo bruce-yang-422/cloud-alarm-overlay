@@ -1,4 +1,4 @@
-﻿using System.Globalization;
+using System.Globalization;
 using CloudAlarmOverlay.Core.Models;
 using CloudAlarmOverlay.Core.Repositories;
 using CloudAlarmOverlay.Core.Services;
@@ -8,7 +8,7 @@ namespace CloudAlarmOverlay.BackgroundServices;
 
 public sealed class AlarmWorker(ITaskRepository tasks, ITaskSchedulingService schedule, IRuntimeStore runtime,
     IDeviceIdentityService identity, IAlarmService alarms, ISettingsRepository settings, ChangeSignal signal,
-    RuntimeState state, IAlarmHeartbeat heartbeat, ILogger<AlarmWorker> logger, ICountdownRepository countdowns, TimeProvider clock, ILunarCalendarRepository lunar, IHolidayRepository holidays) : BackgroundService
+    RuntimeState state, IAlarmHeartbeat heartbeat, ILogger<AlarmWorker> logger, ICountdownRepository countdowns, TimeProvider clock, IHolidayRepository holidays) : BackgroundService
 {
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
@@ -47,11 +47,10 @@ public sealed class AlarmWorker(ITaskRepository tasks, ITaskSchedulingService sc
                             }
                             if (occurrence is { } future && future < next) next = future;
                         }
-                        var lunarDays=(await lunar.GetAllAsync(stoppingToken)).ToDictionary(e=>e.Date,e=>e.LunarDay);
                         var holidayList=await holidays.GetAllAsync(stoppingToken);
                         foreach (var item in await countdowns.GetAllAsync(stoppingToken))
                         {
-                            var occurrence = item.NextReminder(cursor,lunarDays,holidayList);
+                            var occurrence = item.NextReminder(cursor,null,holidayList);
                             while (occurrence is {} at && at <= now)
                             {
                                 var task = item.ReminderTask(at);
@@ -62,7 +61,7 @@ public sealed class AlarmWorker(ITaskRepository tasks, ITaskSchedulingService sc
                                         await runtime.MissedAsync(id, task, at, device, startup ? "NotLaunched" : "Overdue_Unacked", stoppingToken);
                                     else pending.Add(DispatchAsync(task, stoppingToken));
                                 }
-                                occurrence = item.NextReminder(at,lunarDays,holidayList);
+                                occurrence = item.NextReminder(at,null,holidayList);
                             }
                             if (occurrence is {} future && future < next) next = future;
                         }

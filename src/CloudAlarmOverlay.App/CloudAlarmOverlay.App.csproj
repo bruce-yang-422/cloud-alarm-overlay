@@ -17,6 +17,7 @@
     <Content Include="Assets/Emoji/LICENSE.txt" CopyToOutputDirectory="PreserveNewest" />
     <Resource Include="Assets/Brand/*.png" />
     <Content Include="../../task_builder_tailwind.html" Link="task_builder_tailwind.html" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="../../task-builder-assets/**/*" Link="task-builder-assets/%(RecursiveDir)%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
     <ProjectReference Include="../CloudAlarmOverlay.Core/CloudAlarmOverlay.Core.csproj" />
     <ProjectReference Include="../CloudAlarmOverlay.Data/CloudAlarmOverlay.Data.csproj" />
     <ProjectReference Include="../CloudAlarmOverlay.BackgroundServices/CloudAlarmOverlay.BackgroundServices.csproj" />

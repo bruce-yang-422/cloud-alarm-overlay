@@ -71,7 +71,11 @@ public sealed class PomodoroUiTests
                 Assert.Single(main.Pomodoro.History);Assert.Equal(1,main.Pomodoro.Page);
                 main.HistoryTabIndex=1;main.PageIndex=2;window.UpdateLayout();
                 await Dispatcher.Yield(DispatcherPriority.ApplicationIdle);Screenshot(window,"pomodoro-history");
-                var historyView=Find<PomodoroHistoryView>(window)!;var datePicker=Find<DatePicker>(historyView)!;
+                var historyView=Find<PomodoroHistoryView>(window)!;
+                var dateFilters=(Expander)historyView.FindName("PomodoroDateFilters");
+                Assert.False(dateFilters.IsExpanded);dateFilters.IsExpanded=true;window.UpdateLayout();
+                await Dispatcher.Yield(DispatcherPriority.ApplicationIdle);
+                var datePicker=Find<DatePicker>(historyView)!;
                 datePicker.IsDropDownOpen=true;await Dispatcher.Yield(DispatcherPriority.ApplicationIdle);
                 Assert.True(((System.Windows.Controls.Primitives.Popup)datePicker.Template.FindName("PART_Popup",datePicker)).IsOpen);datePicker.IsDropDownOpen=false;
                 main.PageIndex=3;window.Width=1050;window.Height=680;window.UpdateLayout();

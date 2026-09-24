@@ -168,6 +168,13 @@ public partial class MainWindow:Window
         if(!e.IsRepeat&&sender is CheckBox {DataContext:TaskRow row}&&vm.ToggleRowCommand.CanExecute(row))vm.ToggleRowCommand.Execute(row);
     }
     private void SelectAllTasks(object sender,RoutedEventArgs e)=>TaskGrid.SelectAll();
+    private void OpenTaskMenu(object sender,RoutedEventArgs e)
+    {
+        if(sender is not Button {ContextMenu: {} menu} button)return;
+        menu.PlacementTarget=button;
+        menu.Placement=System.Windows.Controls.Primitives.PlacementMode.Bottom;
+        menu.IsOpen=true;
+    }
     private void ClearTaskSelection(object sender,RoutedEventArgs e)=>TaskGrid.UnselectAll();
     private async void Navigate(object sender,RoutedEventArgs e)
     {

@@ -11,7 +11,7 @@ internal sealed class AdminSettingsStore(Database db,AdminSession session):IAdmi
         var actor=session.RequireAdmin();
         foreach(var setting in settings)
         {
-            if(setting.Key is not ("UpdateManifestUrl" or "AllowUrgentSnooze" or "WeatherDefaultLocation" or "SyncOptions" or "FlashMilliseconds" or "QuietPeriods" or "SyncLinksLocked" or "ExitPasswordMode" or "ExitPasswordHash" or "ExitPasswordRequired"))
+            if(setting.Key is not (LogRetentionPolicy.Key or "UpdateManifestUrl" or "AllowUrgentSnooze" or "WeatherDefaultLocation" or "SyncOptions" or "FlashMilliseconds" or "QuietPeriods" or "SyncLinksLocked" or "ExitPasswordMode" or "ExitPasswordHash" or "ExitPasswordRequired"))
                 throw new ArgumentException("此項目不屬於管理者可鎖定的設定。");
             if(setting.Key=="UpdateManifestUrl" && !string.IsNullOrWhiteSpace(setting.Value))UpdateCheckService.ValidateUrl(setting.Value);
             NotificationPreferences.Validate(setting);

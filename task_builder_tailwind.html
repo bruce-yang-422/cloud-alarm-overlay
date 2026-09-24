@@ -4,39 +4,13 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>雲端廣播排程小工具 - Tailwind UI 風格</title>
-  <!-- Tailwind CSS CDN -->
-  <script src="https://cdn.tailwindcss.com"></script>
-  <!-- Lucide Icons -->
-  <script src="https://unpkg.com/lucide@latest"></script>
-  <!-- SheetJS for client-side xlsx export -->
-  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
-  <!-- Google Fonts -->
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700&family=JetBrains+Mono:wght@400;500;600&family=Noto+Sans+TC:wght@400;500;600;700&display=swap" rel="stylesheet">
-
-  <script>
-    tailwind.config = {
-      theme: {
-        extend: {
-          fontFamily: {
-            sans: ['"Noto Sans TC"', '"Plus Jakarta Sans"', 'sans-serif'],
-            mono: ['"JetBrains Mono"', 'monospace'],
-          },
-          colors: {
-            brand: {
-              50: '#f0fdf4',
-              100: '#dcfce7',
-              500: '#22c55e',
-              600: '#16a34a',
-              700: '#15803d',
-              800: '#166534',
-            }
-          }
-        }
-      }
-    }
-  </script>
+  <!-- Bundled resources: no network required for editing or exporting. -->
+  <link rel="stylesheet" href="task-builder-assets/tailwind.css">
+  <link rel="stylesheet" href="task-builder-assets/noto-sans-tc/index.css">
+  <link rel="stylesheet" href="task-builder-assets/plus-jakarta-sans/index.css">
+  <link rel="stylesheet" href="task-builder-assets/jetbrains-mono/index.css">
+  <script src="task-builder-assets/lucide.min.js"></script>
+  <script src="task-builder-assets/xlsx.full.min.js"></script>
   <style>
     /* Custom subtle scrollbar */
     ::-webkit-scrollbar { width: 6px; height: 6px; }
@@ -1738,7 +1712,7 @@
         if (tasksResult.status === 'fulfilled' && employeesResult.status === 'fulfilled') {
           showToast(`已同步雲端資料：${cloudExistingIds.size} 筆任務、${employees.length} 位員工`);
         } else {
-          showToast('部分雲端資料同步失敗，請稍後再試');
+          showToast('雲端資料未完整載入，仍可手動輸入並匯出任務');
         }
       }
     }
@@ -2175,7 +2149,7 @@
         ]);
       });
 
-      if (typeof XLSX === 'undefined') { showToast('Excel 匯出元件尚未載入，請檢查網路後重新整理。'); return; }
+      if (typeof XLSX === 'undefined') { showToast('本機 Excel 匯出元件遺失，請重新安裝程式。'); return; }
       const wb = XLSX.utils.book_new();
       const ws = XLSX.utils.aoa_to_sheet(grid);
 

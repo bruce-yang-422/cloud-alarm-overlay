@@ -16,11 +16,169 @@ using Microsoft.Extensions.Hosting;
 namespace CloudAlarmOverlay.App.Tests;
 public sealed class PlannedFeaturesUiTests
 {
+    [Fact] public Task Sidebar_health_card_tracks_each_service_and_overall_state()=>MilestoneOneTests.RunSta(async()=>
+    {
+        var paths=new Paths();using var host=new HostBuilder().ConfigureServices(s=>{
+            CompositionRoot.ConfigureServices(s);s.AddSingleton<IAppPaths>(paths);
+        }).Build();MainWindow? window=null;
+        try
+        {
+            await host.Services.GetRequiredService<IDatabaseInitializer>().InitializeAsync();
+            var vm=host.Services.GetRequiredService<MainViewModel>();await vm.InitializeAsync();
+            var notified=false;vm.PropertyChanged+=(_,e)=>{if(e.PropertyName==nameof(vm.OverallHealth))notified=true;};
+            window=host.Services.GetRequiredService<MainWindow>();window.Width=1050;window.Height=780;window.ShowInTaskbar=false;window.ShowActivated=false;window.Show();
+            foreach(var dark in new[]{false,true})
+            {
+                CloudAlarmOverlay.App.Styles.AdaptiveBrushExtension.Apply(dark,ThemeColorStyle.Default);
+                vm.LocalScheduleHealth=vm.SheetAHealth=vm.SheetBHealth=new("正常","最後檢查正常","Healthy");
+                Assert.Equal("全部正常",vm.OverallHealth.Label);Assert.True(notified);
+                await Dispatcher.Yield(DispatcherPriority.ApplicationIdle);window.UpdateLayout();
+                var badge=(ContentControl)window.FindName("OverallHealthStatus");
+                Assert.Equal("Healthy",((HealthStatus)badge.Content).Severity);
+                Capture(window,dark?"connection-status-dark":"connection-status-light");
+                vm.SheetAHealth=new("未設定","尚未設定同步來源","Pending");Assert.Equal("尚待就緒",vm.OverallHealth.Label);
+                vm.SheetBHealth=new("中斷","上次同步已逾時","Stopped");Assert.Equal("部分中斷",vm.OverallHealth.Label);
+                vm.LocalScheduleHealth=new("異常","排程失敗","Error");Assert.Equal("狀態異常",vm.OverallHealth.Label);
+                await Dispatcher.Yield(DispatcherPriority.ApplicationIdle);Assert.Equal("Error",((HealthStatus)badge.Content).Severity);
+                Assert.Contains("Sheet A：未設定",vm.OverallHealth.Detail);
+            }
+        }
+        finally { CloudAlarmOverlay.App.Styles.AdaptiveBrushExtension.Apply(false,ThemeColorStyle.Default);window?.ForceClose();host.Dispose();Microsoft.Data.Sqlite.SqliteConnection.ClearAllPools();if(Directory.Exists(paths.DataDirectory))Directory.Delete(paths.DataDirectory,true); }
+    });
+    [Fact] public Task Pomodoro_history_preserves_cards_and_list_space()=>MilestoneOneTests.RunSta(async()=>
+    {
+        var paths=new Paths();using var host=new HostBuilder().ConfigureServices(s=>{
+            CompositionRoot.ConfigureServices(s);s.AddSingleton<IAppPaths>(paths);
+        }).Build();Window? window=null;
+        try
+        {
+            await host.Services.GetRequiredService<IDatabaseInitializer>().InitializeAsync();
+            var repository=host.Services.GetRequiredService<IPomodoroRepository>();
+            for(var i=0;i<18;i++)await repository.SaveLogAsync(new PomodoroLogEntry {
+                Id=$"history-{i}",Type=i%3==0?"Break":"Focus",Result=i%4==0?"Interrupted":"Completed",
+                StartedAt=DateTime.Today.AddHours(8).AddMinutes(i*30),EndedAt=DateTime.Today.AddHours(8).AddMinutes(i*30+25),PlannedMinutes=25 });
+            var vm=host.Services.GetRequiredService<PomodoroViewModel>();await vm.LoadAsync();
+            var view=new PomodoroHistoryView { DataContext=vm };
+            window=new Window { Content=view,Width=780,Height=650,ShowInTaskbar=false,ShowActivated=false };window.Show();
+            await Dispatcher.Yield(DispatcherPriority.ApplicationIdle);window.UpdateLayout();
+            var toolbar=(FrameworkElement)view.FindName("PomodoroHistoryToolbar");
+            var grid=(DataGrid)view.FindName("PomodoroHistoryGrid");
+            var cards=(FrameworkElement)view.FindName("PomodoroSummaryCards");
+            var dates=(Expander)view.FindName("PomodoroDateFilters");
+            var phase=(ListBox)view.FindName("PomodoroPhasePicker");
+            var result=(ComboBox)view.FindName("PomodoroResultPicker");
+            Assert.False(dates.IsExpanded);Assert.Equal(15,vm.History.Count);Assert.True(vm.CanNext);
+            foreach(var dark in new[]{false,true})
+            {
+                CloudAlarmOverlay.App.Styles.AdaptiveBrushExtension.Apply(dark,ThemeColorStyle.Default);
+                view.Background=new SolidColorBrush(dark?Color.FromRgb(36,52,70):Colors.White);window.UpdateLayout();
+                Assert.Equal(64,cards.ActualHeight);Assert.True(toolbar.ActualHeight<260,$"Toolbar: {toolbar.ActualHeight}");
+                Assert.True(grid.ActualHeight>toolbar.ActualHeight,$"Grid: {grid.ActualHeight}, toolbar: {toolbar.ActualHeight}");
+                Capture(window,dark?"pomodoro-history-dark":"pomodoro-history-light");
+                phase.SelectedItem="專注";result.SelectedItem="完成";await vm.RefreshAsync();
+                Assert.All(vm.History,row=>{Assert.Equal("專注",row.Phase);Assert.Equal("完成",row.Result);});
+                Assert.True(vm.FilteredCompleted>0);Assert.Equal(0,vm.FilteredInterrupted);
+                dates.IsExpanded=true;window.UpdateLayout();Assert.True(grid.ActualHeight>200);
+                dates.IsExpanded=false;await vm.ClearFiltersCommand.ExecuteAsync(null);
+                Assert.Equal("全部",phase.SelectedItem);Assert.Equal("全部",result.SelectedItem);
+            }
+        }
+        finally { CloudAlarmOverlay.App.Styles.AdaptiveBrushExtension.Apply(false,ThemeColorStyle.Default);window?.Close();host.Dispose();Microsoft.Data.Sqlite.SqliteConnection.ClearAllPools();if(Directory.Exists(paths.DataDirectory))Directory.Delete(paths.DataDirectory,true); }
+    });
+    [Fact] public Task History_toolbar_keeps_filters_and_gives_space_to_records()=>MilestoneOneTests.RunSta(async()=>
+    {
+        var paths=new Paths();using var host=new HostBuilder().ConfigureServices(s=>{
+            CompositionRoot.ConfigureServices(s);s.AddSingleton<IAppPaths>(paths);
+        }).Build();
+        Window? window=null;
+        try
+        {
+            await host.Services.GetRequiredService<IDatabaseInitializer>().InitializeAsync();
+            var vm=host.Services.GetRequiredService<MainViewModel>();await vm.InitializeAsync();
+            var view=new TaskHistoryView { DataContext=vm };
+            window=new Window { Content=view, Width=780, Height=650, ShowInTaskbar=false, ShowActivated=false };window.Show();
+            await Dispatcher.Yield(DispatcherPriority.ApplicationIdle);window.UpdateLayout();
+            var toolbar=(FrameworkElement)view.FindName("HistoryToolbar");
+            var grid=(DataGrid)view.FindName("HistoryGrid");
+            var dates=(Expander)view.FindName("HistoryDateFilters");
+            var source=(ComboBox)view.FindName("HistorySourcePicker");
+            var result=(ComboBox)view.FindName("HistoryResultPicker");
+            Assert.False(dates.IsExpanded);
+            foreach(var dark in new[]{false,true})
+            {
+                CloudAlarmOverlay.App.Styles.AdaptiveBrushExtension.Apply(dark,ThemeColorStyle.Default);
+                view.Background=new SolidColorBrush(dark?Color.FromRgb(36,52,70):Colors.White);
+                window.UpdateLayout();
+                Assert.True(toolbar.ActualHeight<185,$"Toolbar: {toolbar.ActualHeight}");
+                Assert.True(grid.ActualHeight>toolbar.ActualHeight*2,$"Grid: {grid.ActualHeight}, toolbar: {toolbar.ActualHeight}");
+                Capture(window,dark?"history-compact-dark":"history-compact-light");
+                source.SelectedItem=TaskSources.SheetB;result.SelectedItem="稍後提醒";
+                Assert.Equal(TaskSources.SheetB,vm.HistorySource);Assert.Equal("稍後提醒",vm.HistoryResult);
+                dates.IsExpanded=true;window.UpdateLayout();Assert.True(grid.ActualHeight>200);
+                vm.HistoryFrom=DateTime.Today.AddDays(1);dates.IsExpanded=false;window.UpdateLayout();
+                Assert.NotEmpty(vm.HistoryHint);Assert.Contains(vm.HistoryFrom.ToString("yyyy/MM/dd"),vm.HistoryDateSummary);
+                vm.ClearHistoryFiltersCommand.Execute(null);window.UpdateLayout();
+                Assert.Equal("全部",source.SelectedItem);Assert.Equal("全部",result.SelectedItem);Assert.Empty(vm.HistoryHint);
+            }
+        }
+        finally { CloudAlarmOverlay.App.Styles.AdaptiveBrushExtension.Apply(false,ThemeColorStyle.Default);window?.Close();host.Dispose();Microsoft.Data.Sqlite.SqliteConnection.ClearAllPools();if(Directory.Exists(paths.DataDirectory))Directory.Delete(paths.DataDirectory,true); }
+    });
+    [Fact] public Task Task_toolbar_keeps_list_space_and_menus_follow_selection()=>MilestoneOneTests.RunSta(async()=>
+    {
+        var paths=new Paths();using var host=new HostBuilder().ConfigureServices(s=>{
+            CompositionRoot.ConfigureServices(s);s.AddSingleton<IAppPaths>(paths);
+        }).Build();
+        MainWindow? window=null;
+        try
+        {
+            await host.Services.GetRequiredService<IDatabaseInitializer>().InitializeAsync();
+            var vm=host.Services.GetRequiredService<MainViewModel>();await vm.InitializeAsync();
+            vm.Tasks.Add(new TaskRow(TaskItem() with {Source=TaskSources.Local}));
+            vm.Tasks.Add(new TaskRow(TaskItem() with {Id="cloud",Title="公司共用任務",Source=TaskSources.SheetA}));
+            vm.PageIndex=1;
+            window=host.Services.GetRequiredService<MainWindow>();window.Width=1050;window.Height=780;window.ShowInTaskbar=false;window.ShowActivated=false;window.Show();
+            await Dispatcher.Yield(DispatcherPriority.ApplicationIdle);window.UpdateLayout();
+            var grid=(DataGrid)window.FindName("TaskGrid");
+            var toolbar=(FrameworkElement)window.FindName("TaskToolbar");
+            var batch=(Button)window.FindName("TaskBatchButton");
+            var single=(Button)window.FindName("TaskActionsButton");
+            var tools=(Button)window.FindName("TaskToolsButton");
+            foreach(var dark in new[]{false,true})
+            {
+                CloudAlarmOverlay.App.Styles.AdaptiveBrushExtension.Apply(dark,ThemeColorStyle.Default);
+                grid.UnselectAll();await Dispatcher.Yield(DispatcherPriority.ApplicationIdle);window.UpdateLayout();
+                Assert.False(single.IsVisible);Assert.False(batch.IsVisible);
+                Assert.True(toolbar.ActualHeight<180,$"Toolbar height: {toolbar.ActualHeight}");
+                Assert.True(grid.ActualHeight>toolbar.ActualHeight*2,$"Grid: {grid.ActualHeight}, toolbar: {toolbar.ActualHeight}");
+                tools.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));await Dispatcher.Yield(DispatcherPriority.ApplicationIdle);
+                Assert.True(tools.ContextMenu.IsOpen);Assert.Same(vm.ImportTasksCommand,((MenuItem)tools.ContextMenu.Items[0]).Command);tools.ContextMenu.IsOpen=false;
+                grid.SelectedItem=vm.Tasks[0];await Dispatcher.Yield(DispatcherPriority.ApplicationIdle);window.UpdateLayout();
+                Assert.True(single.IsVisible);Assert.False(batch.IsVisible);
+                Capture(window,dark?"tasks-compact-dark":"tasks-compact-light");
+                grid.SelectAll();await Dispatcher.Yield(DispatcherPriority.ApplicationIdle);window.UpdateLayout();
+                Assert.False(single.IsVisible);Assert.True(batch.IsVisible);
+                batch.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));await Dispatcher.Yield(DispatcherPriority.ApplicationIdle);
+                Assert.Same(vm.BatchTasksCommand,((MenuItem)batch.ContextMenu.Items[0]).Command);batch.ContextMenu.IsOpen=false;
+                grid.UnselectAll();grid.SelectedItem=vm.Tasks[1];
+                Assert.False(vm.EditTaskCommand.CanExecute(null));Assert.True(vm.CopyTaskCommand.CanExecute(null));
+            }
+        }
+        finally { CloudAlarmOverlay.App.Styles.AdaptiveBrushExtension.Apply(false,ThemeColorStyle.Default);window?.Close();host.Dispose();Microsoft.Data.Sqlite.SqliteConnection.ClearAllPools();if(Directory.Exists(paths.DataDirectory))Directory.Delete(paths.DataDirectory,true); }
+    });
+    private sealed class WeatherBrowser : CloudAlarmOverlay.App.Services.IBrowserLauncher
+    {
+        public Uri? Opened;
+        public bool Fail;
+        public void Open(Uri address) { if(Fail)throw new InvalidOperationException();Opened=address; }
+    }
     private sealed class SettingsDialogs : CloudAlarmOverlay.App.Services.IUserDialogs
     {
         public string? Json=AdminSettingsJson.Template;
         public Action? OnOpen;
         public int Opens;
+        public string? Exported;
+        public Action? OnSave;
+        public bool ExportSettingsJson(string contents,Action authorize) { OnSave?.Invoke();authorize();Exported=contents;return true; }
         public bool Confirm(string message)=>true;
         public void Edit(AlarmTask? task,bool copy) { }
         public void Export(string contents) { }
@@ -38,6 +196,7 @@ public sealed class PlannedFeaturesUiTests
             await host.Services.GetRequiredService<IDatabaseInitializer>().InitializeAsync();
             var vm=host.Services.GetRequiredService<MainViewModel>();
             await vm.ImportAdminSettingsCommand.ExecuteAsync(null);Assert.Equal(0,dialogs.Opens);
+            await vm.Admin.ExportCurrentSettingsCommand.ExecuteAsync(null);Assert.Null(dialogs.Exported);
             var auth=host.Services.GetRequiredService<IAuthenticationService>();await auth.EnsureDefaultAdministratorAsync();
             Assert.True(await auth.AuthenticateAsync("admin","12345"));
             await vm.ImportAdminSettingsCommand.ExecuteAsync(null);
@@ -46,6 +205,14 @@ public sealed class PlannedFeaturesUiTests
             dialogs.Json="{\"FormatVersion\":1,\"UpdateManifestUrl\":\"https://example.com/version.json\"}";
             await vm.ImportAdminSettingsCommand.ExecuteAsync(null);
             Assert.Equal("https://example.com/version.json",vm.Preferences.Maintenance.UpdateUrl);
+            vm.SheetAId="unsaved-draft";
+            await vm.Admin.ExportCurrentSettingsCommand.ExecuteAsync(null);
+            Assert.NotNull(dialogs.Exported);Assert.Contains("REPLACE_WITH_SHEET_A_ID",dialogs.Exported);
+            Assert.DoesNotContain("unsaved-draft",dialogs.Exported);
+            Assert.NotEmpty(AdminSettingsJson.Parse(dialogs.Exported));
+            dialogs.Exported=null;dialogs.OnSave=host.Services.GetRequiredService<AdminSession>().SignOut;
+            await vm.Admin.ExportCurrentSettingsCommand.ExecuteAsync(null);Assert.Null(dialogs.Exported);
+            Assert.True(await auth.AuthenticateAsync("admin","12345"));
             dialogs.Json=AdminSettingsJson.Template.Replace("REPLACE_WITH_SHEET_A_ID","changed");
             dialogs.OnOpen=host.Services.GetRequiredService<AdminSession>().SignOut;
             await vm.ImportAdminSettingsCommand.ExecuteAsync(null);
@@ -96,12 +263,12 @@ public sealed class PlannedFeaturesUiTests
             finally{window.Finish(false);}
         });
     }
-    [Fact] public async Task New_views_render_weather_wraps_and_header_opens_weather_settings()
+    [Fact] public async Task New_views_render_weather_wraps_and_header_opens_forecast()
     {
         await MilestoneOneTests.RunSta(async()=>
         {
-            var paths=new Paths();using var host=new HostBuilder().ConfigureServices(s=>{
-                CompositionRoot.ConfigureServices(s);s.AddSingleton<IAppPaths>(paths);s.AddSingleton(new HttpClient(new Handler()));
+            var paths=new Paths();var browser=new WeatherBrowser();using var host=new HostBuilder().ConfigureServices(s=>{
+                CompositionRoot.ConfigureServices(s);s.AddSingleton<IAppPaths>(paths);s.AddSingleton<CloudAlarmOverlay.App.Services.IBrowserLauncher>(browser);s.AddSingleton(new HttpClient(new Handler()));
             }).Build();
             MainWindow? main=null;AlarmWindow? alarm=null;TaskImportWindow? import=null;
             try
@@ -127,7 +294,9 @@ public sealed class PlannedFeaturesUiTests
                 }
                 CloudAlarmOverlay.App.Styles.AdaptiveBrushExtension.Apply(false,ThemeColorStyle.Default);
                 vm.OpenWeatherCommand.Execute(null);await Dispatcher.Yield(DispatcherPriority.ApplicationIdle);main.UpdateLayout();
-                Assert.Equal(4,vm.PageIndex);Assert.True(vm.Preferences.SelectedSettingsTab>0);Capture(main,"weather-settings");
+                Assert.Equal(0,vm.PageIndex);Assert.Equal(vm.Preferences.Weather!.ForecastUri,browser.Opened);
+                browser.Fail=true;vm.OpenWeatherCommand.Execute(null);Assert.Contains("無法開啟氣象署",vm.Status);
+                vm.Preferences.SelectedSettingsTab=6;vm.PageIndex=4;await Dispatcher.Yield(DispatcherPriority.ApplicationIdle);main.UpdateLayout();Capture(main,"weather-settings");
                 var csv=host.Services.GetRequiredService<LocalTaskCsvService>();
                 var rows=await csv.PreviewAsync(LocalTaskCsvService.Template(DateTime.Now));
                 import=new TaskImportWindow{DataContext=new TaskImportViewModel(csv,rows),ShowInTaskbar=false,ShowActivated=false};import.Show();await Dispatcher.Yield(DispatcherPriority.ApplicationIdle);import.UpdateLayout();Capture(import,"csv-import");import.Close();

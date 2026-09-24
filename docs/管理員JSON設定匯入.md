@@ -1,6 +1,6 @@
-# 管理員 JSON 設定匯入
+# 管理員 JSON 設定匯入與匯出
 
-此功能已加入原始碼，尚未重新封裝至現有 v1.3.0 安裝檔。
+JSON 匯入已於 2026-09-24 納入本機 v1.3.0 安裝檔；新增的「匯出目前設定」已完成原始碼實作，已納入本機 v1.3.0 安裝檔。
 
 1. 開啟「管理者專區」，輸入管理者帳號及密碼。
 2. 在「同步來源」按「下載 JSON 範本」。範本不包含這台電腦的設定或密碼。
@@ -10,18 +10,30 @@
 
 若同步來源已鎖定，含 SyncOptions 的檔案必須先手動解鎖才能匯入；JSON 不能繞過此限制。登入逾時須重新登入。
 
+## 匯出目前設定
+
+管理員登入後，在「同步來源」按「匯出目前設定」，選擇 JSON 儲存位置；預設檔名為 `cao-settings.local.json`。此功能與「下載 JSON 範本」不同：範本使用範例值，匯出使用本機已儲存的實際值。畫面上尚未儲存的修改不包含在內。
+
+- 匯出 Sheet A／B、同步間隔、更新網址、來源鎖定、緊急稍後提醒、閃爍與靜音政策、公司天氣地點及執行日誌保留天數。
+- 不含管理者帳密、結束密碼、裝置身分或個人天氣位置；未設定公司天氣時省略該欄位，再匯入時保留目標電腦原有地點。
+- 內建地點使用行政區代碼；舊版自訂地點使用 `WeatherDefaultLocation` 的 Name、Latitude、Longitude 保留原始位置。
+- 輸出可再次匯入；若目標電腦同步來源已鎖定，仍須先解鎖。選擇儲存位置期間登入逾時或登出，禁止寫檔。
+- JSON 含真實連線資訊，請妥善保管；預設檔名已由專案 `.gitignore` 排除，改名或搬到其他儲存庫時須自行確認忽略規則。
+
 ## 設定格式
 
 採 UTF-8 JSON（可含 BOM），最大 64 KB；欄位名稱區分大小寫。FormatVersion 必須為 1。
 
 | 欄位 | 說明 |
 | --- | --- |
+| RuntimeLogRetentionDays | 執行日誌保留天數，1–365，預設 30；只清理 runtime 日誌。此參數已納入本機 v1.3.0 安裝檔。 |
 | SyncOptions | 完整八欄：SheetAId、TasksAGid、HolidaysGid、EmployeesGid、LunarGid、SheetBId、TasksBGid、IntervalSeconds。ID 為純 ID，GID 為字串；來源 ID 空字串代表停用，間隔 30–60 秒。 |
 | SyncLinksLocked | true／false，儲存同步來源後是否鎖定。 |
 | UpdateManifestUrl | HTTPS 更新資訊網址；空字串清除。 |
 | AllowUrgentSnooze | 是否允許緊急提醒稍後提醒。 |
 | FlashMilliseconds、LockFlash | 必須一起提供；閃爍 200–5000 毫秒及是否鎖定。 |
 | QuietPeriods、LockQuiet | 必須一起提供；例如 `[{"Start":"12:00","End":"13:00"}]`，空陣列清除靜音時段。 |
+| WeatherDefaultLocation | 舊版自訂地點的 Name、Latitude、Longitude；不可與 WeatherDefaultDistrictCode 同時提供。 |
 | WeatherDefaultDistrictCode | 內建行政區代碼，例如板橋區 `65000010`；完整代碼見 Core/Data/TaiwanWeatherLocations.json 的 Code 欄位。 |
 
 未提供的設定群組保留原值。未知欄位、重複欄位、null、無效格式或值會拒絕整份檔案，不部分套用。不支援管理者帳密、結束密碼、裝置身分或任務資料。

@@ -8,6 +8,28 @@ using CloudAlarmOverlay.App.ViewModels;
 namespace CloudAlarmOverlay.App.Tests;
 public sealed class WeatherTests
 {
+    [Theory]
+    [InlineData("65000150","6501500")]
+    [InlineData("63000030","6300300")]
+    [InlineData("68000020","6800200")]
+    [InlineData("10002080","1000208")]
+    [InlineData("09007010","0900701")]
+    public void Cwa_links_use_official_town_codes(string code,string expected)
+        => Assert.Equal(expected,TaiwanWeatherLocations.All.Single(d=>d.Code==code).CwaTownId);
+
+    [Fact] public async Task Forecast_link_uses_effective_saved_location_and_falls_back_for_legacy_locations()
+    {
+        var settings=new Settings();var clock=new Clock();using var http=new HttpClient(new Handler());
+        using var weather=new WeatherService(settings,new(http),clock);var vm=new WeatherViewModel(weather,settings,clock);
+        var wugu=TaiwanWeatherLocations.All.Single(d=>d.Code=="65000150");
+        await settings.SaveAsync(new Setting{Key="WeatherDefaultLocation",Value=System.Text.Json.JsonSerializer.Serialize(wugu.Location)});
+        await vm.LoadAsync();Assert.EndsWith("TID=6501500",vm.ForecastUri.AbsoluteUri);
+        vm.SelectedCounty="臺北市";vm.SelectedDistrict=TaiwanWeatherLocations.All.Single(d=>d.Code=="63000030");
+        Assert.EndsWith("TID=6501500",vm.ForecastUri.AbsoluteUri); // Unsaved selection must not change the home link.
+        await vm.SaveCommand.ExecuteAsync(null);Assert.EndsWith("TID=6300300",vm.ForecastUri.AbsoluteUri);
+        await weather.SaveAsync(new(true,Taipei));Assert.Equal("https://www.cwa.gov.tw/V8/C/W/Town/Town.html",vm.ForecastUri.AbsoluteUri);
+        Assert.Contains("Open-Meteo",vm.Details);Assert.Contains("點擊查看氣象署",vm.Details);
+    }
     private const string Forecast = """
         {"current":{"time":"2026-09-24T14:00","temperature_2m":29.4,"apparent_temperature":32.1,"precipitation":0.2,"weather_code":2},
         "daily":{"time":["2026-09-24","2026-09-25"],"weather_code":[2,61],"temperature_2m_min":[25,24],"temperature_2m_max":[32,31],"precipitation_probability_max":[20,60]}}
@@ -105,11 +127,11 @@ public sealed class WeatherTests
         var personal=new WeatherLocation("高雄",22.6,120.3);await weather.SaveAsync(new(true,personal));Assert.Equal(personal,weather.EffectiveLocation);
         await weather.SaveAsync(new(true));Assert.Equal(Taipei,weather.EffectiveLocation);
     }
-    [Fact] public async Task Expired_cache_is_hidden_and_unconfigured_weather_links_to_settings()
+    [Fact] public async Task Expired_cache_is_hidden_and_unconfigured_weather_explains_location_settings()
     {
         using var handler=new Handler();using var http=new HttpClient(handler);var settings=new Settings();var clock=new Clock();
         using var weather=new WeatherService(settings,new(http),clock);var vm=new WeatherViewModel(weather,settings,clock);
-        await vm.LoadAsync();Assert.Equal("設定天氣地點",vm.Current);
+        await vm.LoadAsync();Assert.Equal("請至設定 → 天氣選擇地點",vm.Current);Assert.Equal("https://www.cwa.gov.tw/V8/C/W/Town/Town.html",vm.ForecastUri.AbsoluteUri);
         await weather.SaveAsync(new(true,Taipei));await weather.RefreshAsync();
         Assert.Contains("29.4",vm.Current);Assert.Contains("0.2 mm",vm.Current);Assert.Contains("60%",vm.Tomorrow);
         clock.Now=clock.Now.AddHours(6);vm.Tick();

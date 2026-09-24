@@ -1,4 +1,4 @@
-﻿using System.Globalization;
+using System.Globalization;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CloudAlarmOverlay.Core.Models;
@@ -27,7 +27,7 @@ public partial class TaskEditorViewModel : ObservableObject
         {
             var task=Draft();
             var next=await scheduling.GetNextOccurrenceAsync(task,DateTime.Now);
-            if(revision==previewRevision)NextReminderPreview=!Enabled?"提醒已停用":next is {} at?$"下一次提醒：{at:yyyy/MM/dd HH:mm}":"目前找不到下一次提醒，請檢查日期或農曆資料。";
+            if(revision==previewRevision)NextReminderPreview=!Enabled?"提醒已停用":next is {} at?$"下一次提醒：{at:yyyy/MM/dd HH:mm}":"目前找不到下一次提醒，請檢查日期、曆法支援範圍或規則。";
         }
         catch(Exception ex){if(revision==previewRevision)NextReminderPreview=ex.Message;}
     }

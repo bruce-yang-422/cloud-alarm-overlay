@@ -151,7 +151,7 @@ public sealed class MilestoneTwoTests
                         Assert.Equal(5,intervalSlider.TickFrequency);
                         intervalSlider.Value=50;
                         Assert.Equal(50,vm.IntervalSeconds);
-                        Assert.Equal(2,Descendants<TextBlock>(window).Count(t=>Equals(t.Text,"連線狀態")&&t.IsVisible));
+                        Assert.Equal(2,Descendants<TextBlock>(Descendants<AdminView>(window).Single()).Count(t=>Equals(t.Text,"連線狀態")&&t.IsVisible));
                         Assert.DoesNotContain(Descendants<TextBlock>(window),t=>Equals(t.Text,"›  連線測試輸出")&&t.IsVisible);
                     }
                     if(i==1)

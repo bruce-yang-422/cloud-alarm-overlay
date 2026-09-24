@@ -8,7 +8,7 @@ using Microsoft.Extensions.Hosting;
 namespace CloudAlarmOverlay.App.Tests;
 public sealed class CalendarHeaderTests
 {
-    [Fact] public async Task Header_uses_cache_with_offline_lunar_fallback_and_rolls_over_at_midnight()
+    [Fact] public async Task Header_uses_builtin_lunar_and_sheet_solar_terms_and_rolls_over_at_midnight()
     {
         var paths=new Paths();
         using var host=new HostBuilder().ConfigureServices(s=>{CompositionRoot.ConfigureServices(s);s.AddSingleton<IAppPaths>(paths);}).Build();
@@ -23,7 +23,7 @@ public sealed class CalendarHeaderTests
             Assert.Equal("-",vm.CurrentSolarTerm);
             await host.Services.GetRequiredService<ILunarCalendarRepository>().ReplaceCacheAsync([
                 new(){Date=new(2024,2,4),LunarDay=25,SolarTerm="立春"},
-                new(){Date=new(2024,2,11),LunarDay=2,LunarDate="正月初二"}]);
+                new(){Date=new(2024,2,11),LunarDay=30,LunarDate="錯誤的 Sheet 農曆"}]);
             await vm.RefreshCalendarAsync(new(2024,2,4));
             Assert.Equal("立春",vm.CurrentSolarTerm);
             await vm.RefreshCalendarAsync(new(2024,2,11));

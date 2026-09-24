@@ -13,6 +13,33 @@ public partial class AdminViewModel(AdminSession session,IAdminSettingsStore sto
     ISystemEventStore events,IExitProtectionService exitProtection,IAutoStartService autoStart,IAuthenticationService authentication):ObservableObject
 {
     public AdminSession Session=>session;
+    [ObservableProperty] private string logRetentionDaysText="30";
+    [RelayCommand] private async Task SaveLogRetentionAsync()
+    {
+        try
+        {
+            session.RequireAdmin();
+            var days=LogRetentionPolicy.Validate(LogRetentionDaysText.Trim());
+            await store.SaveAsync([new(){Key=LogRetentionPolicy.Key,Value=days.ToString(System.Globalization.CultureInfo.InvariantCulture)}]);
+            LogRetentionDaysText=days.ToString(System.Globalization.CultureInfo.InvariantCulture);
+            Message=$"日誌保留天數已設為 {days} 天，下次自動檢查時套用（最晚一小時內）。";
+        }
+        catch(Exception ex) { Message=ex.Message; }
+    }
+    [RelayCommand] private async Task ExportCurrentSettingsAsync()
+    {
+        try
+        {
+            session.RequireAdmin();
+            var json=await AdminSettingsJson.ExportAsync(settings);
+            session.RequireAdmin();
+            Message=dialogs.ExportSettingsJson(json,()=>session.RequireAdmin())
+                ?"已匯出目前已儲存的設定。JSON 含連線資訊，請妥善保管。"
+                :"已取消匯出設定。";
+        }
+        catch(UnauthorizedAccessException) { Message="請先登入管理者；登入逾時請重新驗證。"; }
+        catch(Exception) { Message="無法匯出設定，請確認已儲存的設定有效且檔案可寫入。"; }
+    }
     public async Task<bool> ImportSettingsJsonAsync()
     {
         session.RequireAdmin();
@@ -90,6 +117,7 @@ public partial class AdminViewModel(AdminSession session,IAdminSettingsStore sto
             await RefreshExitPasswordModeAsync();
             ExitPasswordRequired=await exitProtection.IsRequiredAsync();
             AutoStartEnabled=autoStart.IsEnabled();
+            LogRetentionDaysText=LogRetentionPolicy.Read((await settings.GetAsync(LogRetentionPolicy.Key))?.Value).ToString(System.Globalization.CultureInfo.InvariantCulture);
             OnPropertyChanged(nameof(LinksEditable));
             await RefreshLogsAsync();
         }

@@ -20,6 +20,7 @@ public partial class MainViewModel
     public int UnackedHistoryCount=>filteredHistory.Count(x=>x.Entry.Result=="Overdue_Unacked");
     public int NotLaunchedHistoryCount=>filteredHistory.Count(x=>x.Entry.Result=="NotLaunched");
     public bool CanPreviousHistory=>HistoryPage>1;
+    public string HistoryDateSummary=>$"預定日期：{HistoryFrom:yyyy/MM/dd} – {HistoryTo:yyyy/MM/dd} · 調整日期";
     public bool CanNextHistory=>HistoryPage*15<filteredHistory.Count;
     public string HistoryPageLabel=>$"顯示 {(filteredHistory.Count==0?0:(HistoryPage-1)*15+1)}–{Math.Min(HistoryPage*15,filteredHistory.Count)} 筆，共 {filteredHistory.Count} 筆 · 第 {HistoryPage}/{Math.Max(1,(filteredHistory.Count+14)/15)} 頁";
     partial void OnHistoryFromChanged(DateTime value)=>FilterHistory();
@@ -29,6 +30,7 @@ public partial class MainViewModel
     private void FilterHistory(bool resetPage=true)
     {
         if(resettingHistory)return;
+        OnPropertyChanged(nameof(HistoryDateSummary));
         if(resetPage)HistoryPage=1;
         HistoryHint=HistoryFrom.Date>HistoryTo.Date?"結束日期不可早於開始日期。":
             (HistoryTo.Date-HistoryFrom.Date).TotalDays>90?"查詢區間較大，載入可能需要數秒。":"";

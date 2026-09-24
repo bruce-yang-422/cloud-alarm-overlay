@@ -256,5 +256,32 @@ public sealed class PlannedFeaturesTests : IDisposable, IAppPaths
         Get<AdminSession>().SignOut();
         await Assert.ThrowsAsync<UnauthorizedAccessException>(()=>store.SaveAsync(imported));
     }
+    [Fact] public async Task Admin_json_export_roundtrips_policies_quiet_hours_and_legacy_weather_without_credentials()
+    {
+        var settings=Get<ISettingsRepository>();
+        var defaults=AdminSettingsJson.Parse(await AdminSettingsJson.ExportAsync(settings));
+        Assert.Equal("500",defaults.Single(s=>s.Key=="FlashMilliseconds").Value);
+        await Get<IAuthenticationService>().EnsureDefaultAdministratorAsync();
+        Assert.True(await Get<IAuthenticationService>().AuthenticateAsync("admin","12345"));
+        var imported=AdminSettingsJson.Parse(AdminSettingsJson.Template);
+        await Get<IAdminSettingsStore>().SaveAsync(imported);
+        await Get<IAdminSettingsStore>().SaveAsync([
+            new(){Key="QuietPeriods",Value="[{\"Start\":\"22:00\",\"End\":\"07:00\"}]",Locked=true},
+            new(){Key="FlashMilliseconds",Value="800",Locked=true},
+            new(){Key="AllowUrgentSnooze",Value="false"},
+            new(){Key="SyncLinksLocked",Value="true"}]);
+        var json=await AdminSettingsJson.ExportAsync(settings);
+        Assert.Contains("WeatherDefaultDistrictCode",json);
+        Assert.DoesNotContain("StartTime",json);Assert.DoesNotContain("Password",json);Assert.DoesNotContain("12345",json);
+        var roundtrip=AdminSettingsJson.Parse(json);
+        Assert.Equal("true",roundtrip.Single(s=>s.Key=="SyncLinksLocked").Value);
+        Assert.Equal("false",roundtrip.Single(s=>s.Key=="AllowUrgentSnooze").Value);
+        Assert.True(roundtrip.Single(s=>s.Key=="QuietPeriods").Locked);
+        Assert.Equal(await settings.GetAsync("FlashMilliseconds"),roundtrip.Single(s=>s.Key=="FlashMilliseconds"));
+        var legacy=new WeatherLocation("自訂舊地點",25.01,121.01);
+        await Get<IAdminSettingsStore>().SaveAsync([new(){Key="WeatherDefaultLocation",Value=System.Text.Json.JsonSerializer.Serialize(legacy)}]);
+        var legacyExport=AdminSettingsJson.Parse(await AdminSettingsJson.ExportAsync(settings));
+        Assert.Equal(legacy,System.Text.Json.JsonSerializer.Deserialize<WeatherLocation>(legacyExport.Single(s=>s.Key=="WeatherDefaultLocation").Value!));
+    }
     public void Dispose(){services.Dispose();Microsoft.Data.Sqlite.SqliteConnection.ClearAllPools();if(Directory.Exists(DataDirectory))Directory.Delete(DataDirectory,true);}
 }

@@ -1,4 +1,4 @@
-﻿using System.Globalization;
+using System.Globalization;
 namespace CloudAlarmOverlay.Core.Recurrence;
 public static class RecurrenceRule
 {
@@ -39,7 +39,16 @@ public static class RecurrenceRule
             return month==int.Parse(p[1]) && calendar.GetDayOfMonth(solar)==int.Parse(p[2]) && (!isLeap || (p.Length==4 && p[3]=="Both"));
         }
         if(p.Length==3 && !p[2].Split(',').Select(int.Parse).Contains(date.Month))return false;
-        int value=p[0] switch {"Weekly"=>date.DayOfWeek==DayOfWeek.Sunday?7:(int)date.DayOfWeek,"Monthly"=>date.Day,_=>lunarDay??0};
+        int value;
+        if(p[0]=="LunarDay")
+        {
+            var calendar=new ChineseLunisolarCalendar();
+            var solar=date.ToDateTime(TimeOnly.MinValue);
+            if(solar<calendar.MinSupportedDateTime || solar>calendar.MaxSupportedDateTime)return false;
+            // Monthly recurrence includes regular and leap months. Legacy Sheet values are ignored.
+            value=calendar.GetDayOfMonth(solar);
+        }
+        else value=p[0]=="Weekly"?(date.DayOfWeek==DayOfWeek.Sunday?7:(int)date.DayOfWeek):date.Day;
         return p[1].Split(',').Select(int.Parse).Contains(value);
     }
     public static string Describe(string rule) => rule switch

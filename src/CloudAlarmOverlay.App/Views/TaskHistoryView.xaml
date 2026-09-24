@@ -1,36 +1,50 @@
 <UserControl x:Class="CloudAlarmOverlay.App.Views.TaskHistoryView" xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:adaptive="clr-namespace:CloudAlarmOverlay.App.Styles" FontFamily="Segoe UI, Microsoft JhengHei UI" FontSize="14">
 <UserControl.Resources><ResourceDictionary><ResourceDictionary.MergedDictionaries><ResourceDictionary Source="../Styles/LightTheme.xaml"/></ResourceDictionary.MergedDictionaries></ResourceDictionary></UserControl.Resources>
 <Grid Margin="0,4,0,0"><Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
-<ScrollViewer x:Name="HeaderScroll" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled"><StackPanel>
-<DockPanel Margin="0,0,0,16"><Button Content="匯出紀錄" Command="{Binding ExportHistoryCommand}" DockPanel.Dock="Right" HorizontalAlignment="Right" Margin="10,0,0,0" ToolTip="匯出目前篩選的全部結果"/><StackPanel><TextBlock Text="提醒紀錄" FontSize="22" FontWeight="SemiBold"/><TextBlock Text="查看提醒何時送達、是否已經確認。" Foreground="{adaptive:AdaptiveBrush #71829A}" Margin="0,5,0,0"/></StackPanel></DockPanel>
-<UniformGrid Columns="4" Margin="0,0,0,16"><Border Background="{adaptive:AdaptiveBrush #EDF7F2}" CornerRadius="12" Padding="16,12" Margin="0,0,8,0"><StackPanel><TextBlock Text="準時簽收" Foreground="{adaptive:AdaptiveBrush #246D50}" FontSize="12"/><TextBlock Text="{Binding OnTimeHistoryCount}" FontSize="28" FontWeight="SemiBold" Foreground="{adaptive:AdaptiveBrush #246D50}" Margin="0,5,0,0"/></StackPanel></Border><Border Background="{adaptive:AdaptiveBrush #FFF4E8}" CornerRadius="12" Padding="16,12" Margin="0,0,8,0"><StackPanel><TextBlock Text="逾期簽收" Foreground="{adaptive:AdaptiveBrush #996323}" FontSize="12"/><TextBlock Text="{Binding LateHistoryCount}" FontSize="28" FontWeight="SemiBold" Foreground="{adaptive:AdaptiveBrush #996323}" Margin="0,5,0,0"/></StackPanel></Border><Border Background="{adaptive:AdaptiveBrush #FFF0EE}" CornerRadius="12" Padding="16,12" Margin="0,0,8,0"><StackPanel><TextBlock Text="逾期未簽收" Foreground="{adaptive:AdaptiveBrush #AF493E}" FontSize="12"/><TextBlock Text="{Binding UnackedHistoryCount}" FontSize="28" FontWeight="SemiBold" Foreground="{adaptive:AdaptiveBrush #AF493E}" Margin="0,5,0,0"/></StackPanel></Border><Border Background="{adaptive:AdaptiveBrush #EEF3F9}" CornerRadius="12" Padding="16,12" Margin="0,0,8,0"><StackPanel><TextBlock Text="未開機" Foreground="{adaptive:AdaptiveBrush #61718A}" FontSize="12"/><TextBlock Text="{Binding NotLaunchedHistoryCount}" FontSize="28" FontWeight="SemiBold" Foreground="{adaptive:AdaptiveBrush #61718A}" Margin="0,5,0,0"/></StackPanel></Border></UniformGrid>
-<Border Background="{adaptive:AdaptiveBrush #F8FAFD}" BorderBrush="{adaptive:AdaptiveBrush #E5EBF3}" BorderThickness="1" CornerRadius="12" Padding="12" Margin="0,0,0,14"><StackPanel>
-<DockPanel Margin="0,0,0,8"><Button Content="清除篩選" Command="{Binding ClearHistoryFiltersCommand}" DockPanel.Dock="Right" HorizontalAlignment="Right" Padding="6" Margin="0" Background="Transparent" Foreground="{adaptive:AdaptiveBrush #61758F}"/><TextBlock Text="篩選紀錄" FontWeight="SemiBold"/></DockPanel>
-<WrapPanel>
-<StackPanel Margin="0,0,18,10"><TextBlock Text="任務名稱" Foreground="{adaptive:AdaptiveBrush #71829A}" FontSize="12"/><TextBox Text="{Binding HistorySearch,UpdateSourceTrigger=PropertyChanged}" Width="230" Margin="0,6,0,0" AutomationProperties.Name="搜尋任務名稱" ToolTip="可輸入多個關鍵字，以空白分隔；% 代表任意文字。"/></StackPanel>
-<StackPanel Margin="0,0,0,10"><TextBlock Text="預定日期範圍" Foreground="{adaptive:AdaptiveBrush #71829A}" FontSize="12"/><StackPanel Orientation="Horizontal" Margin="0,6,0,0"><DatePicker SelectedDate="{Binding HistoryFrom}" Style="{StaticResource HistoryDatePicker}" Width="148" Height="38" AutomationProperties.Name="歷史開始日期"/><TextBlock Text="—" Margin="10,0"/><DatePicker SelectedDate="{Binding HistoryTo}" Style="{StaticResource HistoryDatePicker}" Width="148" Height="38" AutomationProperties.Name="歷史結束日期"/></StackPanel></StackPanel>
+<ScrollViewer x:Name="HeaderScroll" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled"><StackPanel x:Name="HistoryToolbar">
+<DockPanel Margin="0,0,0,10">
+<Button Content="匯出紀錄" Command="{Binding ExportHistoryCommand}" DockPanel.Dock="Right" HorizontalAlignment="Right" Padding="12,6" ToolTip="匯出目前篩選的全部結果"/>
+<TextBlock Text="提醒紀錄" FontSize="22" FontWeight="SemiBold" VerticalAlignment="Center" ToolTip="查看提醒何時送達、是否已經確認。通知觸發後 15 分鐘未簽收會標記逾期；未開機紀錄於程式下次啟動時補登。"/>
+</DockPanel>
+<WrapPanel Margin="0,0,0,10" ToolTip="目前篩選結果的統計">
+<TextBlock Foreground="{adaptive:AdaptiveBrush #246D50}" Margin="0,0,20,0"><Run Text="準時簽收 "/><Run Text="{Binding OnTimeHistoryCount,Mode=OneWay}" FontWeight="SemiBold"/></TextBlock>
+<TextBlock Foreground="{adaptive:AdaptiveBrush #996323}" Margin="0,0,20,0"><Run Text="逾期簽收 "/><Run Text="{Binding LateHistoryCount,Mode=OneWay}" FontWeight="SemiBold"/></TextBlock>
+<TextBlock Foreground="{adaptive:AdaptiveBrush #AF493E}" Margin="0,0,20,0"><Run Text="逾期未簽收 "/><Run Text="{Binding UnackedHistoryCount,Mode=OneWay}" FontWeight="SemiBold"/></TextBlock>
+<TextBlock Foreground="{adaptive:AdaptiveBrush #61718A}"><Run Text="未開機 "/><Run Text="{Binding NotLaunchedHistoryCount,Mode=OneWay}" FontWeight="SemiBold"/></TextBlock>
 </WrapPanel>
-<WrapPanel>
-<StackPanel Margin="0,0,18,8"><TextBlock Text="來源" Foreground="{adaptive:AdaptiveBrush #71829A}" FontSize="12" Margin="0,0,0,6"/><ListBox ItemsSource="{Binding HistorySources}" SelectedItem="{Binding HistorySource}" Style="{StaticResource SegmentedSelector}" AutomationProperties.Name="篩選紀錄來源"/></StackPanel>
-<StackPanel Margin="0,0,0,8"><TextBlock Text="結果" Foreground="{adaptive:AdaptiveBrush #71829A}" FontSize="12" Margin="0,0,0,6"/><ListBox ItemsSource="{Binding HistoryResults}" SelectedItem="{Binding HistoryResult}" Style="{StaticResource SegmentedSelector}" AutomationProperties.Name="篩選簽收結果"/></StackPanel>
+<Grid Margin="0,0,0,8"><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="130"/><ColumnDefinition Width="150"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+<Grid Margin="0,0,8,0">
+<TextBox x:Name="HistorySearchBox" Text="{Binding HistorySearch,UpdateSourceTrigger=PropertyChanged}" MinWidth="100" Height="36" Padding="8,5" AutomationProperties.Name="搜尋任務名稱" ToolTip="可輸入多個關鍵字，以空白分隔；% 代表任意文字。"/>
+<TextBlock Text="搜尋任務名稱…" Margin="10,0" VerticalAlignment="Center" IsHitTestVisible="False" Foreground="{adaptive:AdaptiveBrush #71829A}"><TextBlock.Style><Style TargetType="TextBlock"><Setter Property="Visibility" Value="Collapsed"/><Style.Triggers><DataTrigger Binding="{Binding HistorySearch}" Value=""><Setter Property="Visibility" Value="Visible"/></DataTrigger></Style.Triggers></Style></TextBlock.Style></TextBlock>
+</Grid>
+<ComboBox x:Name="HistorySourcePicker" Grid.Column="1" ItemsSource="{Binding HistorySources}" SelectedItem="{Binding HistorySource}" Margin="0,0,8,0" Height="36" AutomationProperties.Name="篩選紀錄來源" ToolTip="篩選紀錄來源"><ComboBox.ItemTemplate><DataTemplate><TextBlock><Run Text="來源："/><Run Text="{Binding Mode=OneWay}"/></TextBlock></DataTemplate></ComboBox.ItemTemplate></ComboBox>
+<ComboBox x:Name="HistoryResultPicker" Grid.Column="2" ItemsSource="{Binding HistoryResults}" SelectedItem="{Binding HistoryResult}" Margin="0,0,8,0" Height="36" AutomationProperties.Name="篩選簽收結果" ToolTip="篩選簽收結果"><ComboBox.ItemTemplate><DataTemplate><TextBlock><Run Text="結果："/><Run Text="{Binding Mode=OneWay}"/></TextBlock></DataTemplate></ComboBox.ItemTemplate></ComboBox>
+<Button Grid.Column="3" Content="重設" Command="{Binding ClearHistoryFiltersCommand}" Padding="10,5" Height="36" ToolTip="清除關鍵字、來源及結果，日期恢復最近 30 天"/>
+</Grid>
+<Expander x:Name="HistoryDateFilters" IsExpanded="False" Margin="0,0,0,8" Foreground="{adaptive:AdaptiveBrush #61718A}">
+<Expander.Header><TextBlock Text="{Binding HistoryDateSummary}" FontSize="12"/></Expander.Header>
+<WrapPanel Margin="20,8,0,4">
+<TextBlock Text="預定日期" VerticalAlignment="Center" Margin="0,0,10,0"/>
+<DatePicker SelectedDate="{Binding HistoryFrom}" Style="{StaticResource HistoryDatePicker}" Width="148" Height="38" AutomationProperties.Name="歷史開始日期"/>
+<TextBlock Text="—" Margin="10,0" VerticalAlignment="Center"/>
+<DatePicker SelectedDate="{Binding HistoryTo}" Style="{StaticResource HistoryDatePicker}" Width="148" Height="38" AutomationProperties.Name="歷史結束日期"/>
 </WrapPanel>
-<TextBlock Text="{Binding HistoryHint}" Foreground="{adaptive:AdaptiveBrush #A66521}" TextWrapping="Wrap"/>
-</StackPanel></Border>
-<TextBlock Text="通知觸發後 15 分鐘未簽收會標記逾期；未開機紀錄於程式下次啟動時補登。" Foreground="{adaptive:AdaptiveBrush #71829A}" FontSize="11" TextWrapping="Wrap" Margin="0,0,0,12"/>
+</Expander>
+<TextBlock Text="{Binding HistoryHint}" Foreground="{adaptive:AdaptiveBrush #A66521}" TextWrapping="Wrap"><TextBlock.Style><Style TargetType="TextBlock"><Style.Triggers><DataTrigger Binding="{Binding HistoryHint}" Value=""><Setter Property="Visibility" Value="Collapsed"/></DataTrigger></Style.Triggers></Style></TextBlock.Style></TextBlock>
 </StackPanel></ScrollViewer>
 <Grid Grid.Row="1">
-<DataGrid ItemsSource="{Binding History}"><DataGrid.Columns>
+<DataGrid x:Name="HistoryGrid" ItemsSource="{Binding History}"><DataGrid.Columns>
 <DataGridTemplateColumn Header="任務名稱" Width="*" MinWidth="130"><DataGridTemplateColumn.CellTemplate><DataTemplate>
 <TextBlock Text="{Binding Title}" Padding="5" Background="Transparent" Cursor="Hand" ToolTip="連按兩下查看當次提醒" MouseLeftButtonDown="HistoryTitleDoubleClick"/>
 </DataTemplate></DataGridTemplateColumn.CellTemplate></DataGridTemplateColumn>
-<DataGridTextColumn Header="延後次數" Binding="{Binding Entry.SnoozeCount}" Width="80"/><DataGridTextColumn Header="來源" Binding="{Binding Source}" Width="70"/>
-<DataGridTextColumn Header="預定時間" Binding="{Binding Scheduled}" Width="155"/>
-<DataGridTextColumn Header="觸發時間" Binding="{Binding Triggered}" Width="155"/>
-<DataGridTextColumn Header="簽收時間" Binding="{Binding Acknowledged}" Width="155"/>
-<DataGridTextColumn Header="簽收耗時" Binding="{Binding Duration}" Width="100"/>
-<DataGridTextColumn Header="結果" Binding="{Binding Result}" Width="100"/>
+<DataGridTextColumn Header="延後次數" Binding="{Binding Entry.SnoozeCount}" Width="80" MinWidth="80"/><DataGridTextColumn Header="來源" Binding="{Binding Source}" Width="70" MinWidth="70"/>
+<DataGridTextColumn Header="預定時間" Binding="{Binding Scheduled}" Width="155" MinWidth="155"/>
+<DataGridTextColumn Header="觸發時間" Binding="{Binding Triggered}" Width="155" MinWidth="155"/>
+<DataGridTextColumn Header="簽收時間" Binding="{Binding Acknowledged}" Width="155" MinWidth="155"/>
+<DataGridTextColumn Header="簽收耗時" Binding="{Binding Duration}" Width="100" MinWidth="100"/>
+<DataGridTextColumn Header="結果" Binding="{Binding Result}" Width="100" MinWidth="100"/>
 </DataGrid.Columns></DataGrid>
 <TextBlock Text="此篩選條件下沒有通知紀錄" HorizontalAlignment="Center" VerticalAlignment="Center" Foreground="{adaptive:AdaptiveBrush #71829A}" Visibility="{Binding IsHistoryEmpty,Converter={StaticResource BoolVisibility}}" IsHitTestVisible="False"/>
 </Grid>
-<DockPanel Grid.Row="2" Margin="0,14,0,0"><TextBlock Text="{Binding HistoryPageLabel}" Foreground="{adaptive:AdaptiveBrush #71829A}" VerticalAlignment="Center"/><StackPanel Orientation="Horizontal" HorizontalAlignment="Right"><Button Content="← 上一頁" Command="{Binding PreviousHistoryCommand}" IsEnabled="{Binding CanPreviousHistory}"/><Button Content="下一頁 →" Command="{Binding NextHistoryCommand}" IsEnabled="{Binding CanNextHistory}" Margin="8,0,0,0"/></StackPanel></DockPanel>
+<DockPanel Grid.Row="2" Margin="0,8,0,0"><TextBlock Text="{Binding HistoryPageLabel}" Foreground="{adaptive:AdaptiveBrush #71829A}" VerticalAlignment="Center"/><StackPanel Orientation="Horizontal" HorizontalAlignment="Right"><Button Content="← 上一頁" Command="{Binding PreviousHistoryCommand}" IsEnabled="{Binding CanPreviousHistory}"/><Button Content="下一頁 →" Command="{Binding NextHistoryCommand}" IsEnabled="{Binding CanNextHistory}" Margin="8,0,0,0"/></StackPanel></DockPanel>
 </Grid></UserControl>

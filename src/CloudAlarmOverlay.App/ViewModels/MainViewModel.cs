@@ -9,7 +9,7 @@ using CloudAlarmOverlay.Core.Services;
 namespace CloudAlarmOverlay.App.ViewModels;
 public partial class MainViewModel(ITaskRepository tasks,ITaskService taskService,ITaskSchedulingService scheduling,
     IAckLogRepository history,ISyncLogRepository syncLogs,ISyncService sync,SyncConfiguration configuration,
-    IDeviceIdentityService identity,IAlarmPresenter presenter,IUserDialogs dialogs,ILunarCalendarRepository lunar,AdminViewModel admin,PreferencesViewModel preferences,PomodoroViewModel pomodoro,IAlarmHeartbeat heartbeat,CountdownsViewModel countdowns,ITaskHomePinRepository taskHomePins,ChangeSignal changes):ObservableObject
+    IDeviceIdentityService identity,IAlarmPresenter presenter,IUserDialogs dialogs,ILunarCalendarRepository lunar,AdminViewModel admin,PreferencesViewModel preferences,PomodoroViewModel pomodoro,IAlarmHeartbeat heartbeat,CountdownsViewModel countdowns,ITaskHomePinRepository taskHomePins,ChangeSignal changes,IBrowserLauncher browser):ObservableObject
 {
     public PomodoroViewModel Pomodoro=>pomodoro;
     public CountdownsViewModel Countdowns=>countdowns;
@@ -54,7 +54,11 @@ public partial class MainViewModel(ITaskRepository tasks,ITaskService taskServic
         catch(Exception ex){Status=ex.Message;}
     }
     [RelayCommand] private void OpenCountdowns()=>PageIndex=6;
-    [RelayCommand] private void OpenWeather() { Preferences.SelectedSettingsTab=6; PageIndex=4; }
+    [RelayCommand] private void OpenWeather()
+    {
+        try { browser.Open(Preferences.Weather?.ForecastUri ?? new Uri("https://www.cwa.gov.tw/V8/C/W/Town/Town.html")); }
+        catch { Status="無法開啟氣象署預報，請確認預設瀏覽器設定。"; }
+    }
     [RelayCommand] private void OpenPomodoro()=>PageIndex=3;
     [ObservableProperty] private int historyTabIndex;
     public AdminViewModel Admin=>admin;
@@ -110,7 +114,6 @@ public partial class MainViewModel(ITaskRepository tasks,ITaskService taskServic
         {
             var entry=await lunar.GetByDateAsync(date);
             if(calendarDate!=date)return;
-            if(!string.IsNullOrWhiteSpace(entry?.LunarDate))LunarToday=entry.LunarDate;
             if(calendarDate==date)CurrentSolarTerm=string.IsNullOrWhiteSpace(entry?.SolarTerm)?"-":entry.SolarTerm;
         }
         catch{if(calendarDate==date)CurrentSolarTerm="節氣資料暫不可用";}
@@ -133,6 +136,8 @@ public partial class MainViewModel(ITaskRepository tasks,ITaskService taskServic
     private bool rebuildingTasks;
     public event Action? TaskSelectionRestored;
     public bool HasTaskSelection=>SelectedTasks.Count>0;
+    public bool HasMultipleTaskSelection=>SelectedTasks.Count>1;
+    public string CompactSelectionSummary=>HasTaskSelection?$"已選 {SelectedTasks.Count} 筆 · 本機 {SelectedTasks.Count(t=>t.IsLocal)}／雲端 {SelectedTasks.Count(t=>!t.IsLocal)}":"勾選任務以操作";
     public bool CanEditSelectedTask=>SelectedTasks.Count==1&&SelectedTasks[0].IsLocal;
     public bool CanCopySelectedTask=>SelectedTasks.Count==1;
     public string SelectionHint=>!HasTaskSelection?"勾選任務以進行操作；名稱旁圖釘可釘選首頁，與倒數／正數共用名額，上限可於設定調整。":
@@ -145,6 +150,7 @@ public partial class MainViewModel(ITaskRepository tasks,ITaskService taskServic
         if(rebuildingTasks)return;
         var snapshot=rows.ToArray();
         SelectedTasks.Clear();SelectedTasks.AddRange(snapshot);OnPropertyChanged(nameof(SelectionSummary));OnPropertyChanged(nameof(HasTaskSelection));
+        OnPropertyChanged(nameof(HasMultipleTaskSelection));OnPropertyChanged(nameof(CompactSelectionSummary));
         OnPropertyChanged(nameof(CanEditSelectedTask));OnPropertyChanged(nameof(CanCopySelectedTask));OnPropertyChanged(nameof(SelectionHint));
         EditTaskCommand.NotifyCanExecuteChanged();CopyTaskCommand.NotifyCanExecuteChanged();
         DeleteTaskCommand.NotifyCanExecuteChanged();ToggleTaskCommand.NotifyCanExecuteChanged();BatchTasksCommand.NotifyCanExecuteChanged();
@@ -262,9 +268,7 @@ public partial class MainViewModel(ITaskRepository tasks,ITaskService taskServic
             await RefreshCalendarAsync(DateTime.Now);
             allTasks=await tasks.GetAllAsync();
             taskPinIds=(await taskHomePins.GetTaskIdsAsync()).ToHashSet();FilterTasks();
-            CalendarWarning=allTasks.Any(t=>t.Enabled&&t.Recurrence.StartsWith("LunarDay:",StringComparison.Ordinal))
-                &&await lunar.GetByDateAsync(DateOnly.FromDateTime(DateTime.Today)) is null
-                ?"缺少今日農曆對照：農曆任務今天不會觸發，請 IT 更新 LunarCalendar 分頁。":"";
+            CalendarWarning="";
             OnPropertyChanged(nameof(HasCalendarWarning));
             allHistory=await history.GetRangeAsync(DateTime.MinValue,DateTime.MaxValue);FilterHistory(false);
             var now=DateTime.Now;
@@ -287,8 +291,7 @@ public partial class MainViewModel(ITaskRepository tasks,ITaskService taskServic
             NextDate=nextReminderAt?.ToString("yyyy/MM/dd（ddd）")??"尚未排定";
             NextDescription=NextReminder is null?"新增本機任務，安排下一個提醒。":
                 string.IsNullOrWhiteSpace(NextReminder.Task.Description)?"目前沒有補充說明。":NextReminder.Task.Description;
-            var nextLunarEntry=nextReminderAt is {} date?await lunar.GetByDateAsync(DateOnly.FromDateTime(date)):null;
-            NextLunar=string.IsNullOrWhiteSpace(nextLunarEntry?.LunarDate)?"":"農曆 "+nextLunarEntry.LunarDate;
+            NextLunar=nextReminderAt is {} nextDate?"農曆 "+LocalLunarDate(nextDate):"";
             UpdateCountdown();
             NextTime=Upcoming.FirstOrDefault() is {} first?$"{first.NextAt:MM/dd HH:mm:ss}  ·  {CloudAlarmOverlay.App.Styles.AlarmLevelLabelConverter.Label(first.Level)}  ·  {first.Source}":"新增本機任務，或前往設定連接公開試算表。";
             var todayHistory=allHistory.Where(h=>(h.ScheduledAt??h.TriggeredAt).Date==now.Date).ToArray();
@@ -302,9 +305,19 @@ public partial class MainViewModel(ITaskRepository tasks,ITaskService taskServic
         }
         catch(Exception ex){Status=ex.Message;}
     }
-    [ObservableProperty] private HealthStatus localScheduleHealth=new("等待啟動","尚未檢查","Pending");
-    [ObservableProperty] private HealthStatus sheetAHealth=new("未設定","尚未檢查","Pending");
-    [ObservableProperty] private HealthStatus sheetBHealth=new("未設定","尚未檢查","Pending");
+    [ObservableProperty,NotifyPropertyChangedFor(nameof(OverallHealth))] private HealthStatus localScheduleHealth=new("等待啟動","尚未檢查","Pending");
+    [ObservableProperty,NotifyPropertyChangedFor(nameof(OverallHealth))] private HealthStatus sheetAHealth=new("未設定","尚未檢查","Pending");
+    [ObservableProperty,NotifyPropertyChangedFor(nameof(OverallHealth))] private HealthStatus sheetBHealth=new("未設定","尚未檢查","Pending");
+    public HealthStatus OverallHealth
+    {
+        get
+        {
+            var states=new[]{LocalScheduleHealth,SheetAHealth,SheetBHealth};
+            var severity=states.Any(s=>s.Severity=="Error")?"Error":states.Any(s=>s.Severity=="Stopped")?"Stopped":states.All(s=>s.Severity=="Healthy")?"Healthy":"Pending";
+            var label=severity switch {"Healthy"=>"全部正常","Error"=>"狀態異常","Stopped"=>"部分中斷",_=>"尚待就緒"};
+            return new(label,$"本機排程：{LocalScheduleHealth.Label}\nSheet A：{SheetAHealth.Label}\nSheet B：{SheetBHealth.Label}",severity);
+        }
+    }
     public async Task RefreshHealthAsync()
     {
         var now=DateTime.Now;
