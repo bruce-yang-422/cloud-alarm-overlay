@@ -75,6 +75,11 @@ __pycache__/
 .pytest_cache/
 scripts/_gid_output.json
 
+# Local project tree tooling and output
+/project_tree_structure_generator.py
+/project_tree_structure.md
+/project_tree_structure.txt
+
 # Local design history and company Sheet data
 /AI_PLAN.md
 /本機連線資訊.md
