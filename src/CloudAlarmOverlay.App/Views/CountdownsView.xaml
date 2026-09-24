@@ -70,6 +70,7 @@
          <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
           <Button Style="{StaticResource CountdownIconButton}" Content="&#xE718;" ToolTip="{Binding PinLabel}" AutomationProperties.Name="{Binding PinLabel}" Command="{Binding DataContext.TogglePinCommand,RelativeSource={RelativeSource AncestorType=UserControl}}" CommandParameter="{Binding}"/>
           <Button Style="{StaticResource CountdownIconButton}" Content="&#xE74A;" ToolTip="{Binding TopLabel}" AutomationProperties.Name="{Binding TopLabel}" Command="{Binding DataContext.ToggleTopCommand,RelativeSource={RelativeSource AncestorType=UserControl}}" CommandParameter="{Binding}"/>
+          <Button Style="{StaticResource CountdownIconButton}" Content="&#xE72D;" ToolTip="分享圖片" AutomationProperties.Name="分享圖片" Command="{Binding DataContext.ShareImageCommand,RelativeSource={RelativeSource AncestorType=UserControl}}" CommandParameter="{Binding}"/>
           <Button Style="{StaticResource CountdownIconButton}" Content="&#xE74D;" ToolTip="刪除" AutomationProperties.Name="刪除" Command="{Binding DataContext.DeleteCommand,RelativeSource={RelativeSource AncestorType=UserControl}}" CommandParameter="{Binding}"/>
          </StackPanel>
          <StackPanel Orientation="Horizontal">
@@ -100,12 +101,13 @@
       <ProgressBar Style="{StaticResource CountdownBar}" Value="{Binding ElapsedPercent}" Maximum="100" Visibility="{Binding ShowProgress,Converter={StaticResource BoolVisibility}}" Margin="0,6,0,0"/>
      </StackPanel></DataTemplate></DataGridTemplateColumn.CellTemplate></DataGridTemplateColumn>
      <DataGridTextColumn Header="狀態" Binding="{Binding StatusLabel}" Width="85"/>
-     <DataGridTemplateColumn Header="操作" Width="180"><DataGridTemplateColumn.CellTemplate><DataTemplate>
+     <DataGridTemplateColumn Header="操作" Width="215"><DataGridTemplateColumn.CellTemplate><DataTemplate>
       <StackPanel Orientation="Horizontal">
        <Button Content="&#xE70F;" FontFamily="Segoe MDL2 Assets" FontSize="13" Padding="6" Margin="0,0,3,0" ToolTip="編輯" AutomationProperties.Name="編輯" Click="ShowEditor"/>
        <Button Content="&#xE718;" FontFamily="Segoe MDL2 Assets" FontSize="13" Padding="6" Margin="0,0,3,0" ToolTip="{Binding PinLabel}" AutomationProperties.Name="{Binding PinLabel}" Command="{Binding DataContext.TogglePinCommand,RelativeSource={RelativeSource AncestorType=UserControl}}" CommandParameter="{Binding}"/>
        <Button Content="&#xE74A;" FontFamily="Segoe MDL2 Assets" FontSize="13" Padding="6" Margin="0,0,3,0" ToolTip="{Binding TopLabel}" AutomationProperties.Name="{Binding TopLabel}" Command="{Binding DataContext.ToggleTopCommand,RelativeSource={RelativeSource AncestorType=UserControl}}" CommandParameter="{Binding}"/>
        <Button Content="&#xE73E;" FontFamily="Segoe MDL2 Assets" FontSize="13" Padding="6" Margin="0,0,3,0" ToolTip="{Binding CompleteLabel}" AutomationProperties.Name="{Binding CompleteLabel}" Command="{Binding DataContext.ToggleCompleteCommand,RelativeSource={RelativeSource AncestorType=UserControl}}" CommandParameter="{Binding}"/>
+       <Button Content="&#xE72D;" FontFamily="Segoe MDL2 Assets" FontSize="13" Padding="6" Margin="0,0,3,0" ToolTip="分享圖片" AutomationProperties.Name="分享圖片" Command="{Binding DataContext.ShareImageCommand,RelativeSource={RelativeSource AncestorType=UserControl}}" CommandParameter="{Binding}"/>
        <Button Content="&#xE74D;" FontFamily="Segoe MDL2 Assets" FontSize="13" Padding="6" Margin="0,0,3,0" ToolTip="刪除" AutomationProperties.Name="刪除" Command="{Binding DataContext.DeleteCommand,RelativeSource={RelativeSource AncestorType=UserControl}}" CommandParameter="{Binding}"/>
       </StackPanel>
      </DataTemplate></DataGridTemplateColumn.CellTemplate></DataGridTemplateColumn>

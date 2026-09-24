@@ -14,7 +14,7 @@ namespace CloudAlarmOverlay.Data;
 public sealed class BackupRestoreService(Database db, IAuthenticationService authentication, AdminSession session, ChangeSignal changes) : IBackupRestoreService
 {
     private const long MaxArchiveBytes = 64 * 1024 * 1024;
-    private static readonly HashSet<string> AllowedSettings = [HomePinOptions.SettingKey, "KeepWindowAspectRatio", "FlashMilliseconds", "QuietPeriods", "EmojiLibrary", "ThemeMode", "ThemeColorStyle", "NotificationColorMode", "NotificationColorScheme", .. new[] { AlarmLevels.Low, AlarmLevels.Mid, AlarmLevels.High, AlarmLevels.Max, "低級", "中級", "高級", "最高級" }.Select(x => "Sound:" + x)];
+    private static readonly HashSet<string> AllowedSettings = [CountdownShareSnapshot.BrandingSettingKey, "WeatherOptions", HomePinOptions.SettingKey, "KeepWindowAspectRatio", "FlashMilliseconds", "QuietPeriods", "EmojiLibrary", "ThemeMode", "ThemeColorStyle", "NotificationColorMode", "NotificationColorScheme", .. new[] { AlarmLevels.Low, AlarmLevels.Mid, AlarmLevels.High, AlarmLevels.Max, "低級", "中級", "高級", "最高級" }.Select(x => "Sound:" + x)];
     public Task CreateBackupAsync(string path, CancellationToken cancellationToken = default) => CreateBackupAsync(path, null, cancellationToken);
     public async Task RestoreAsync(string path, CancellationToken cancellationToken = default) => await RestoreAsync(path, false, null, cancellationToken);
     private async Task VerifyAsync(BackupCredentials? credentials, CancellationToken ct)
@@ -81,6 +81,10 @@ public sealed class BackupRestoreService(Database db, IAuthenticationService aut
     {
         using var reader = new StringReader(text);
         using var csv = new CsvReader(reader,CultureInfo.InvariantCulture);
+        if(typeof(T)==typeof(AcknowledgementLog))
+        {
+            csv.Context.AutoMap<AcknowledgementLog>().Map(x=>x.SnoozeCount).Optional();
+        }
         return csv.GetRecords<T>().ToList();
     }
     private sealed record Package(Device Identity,List<Setting> Settings,List<AlarmTask> Tasks,List<AcknowledgementLog> Logs,List<User>? Users,List<SavedOccurrence> Occurrences,List<PomodoroSetting> PomodoroSettings,List<PomodoroLogEntry> PomodoroLogs,List<CountdownItem> Countdowns,List<string> TaskPins);
@@ -138,7 +142,7 @@ public sealed class BackupRestoreService(Database db, IAuthenticationService aut
             RecurrenceRule.Validate(task.Recurrence);
         }
         foreach(var log in package.Logs)
-            if(string.IsNullOrWhiteSpace(log.Id)||string.IsNullOrWhiteSpace(log.TaskId)||string.IsNullOrWhiteSpace(log.DeviceId)||log.Result is not ("Pending" or "Acknowledged" or "Overdue_Acknowledged" or "Overdue_Unacked" or "NotLaunched"))throw new InvalidDataException("歷史紀錄格式無效。");
+            if(log.SnoozeCount is <0 or >3 || string.IsNullOrWhiteSpace(log.Id)||string.IsNullOrWhiteSpace(log.TaskId)||string.IsNullOrWhiteSpace(log.DeviceId)||log.Result is not ("Snoozed" or "Pending" or "Acknowledged" or "Overdue_Acknowledged" or "Overdue_Unacked" or "NotLaunched"))throw new InvalidDataException("歷史紀錄格式無效。");
         foreach(var setting in package.PomodoroSettings)
         {
             if(setting.Key!="Options")throw new InvalidDataException("不支援的番茄鐘設定。");
@@ -168,7 +172,7 @@ public sealed class BackupRestoreService(Database db, IAuthenticationService aut
         await using var c=await db.OpenAsync(cancellationToken);
         using var tx=c.BeginTransaction(deferred:false);
         async Task<int> Run(string sql,object? args=null)=>await c.ExecuteAsync(new CommandDefinition(sql,Database.Parameters(args),tx,cancellationToken:cancellationToken));
-        if(await c.ExecuteScalarAsync<long>("SELECT COUNT(*) FROM Occurrences WHERE State IN ('Claimed','Displayed');",transaction:tx)>0)throw new InvalidOperationException("請先完成目前通知，再還原備份。");
+        if(await c.ExecuteScalarAsync<long>("SELECT COUNT(*) FROM Occurrences WHERE State IN ('Claimed','Displayed','Snoozed');",transaction:tx)>0)throw new InvalidOperationException("請先完成目前通知，再還原備份。");
         if(await c.ExecuteScalarAsync<long>("SELECT COUNT(*) FROM PomodoroLog WHERE IsActive=1;",transaction:tx)>0)throw new InvalidOperationException("請先結束番茄鐘，再還原備份。");
         var oldIdentity=await c.QuerySingleOrDefaultAsync<Device>("SELECT * FROM Devices LIMIT 1;",transaction:tx);
         if(oldIdentity?.DeviceId!=p.Identity.DeviceId || oldIdentity?.DisplayName!=p.Identity.DisplayName)await Run("DELETE FROM Tasks WHERE Source<>'本機';");
@@ -191,10 +195,10 @@ public sealed class BackupRestoreService(Database db, IAuthenticationService aut
         var imported=new HashSet<string>();
         foreach(var task in p.Tasks)if(await Insert(c,tx,"Tasks",task with {Level=AlarmLevels.Normalize(task.Level)},cancellationToken)>0){tasks++;imported.Add(task.Id);}
         foreach(var occurrence in p.Occurrences.Where(o=>imported.Contains(o.TaskId)))
-            await Insert(c,tx,"Occurrences",occurrence with { State=occurrence.State is "Claimed" or "Displayed"?"Completed":occurrence.State },cancellationToken);
+            await Insert(c,tx,"Occurrences",occurrence with { State=occurrence.State is "Claimed" or "Displayed" or "Snoozed"?"Completed":occurrence.State },cancellationToken);
         foreach(var log in p.Logs)
         {
-            logs+=await Insert(c,tx,"AcknowledgementLogs",log with{Result=log.Result=="Pending"?"Overdue_Unacked":log.Result},cancellationToken);
+            logs+=await Insert(c,tx,"AcknowledgementLogs",log with{Result=log.Result is "Pending" or "Snoozed"?"Overdue_Unacked":log.Result},cancellationToken);
             // Preserve deduplication when importing older archives without occurrences.json.
             if(imported.Contains(log.TaskId)&&log.ScheduledAt is {} at)
                 await Insert(c,tx,"Occurrences",new SavedOccurrence(log.TaskId+":"+at.ToString("O"),log.TaskId,at,"Completed",log.TriggeredAt),cancellationToken);

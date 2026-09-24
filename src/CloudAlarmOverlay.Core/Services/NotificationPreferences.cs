@@ -12,6 +12,7 @@ public sealed record QuietPeriod(string Start,string End)
 public sealed record SoundPreference(bool Enabled=false,string Name="");
 public sealed class NotificationPreferences(ISettingsRepository settings)
 {
+    public async Task<bool> AllowUrgentSnoozeAsync(CancellationToken ct=default) => (await settings.GetAsync("AllowUrgentSnooze",ct))?.Value != "false";
     public async Task<string> ColorModeAsync(CancellationToken ct=default)=>(await settings.GetAsync("NotificationColorMode",ct))?.Value=="暗色"?"暗色":"亮色";
     public async Task<string> ColorSchemeAsync(CancellationToken ct=default)=>(await settings.GetAsync("NotificationColorScheme",ct))?.Value??"依提醒等級";
     public async Task<int> FlashMillisecondsAsync(CancellationToken ct=default)=>
@@ -24,6 +25,10 @@ public sealed class NotificationPreferences(ISettingsRepository settings)
         JsonSerializer.Deserialize<SoundPreference>((await settings.GetAsync("Sound:"+level,ct))?.Value??"{}")??new();
     public static void Validate(Setting setting)
     {
+        if(setting.Key=="AllowUrgentSnooze" && setting.Value is not ("true" or "false")) throw new ArgumentException("稍後提醒政策無效。");
+        if(setting.Key=="WeatherDefaultLocation" && setting.Value is not null) (JsonSerializer.Deserialize<WeatherLocation>(setting.Value) ?? throw new ArgumentException("天氣地點無效。")).Validate();
+        if(setting.Key=="WeatherOptions") (JsonSerializer.Deserialize<WeatherOptions>(setting.Value ?? "{}") ?? new()).Location?.Validate();
+        if(setting.Key==CountdownShareSnapshot.BrandingSettingKey && setting.Value is not ("true" or "false"))throw new ArgumentException("分享圖片標示設定無效。");
         if(setting.Key==HomePinOptions.SettingKey)HomePinOptions.Validate(setting.Value);
         if(setting.Key=="NotificationColorMode"&&setting.Value is not ("亮色" or "暗色"))throw new ArgumentException("請選擇亮色或暗色通知。");
         if(setting.Key=="NotificationColorScheme"&&setting.Value is not ("依提醒等級" or "海灣藍" or "森林綠" or "暮紫"))throw new ArgumentException("請選擇通知配色。");

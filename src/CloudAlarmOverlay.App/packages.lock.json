@@ -363,7 +363,7 @@
       "cloudalarmoverlay.backgroundservices": {
         "type": "Project",
         "dependencies": {
-          "CloudAlarmOverlay.Core": "[1.2.0, )",
+          "CloudAlarmOverlay.Core": "[1.3.0, )",
           "Microsoft.Extensions.Hosting.Abstractions": "[10.0.12, )"
         }
       },
@@ -377,7 +377,7 @@
       "cloudalarmoverlay.data": {
         "type": "Project",
         "dependencies": {
-          "CloudAlarmOverlay.Core": "[1.2.0, )",
+          "CloudAlarmOverlay.Core": "[1.3.0, )",
           "Dapper": "[2.1.86, )",
           "Microsoft.Data.Sqlite": "[10.0.12, )",
           "Microsoft.Extensions.DependencyInjection.Abstractions": "[10.0.12, )"
@@ -386,7 +386,7 @@
       "cloudalarmoverlay.infrastructure": {
         "type": "Project",
         "dependencies": {
-          "CloudAlarmOverlay.Core": "[1.2.0, )",
+          "CloudAlarmOverlay.Core": "[1.3.0, )",
           "Microsoft.Extensions.DependencyInjection.Abstractions": "[10.0.12, )"
         }
       }

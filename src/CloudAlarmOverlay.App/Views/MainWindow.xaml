@@ -130,12 +130,19 @@
           <ScrollViewer xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" VerticalScrollBarVisibility="Auto" PanningMode="VerticalOnly">
             <StackPanel>
               <Border Background="{adaptive:AdaptiveBrush #EEF4FB}" CornerRadius="12" Padding="20,10" Margin="0,0,0,12">
-                <UniformGrid Columns="4">
-                  <StackPanel><TextBlock Text="國曆日期" Style="{StaticResource Muted}" FontSize="12"/><TextBlock Text="{Binding SolarDate}" FontSize="18" FontWeight="SemiBold" Margin="0,5,0,0"/></StackPanel>
-                  <StackPanel><TextBlock Text="農曆日期" Style="{StaticResource Muted}" FontSize="12"/><TextBlock Text="{Binding LunarToday}" FontSize="18" FontWeight="SemiBold" Margin="0,5,0,0"/></StackPanel>
-                  <StackPanel><TextBlock Text="現在時間" Style="{StaticResource Muted}" FontSize="12"/><TextBlock Text="{Binding CurrentClock}" FontSize="22" FontFamily="Consolas" FontWeight="SemiBold" Margin="0,5,0,0"/></StackPanel>
-                  <StackPanel><TextBlock Text="節氣" Style="{StaticResource Muted}" FontSize="12"/><TextBlock Text="{Binding CurrentSolarTerm}" FontSize="18" FontWeight="SemiBold" Margin="0,5,0,0"/></StackPanel>
-                </UniformGrid>
+                <WrapPanel>
+                  <StackPanel MinWidth="130" Margin="0,0,18,8"><TextBlock Text="國曆日期" Style="{StaticResource Muted}" FontSize="12"/><TextBlock Text="{Binding SolarDate}" FontSize="18" FontWeight="SemiBold" Margin="0,5,0,0"/></StackPanel>
+                  <StackPanel MinWidth="130" Margin="0,0,18,8"><TextBlock Text="農曆日期" Style="{StaticResource Muted}" FontSize="12"/><TextBlock Text="{Binding LunarToday}" FontSize="18" FontWeight="SemiBold" Margin="0,5,0,0"/></StackPanel>
+                  <StackPanel MinWidth="130" Margin="0,0,18,8"><TextBlock Text="現在時間" Style="{StaticResource Muted}" FontSize="12"/><TextBlock Text="{Binding CurrentClock}" FontSize="22" FontFamily="Consolas" FontWeight="SemiBold" Margin="0,5,0,0"/></StackPanel>
+                  <StackPanel MinWidth="130" Margin="0,0,18,8"><TextBlock Text="節氣" Style="{StaticResource Muted}" FontSize="12"/><TextBlock Text="{Binding CurrentSolarTerm}" FontSize="18" FontWeight="SemiBold" Margin="0,5,0,0"/></StackPanel>
+                <Button x:Name="WeatherCard" Command="{Binding OpenWeatherCommand}" Visibility="{Binding Preferences.Weather.Visible,Converter={StaticResource BoolVisibility}}" Padding="8,0" Margin="0,0,0,8" Background="Transparent" BorderThickness="0" HorizontalContentAlignment="Left" ToolTip="{Binding Preferences.Weather.Details}">
+                    <StackPanel DataContext="{Binding Preferences.Weather}">
+                      <StackPanel.Resources><Style TargetType="TextBlock" BasedOn="{StaticResource {x:Type TextBlock}}"><Style.Triggers><DataTrigger Binding="{Binding Stale}" Value="True"><Setter Property="Foreground" Value="{adaptive:AdaptiveBrush #697C99}"/></DataTrigger></Style.Triggers></Style></StackPanel.Resources>
+
+                      <TextBlock Text="{Binding Heading}" FontSize="12" TextWrapping="Wrap" MaxWidth="360"/>
+                      <TextBlock Text="{Binding Current}" Margin="0,4,0,0"/><TextBlock Text="{Binding Tomorrow}"/><TextBlock Text="{Binding UpdateLabel}" FontSize="11"/>
+                    </StackPanel>
+                  </Button></WrapPanel>
               </Border>
               <TextBlock Text="{Binding CalendarWarning}" Foreground="{adaptive:AdaptiveBrush #B46B00}" TextWrapping="Wrap" Margin="0,0,0,12" Visibility="{Binding HasCalendarWarning,Converter={StaticResource BoolVisibility}}" />
               <Grid xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation">
@@ -259,6 +266,7 @@
                                 <TextBlock Grid.Column="1" Text="{Binding HomeElapsedLabel}" Style="{StaticResource Muted}" FontSize="11" Margin="8,0,0,0"/>
                               </Grid>
                               <DockPanel Grid.Row="3">
+                                <Button DockPanel.Dock="Right" Content="&#xE72D;" FontFamily="Segoe MDL2 Assets" Padding="4,0" Margin="6,0,0,0" ToolTip="分享圖片" AutomationProperties.Name="分享圖片" Visibility="{Binding CanShare,Converter={StaticResource BoolVisibility}}" Command="{Binding DataContext.Countdowns.ShareImageCommand,RelativeSource={RelativeSource AncestorType=Window}}" CommandParameter="{Binding}"/>
                                 <TextBlock DockPanel.Dock="Right" Text="{Binding StatusLabel}" Foreground="{Binding BorderBrush,ElementName=PinnedCounterItem}" FontWeight="SemiBold" FontSize="11" Margin="6,0,0,0"/>
                                 <TextBlock Text="{Binding DateCaption}" Style="{StaticResource Muted}" FontSize="11" TextTrimming="CharacterEllipsis" ToolTip="{Binding DateCaption}"/>
                               </DockPanel>
@@ -428,7 +436,7 @@
  <Button Content="刪除所選本機" Command="{Binding BatchTasksCommand}" CommandParameter="delete"/>
 </WrapPanel>
 <TextBlock Text="{Binding SelectionSummary}" Style="{StaticResource Muted}" Visibility="{Binding HasTaskSelection,Converter={StaticResource BoolVisibility}}"/>
-<TextBlock Text="{Binding SelectionHint}" Style="{StaticResource Muted}" Margin="0,4,0,8"/><TextBlock Text="沒有符合條件的任務。按「新增任務」建立本機提醒。" Style="{StaticResource Muted}" Visibility="{Binding IsTasksEmpty,Converter={StaticResource BoolVisibility}}" Margin="0,12" />
+<WrapPanel><Button Content="匯入 CSV" Command="{Binding ImportTasksCommand}"/><Button Content="匯出本機任務 CSV" Command="{Binding ExportLocalTasksCommand}"/><Button Content="下載範本 CSV" Command="{Binding DownloadTaskTemplateCommand}"/></WrapPanel><TextBlock Text="{Binding SelectionHint}" Style="{StaticResource Muted}" Margin="0,4,0,8"/><TextBlock Text="沒有符合條件的任務。按「新增任務」建立本機提醒。" Style="{StaticResource Muted}" Visibility="{Binding IsTasksEmpty,Converter={StaticResource BoolVisibility}}" Margin="0,12" />
             </StackPanel>
             <DataGrid x:Name="TaskGrid" ItemsSource="{Binding Tasks}" SelectionMode="Extended" SelectionUnit="FullRow" SelectionChanged="TaskSelectionChanged">
               <DataGrid.CellStyle><Style TargetType="DataGridCell" BasedOn="{StaticResource {x:Type DataGridCell}}">

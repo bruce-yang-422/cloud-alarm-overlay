@@ -30,6 +30,9 @@
 </StackPanel></ScrollViewer>
 <StackPanel x:Name="Actions" Grid.Row="1" Margin="0,24,0,0">
 <TextBlock Text="{Binding Instruction}" TextAlignment="Center" Foreground="{DynamicResource NoticeMuted}" FontSize="12" Margin="0,0,0,10"/>
-<Button x:Name="ConfirmButton" Content="我已閱讀，確認" Command="{Binding ConfirmCommand}" Background="{DynamicResource NoticeAccent}" Foreground="{DynamicResource NoticeButtonText}" HorizontalAlignment="Center" MinWidth="200" MaxWidth="280" Padding="32,12" MinHeight="48" Margin="0"/>
+<StackPanel Visibility="{Binding CanSnooze,Converter={StaticResource BoolVisibility}}" HorizontalAlignment="Center" Margin="0,0,0,10">
+<StackPanel Orientation="Horizontal" HorizontalAlignment="Center"><ComboBox ItemsSource="{Binding SnoozeChoices}" SelectedItem="{Binding SnoozeMinutes}" Width="70"/><TextBlock Text="分鐘後" VerticalAlignment="Center" Margin="8,0" Foreground="{DynamicResource NoticeMuted}"/></StackPanel>
+<Button Content="{Binding SnoozeLabel}" Command="{Binding SnoozeCommand}" Margin="0,6,0,0" Padding="10,8"/>
+</StackPanel><Button x:Name="ConfirmButton" Content="我已閱讀，確認" Command="{Binding ConfirmCommand}" Background="{DynamicResource NoticeAccent}" Foreground="{DynamicResource NoticeButtonText}" HorizontalAlignment="Center" MinWidth="200" MaxWidth="280" Padding="32,12" MinHeight="48" Margin="0"/>
 </StackPanel>
 </Grid></Grid></Grid></Border></Window>

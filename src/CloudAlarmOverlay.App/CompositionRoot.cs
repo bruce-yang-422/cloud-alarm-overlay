@@ -33,9 +33,13 @@ public static class CompositionRoot
         services.AddHostedService<SyncWorker>();
         services.AddHostedService<AlarmWorker>();
         services.AddHostedService<PomodoroWorker>();
+        services.AddHostedService<WeatherWorker>();
+        services.AddSingleton<WeatherViewModel>();
         services.AddSingleton<AlarmPresenter>();
         services.AddSingleton<IAlarmPresenter>(provider=>provider.GetRequiredService<AlarmPresenter>());
         services.AddSingleton<IUserDialogs, UserDialogs>();
+        services.AddSingleton<CountdownShareRenderer>();
+        services.AddSingleton<CountdownShareService>();
         services.AddSingleton<IAutoStartService, AutoStartService>();
         services.AddSingleton<TaskBuilderHostService>();
         services.AddSingleton<IBrowserLauncher, BrowserLauncher>();

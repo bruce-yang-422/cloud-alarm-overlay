@@ -6,11 +6,11 @@ internal sealed class AckLogRepository(Database db) : IAckLogRepository
     public Task<IReadOnlyList<AcknowledgementLog>> GetRangeAsync(DateTime from,DateTime to,CancellationToken cancellationToken=default)
         => db.QueryAsync<AcknowledgementLog>("SELECT * FROM AcknowledgementLogs WHERE julianday(TriggeredAt)>=julianday(@from) AND julianday(TriggeredAt)<=julianday(@to) ORDER BY TriggeredAt DESC;",new {from,to},cancellationToken);
     public Task SaveAsync(AcknowledgementLog entry,CancellationToken cancellationToken=default)
-        => db.ExecuteAsync("INSERT INTO AcknowledgementLogs(Id,TaskId,DeviceId,DisplayName,TriggeredAt,AcknowledgedAt,DurationSeconds,Result,TaskName,ScheduledAt,Source,TaskSnapshotJson) VALUES(@Id,@TaskId,@DeviceId,@DisplayName,@TriggeredAt,@AcknowledgedAt,@DurationSeconds,@Result,@TaskName,@ScheduledAt,@Source,@TaskSnapshotJson) ON CONFLICT(Id) DO UPDATE SET AcknowledgedAt=excluded.AcknowledgedAt,DurationSeconds=excluded.DurationSeconds,Result=excluded.Result;",entry,cancellationToken);
+        => db.ExecuteAsync("INSERT INTO AcknowledgementLogs(Id,TaskId,DeviceId,DisplayName,TriggeredAt,AcknowledgedAt,DurationSeconds,Result,TaskName,ScheduledAt,Source,TaskSnapshotJson,SnoozeCount) VALUES(@Id,@TaskId,@DeviceId,@DisplayName,@TriggeredAt,@AcknowledgedAt,@DurationSeconds,@Result,@TaskName,@ScheduledAt,@Source,@TaskSnapshotJson,@SnoozeCount) ON CONFLICT(Id) DO UPDATE SET AcknowledgedAt=excluded.AcknowledgedAt,SnoozeCount=excluded.SnoozeCount,DurationSeconds=excluded.DurationSeconds,Result=excluded.Result;",entry,cancellationToken);
     public Task<IReadOnlyList<TaskTriggerLogEntry>> GetTriggerLogAsync(string taskId,DateTime from,DateTime to,CancellationToken cancellationToken=default)
         => db.QueryAsync<TaskTriggerLogEntry>("""
             SELECT o.Id AS OccurrenceId, o.TaskId, a.TaskName, a.Source, o.ScheduledAt,
-                   o.State AS OccurrenceState, a.TriggeredAt, a.AcknowledgedAt, a.DurationSeconds, a.Result
+                   o.State AS OccurrenceState, a.TriggeredAt, a.AcknowledgedAt, a.DurationSeconds,a.SnoozeCount, a.Result
             FROM Occurrences o
             LEFT JOIN AcknowledgementLogs a ON a.Id = o.Id
             WHERE o.TaskId=@taskId AND julianday(o.ScheduledAt)>=julianday(@from) AND julianday(o.ScheduledAt)<=julianday(@to)

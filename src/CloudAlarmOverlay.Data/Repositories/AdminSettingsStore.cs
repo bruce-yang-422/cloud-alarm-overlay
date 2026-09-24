@@ -11,8 +11,9 @@ internal sealed class AdminSettingsStore(Database db,AdminSession session):IAdmi
         var actor=session.RequireAdmin();
         foreach(var setting in settings)
         {
-            if(setting.Key is not ("SyncOptions" or "FlashMilliseconds" or "QuietPeriods" or "SyncLinksLocked" or "ExitPasswordMode" or "ExitPasswordHash" or "ExitPasswordRequired"))
+            if(setting.Key is not ("UpdateManifestUrl" or "AllowUrgentSnooze" or "WeatherDefaultLocation" or "SyncOptions" or "FlashMilliseconds" or "QuietPeriods" or "SyncLinksLocked" or "ExitPasswordMode" or "ExitPasswordHash" or "ExitPasswordRequired"))
                 throw new ArgumentException("此項目不屬於管理者可鎖定的設定。");
+            if(setting.Key=="UpdateManifestUrl" && !string.IsNullOrWhiteSpace(setting.Value))UpdateCheckService.ValidateUrl(setting.Value);
             NotificationPreferences.Validate(setting);
             if(setting.Key=="SyncOptions")(JsonSerializer.Deserialize<SyncOptions>(setting.Value??"{}")??new()).Validate();
             if(setting.Key=="SyncLinksLocked" && setting.Value is not ("true" or "false"))throw new ArgumentException("連結鎖定值無效。");
@@ -35,7 +36,7 @@ internal sealed class AdminSettingsStore(Database db,AdminSession session):IAdmi
             if(old==setting)continue;
             await c.ExecuteAsync(new CommandDefinition("INSERT INTO Settings(Key,Value,Locked) VALUES(@Key,@Value,@Locked) ON CONFLICT(Key) DO UPDATE SET Value=excluded.Value,Locked=excluded.Locked;",setting,tx,cancellationToken:ct));
             await c.ExecuteAsync(new CommandDefinition("INSERT INTO AuditLogs(UserId,Action,OldValue,NewValue,CreatedAt) VALUES(@actor,@action,@oldValue,@newValue,@at);",
-                new {actor,action=setting.Key,oldValue=setting.Key=="ExitPasswordHash"?(old?.Value is null?null:"已設定"):old is null?null:JsonSerializer.Serialize(old),newValue=setting.Key=="ExitPasswordHash"?(setting.Value is null?"已清除":"已設定"):JsonSerializer.Serialize(setting),at=DateTime.Now.ToString("O")},tx,cancellationToken:ct));
+                new {actor,action=setting.Key,oldValue=setting.Key is "ExitPasswordHash" or "SyncOptions" or "UpdateManifestUrl"?(old?.Value is null?null:"已設定"):old is null?null:JsonSerializer.Serialize(old),newValue=setting.Key is "ExitPasswordHash" or "SyncOptions" or "UpdateManifestUrl"?(setting.Value is null?"已清除":"已設定"):JsonSerializer.Serialize(setting),at=DateTime.Now.ToString("O")},tx,cancellationToken:ct));
         }
         var exitMode=await c.ExecuteScalarAsync<string?>(new CommandDefinition("SELECT Value FROM Settings WHERE Key='ExitPasswordMode';",transaction:tx,cancellationToken:ct));
         if(exitMode=="Dedicated" && string.IsNullOrWhiteSpace(await c.ExecuteScalarAsync<string?>(new CommandDefinition("SELECT Value FROM Settings WHERE Key='ExitPasswordHash';",transaction:tx,cancellationToken:ct))))

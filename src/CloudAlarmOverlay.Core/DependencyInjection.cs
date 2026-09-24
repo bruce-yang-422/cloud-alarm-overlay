@@ -16,6 +16,8 @@ public static class DependencyInjection
         services.AddSingleton<IAlarmHeartbeat, AlarmHeartbeat>();
         services.AddSingleton<IAlarmService, AlarmService>();
         services.AddSingleton<ITaskService, TaskService>();
+        services.AddSingleton<LocalTaskCsvService>();
+        services.AddSingleton<SnoozeService>();
         services.AddSingleton<ITaskSchedulingService, TaskSchedulingService>();
         services.AddSingleton<ISyncService, SyncService>();
         services.AddSingleton<ICsvSheetParser, CsvSheetParser>();

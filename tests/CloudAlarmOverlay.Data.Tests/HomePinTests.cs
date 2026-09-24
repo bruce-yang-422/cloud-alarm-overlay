@@ -138,7 +138,7 @@ public sealed class HomePinTests : IDisposable, IAppPaths
     public async Task Version_eight_upgrade_preserves_countdown_pins()
     {
         await Get<ICountdownRepository>().SaveAsync(Counter("existing"));
-        await Get<Database>().ExecuteAsync("DROP TABLE TaskHomePins; PRAGMA user_version=8;");
+        await Get<Database>().ExecuteAsync("DROP TABLE TaskHomePins; ALTER TABLE AcknowledgementLogs DROP COLUMN SnoozeCount; ALTER TABLE Occurrences DROP COLUMN SnoozedUntil; PRAGMA user_version=8;");
         await Get<IDatabaseInitializer>().InitializeAsync();
         Assert.True(Assert.Single(await Get<ICountdownRepository>().GetAllAsync()).IsPinned);
         Assert.Empty(await Get<ITaskHomePinRepository>().GetTaskIdsAsync());

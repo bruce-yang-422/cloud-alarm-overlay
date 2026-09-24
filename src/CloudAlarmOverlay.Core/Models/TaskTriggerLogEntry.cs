@@ -13,10 +13,11 @@ public sealed record TaskTriggerLogEntry
     public string? TaskName { get; init; }
     public string? Source { get; init; }
     public required DateTime ScheduledAt { get; init; }
-    /// <summary>Occurrences.State: Claimed / Displayed / Acknowledged / Missed.</summary>
+    /// <summary>Occurrences.State: Claimed / Displayed / Snoozed / Acknowledged / Missed.</summary>
     public required string OccurrenceState { get; init; }
     public DateTime? TriggeredAt { get; init; }
     public DateTime? AcknowledgedAt { get; init; }
+    public int SnoozeCount { get; init; }
     public int? DurationSeconds { get; init; }
     /// <summary>Null when Occurrences has no matching AcknowledgementLogs row at all (true firing failure).</summary>
     public string? Result { get; init; }

@@ -1,0 +1,26 @@
+<Window x:Class="CloudAlarmOverlay.App.Views.CountdownShareWindow"
+ xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+ xmlns:adaptive="clr-namespace:CloudAlarmOverlay.App.Styles" Title="倒數卡片分享圖片" Width="820" Height="760" MinWidth="580" MinHeight="480"
+ WindowStartupLocation="CenterOwner" Background="{adaptive:AdaptiveBrush #F7FAFE}" Foreground="{adaptive:AdaptiveBrush #16243E}" FontFamily="Segoe UI, Microsoft JhengHei UI" FontSize="14">
+ <Window.Resources><ResourceDictionary><ResourceDictionary.MergedDictionaries><ResourceDictionary Source="../Styles/LightTheme.xaml"/></ResourceDictionary.MergedDictionaries></ResourceDictionary></Window.Resources>
+ <Border Padding="22" Background="{adaptive:AdaptiveBrush #F7FAFE}"><Grid>
+  <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
+  <StackPanel>
+   <TextBlock Text="分享這一天" FontSize="24" FontWeight="SemiBold"/>
+   <TextBlock Text="{Binding CapturedLabel}" Style="{StaticResource Muted}" Margin="0,6,0,12"/>
+   <WrapPanel>
+    <StackPanel Margin="0,0,16,10"><TextBlock Text="圖片尺寸" Margin="0,0,0,6"/><ComboBox ItemsSource="{Binding Sizes}" SelectedIndex="{Binding SizeIndex}" Width="245" AutomationProperties.Name="分享圖片尺寸"/></StackPanel>
+    <StackPanel Margin="0,0,16,10"><TextBlock Text="背景樣式" Margin="0,0,0,6"/><ComboBox ItemsSource="{Binding Backgrounds}" SelectedIndex="{Binding BackgroundIndex}" Width="155" AutomationProperties.Name="分享圖片背景"/></StackPanel>
+    <CheckBox Content="此張圖片顯示程式名稱" IsChecked="{Binding ShowBranding}" VerticalAlignment="Bottom" Margin="0,0,0,18"/>
+   </WrapPanel>
+  </StackPanel>
+  <Border Grid.Row="1" Background="{adaptive:AdaptiveBrush #EAF0F8}" CornerRadius="12" Padding="12" Margin="0,0,0,12">
+   <Image x:Name="SharePreview" Source="{Binding PreviewImage}" Stretch="Uniform" RenderOptions.BitmapScalingMode="HighQuality" AutomationProperties.Name="分享圖片預覽"/>
+  </Border>
+  <StackPanel Grid.Row="2">
+   <TextBlock Text="只分享事件名稱、日期與天數，不包含備註。程式名稱的預設值可在「設定 → 分享圖片」調整。" Style="{StaticResource Muted}" TextWrapping="Wrap"/>
+   <TextBlock Text="{Binding Message}" TextWrapping="Wrap" Margin="0,6"/>
+   <WrapPanel HorizontalAlignment="Right"><Button Content="複製到剪貼簿" Click="CopyImage" Padding="16,9"/><Button Content="另存 PNG" Click="SaveImage" Style="{StaticResource Primary}" Padding="20,9" Margin="10,0,0,0"/></WrapPanel>
+  </StackPanel>
+ </Grid></Border>
+</Window>

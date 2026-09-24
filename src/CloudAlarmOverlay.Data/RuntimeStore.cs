@@ -26,10 +26,10 @@ public sealed class RuntimeStore(Database db) : IRuntimeStore
             now
         });
         await c.ExecuteAsync(new CommandDefinition("""
-            UPDATE Occurrences SET State='Displayed',TriggeredAt=@now WHERE Id=@id;
+            UPDATE Occurrences SET State='Displayed',TriggeredAt=COALESCE(TriggeredAt,@now),SnoozedUntil=NULL WHERE Id=@id;
             UPDATE Tasks SET IsTriggered=1 WHERE Id=@TaskId;
             INSERT INTO AcknowledgementLogs(Id,TaskId,TaskName,Source,ScheduledAt,DeviceId,DisplayName,TriggeredAt,Result,TaskSnapshotJson)
-            VALUES(@id,@TaskId,@TaskName,@Source,@scheduledAt,@DeviceId,@DisplayName,@now,'Pending',@TaskSnapshotJson);
+            VALUES(@id,@TaskId,@TaskName,@Source,@scheduledAt,@DeviceId,@DisplayName,@now,'Pending',@TaskSnapshotJson) ON CONFLICT(Id) DO UPDATE SET Result='Pending';
             """, args, tx, cancellationToken: ct));
         tx.Commit();
     }
@@ -54,6 +54,7 @@ public sealed class RuntimeStore(Database db) : IRuntimeStore
         await c.ExecuteAsync(new CommandDefinition("""
             INSERT OR IGNORE INTO AcknowledgementLogs(Id,TaskId,TaskName,Source,ScheduledAt,DeviceId,DisplayName,TriggeredAt,Result,TaskSnapshotJson)
             VALUES(@id,@TaskId,@TaskName,@Source,@scheduledAt,@DeviceId,@DisplayName,@scheduledAt,@result,@TaskSnapshotJson);
+            UPDATE AcknowledgementLogs SET Result=@result WHERE Id=@id AND AcknowledgedAt IS NULL;
             UPDATE Occurrences SET State='Missed' WHERE Id=@id;
             """, Database.Parameters(new
         {
@@ -75,11 +76,11 @@ public sealed class RuntimeStore(Database db) : IRuntimeStore
     {
         // Preserve displayed-but-unacknowledged attempts; safely retry claims that never reached UI.
         await db.ExecuteAsync("""
-            UPDATE AcknowledgementLogs SET Result='Overdue_Unacked' WHERE Result='Pending';
-            UPDATE Occurrences SET State='Missed' WHERE State='Displayed';
+            UPDATE AcknowledgementLogs SET Result='Overdue_Unacked' WHERE Result IN ('Pending','Snoozed');
+            UPDATE Occurrences SET State='Missed',SnoozedUntil=NULL WHERE State IN ('Displayed','Snoozed');
             DELETE FROM Occurrences WHERE State='Claimed';
             """, ct: ct);
     }
     public async Task<bool> IsActiveAsync(string taskId, CancellationToken ct = default)
-        => (await db.QueryAsync<long>("SELECT COUNT(*) FROM Occurrences WHERE TaskId=@taskId AND State IN ('Claimed','Displayed');", new { taskId }, ct)).Single() > 0;
+        => (await db.QueryAsync<long>("SELECT COUNT(*) FROM Occurrences WHERE TaskId=@taskId AND State IN ('Claimed','Displayed','Snoozed');", new { taskId }, ct)).Single() > 0;
 }

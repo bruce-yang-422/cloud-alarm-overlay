@@ -1,0 +1,3682 @@
+[
+  {
+    "Code": "09007010",
+    "County": "連江縣",
+    "District": "南竿鄉",
+    "PostalCode": "209",
+    "Latitude": 26.152886,
+    "Longitude": 119.938849,
+    "ReferenceName": "南竿鄉公所",
+    "ReferenceSource": "https://www.openstreetmap.org/node/12587782606"
+  },
+  {
+    "Code": "09007020",
+    "County": "連江縣",
+    "District": "北竿鄉",
+    "PostalCode": "210",
+    "Latitude": 26.225101,
+    "Longitude": 119.997036,
+    "ReferenceName": "北竿鄉公所",
+    "ReferenceSource": "https://www.openstreetmap.org/way/238573101"
+  },
+  {
+    "Code": "09007030",
+    "County": "連江縣",
+    "District": "莒光鄉",
+    "PostalCode": "211",
+    "Latitude": 25.971905,
+    "Longitude": 119.932946,
+    "ReferenceName": "莒光鄉公所",
+    "ReferenceSource": "https://www.openstreetmap.org/way/1178252805"
+  },
+  {
+    "Code": "09007040",
+    "County": "連江縣",
+    "District": "東引鄉",
+    "PostalCode": "212",
+    "Latitude": 26.367493,
+    "Longitude": 120.489888,
+    "ReferenceName": "東引鄉公所",
+    "ReferenceSource": "https://www.openstreetmap.org/way/431591104"
+  },
+  {
+    "Code": "09020010",
+    "County": "金門縣",
+    "District": "金城鎮",
+    "PostalCode": "893",
+    "Latitude": 24.432872,
+    "Longitude": 118.320789,
+    "ReferenceName": "金城鎮公所",
+    "ReferenceSource": "https://www.openstreetmap.org/way/324739179"
+  },
+  {
+    "Code": "09020020",
+    "County": "金門縣",
+    "District": "金沙鎮",
+    "PostalCode": "890",
+    "Latitude": 24.489032,
+    "Longitude": 118.413245,
+    "ReferenceName": "金沙鎮公所",
+    "ReferenceSource": "https://www.openstreetmap.org/node/2298333673"
+  },
+  {
+    "Code": "09020030",
+    "County": "金門縣",
+    "District": "金湖鎮",
+    "PostalCode": "891",
+    "Latitude": 24.441387,
+    "Longitude": 118.417071,
+    "ReferenceName": "金湖鎮公所",
+    "ReferenceSource": "https://www.openstreetmap.org/node/2298377506"
+  },
+  {
+    "Code": "09020040",
+    "County": "金門縣",
+    "District": "金寧鄉",
+    "PostalCode": "892",
+    "Latitude": 24.450912,
+    "Longitude": 118.334813,
+    "ReferenceName": "金寧鄉公所",
+    "ReferenceSource": "https://www.openstreetmap.org/way/425672879"
+  },
+  {
+    "Code": "09020050",
+    "County": "金門縣",
+    "District": "烈嶼鄉",
+    "PostalCode": "894",
+    "Latitude": 24.429555,
+    "Longitude": 118.24453,
+    "ReferenceName": "烈嶼鄉公所",
+    "ReferenceSource": "https://www.openstreetmap.org/way/440478071"
+  },
+  {
+    "Code": "09020060",
+    "County": "金門縣",
+    "District": "烏坵鄉",
+    "PostalCode": "896",
+    "Latitude": 24.988731,
+    "Longitude": 119.453145,
+    "ReferenceName": "烏坵鄉公所",
+    "ReferenceSource": "https://www.openstreetmap.org/way/686670228"
+  },
+  {
+    "Code": "10002010",
+    "County": "宜蘭縣",
+    "District": "宜蘭市",
+    "PostalCode": "260",
+    "Latitude": 24.751998,
+    "Longitude": 121.753443,
+    "ReferenceName": "宜蘭市公所",
+    "ReferenceSource": "https://www.openstreetmap.org/way/245320921"
+  },
+  {
+    "Code": "10002020",
+    "County": "宜蘭縣",
+    "District": "羅東鎮",
+    "PostalCode": "265",
+    "Latitude": 24.676961,
+    "Longitude": 121.766867,
+    "ReferenceName": "羅東鎮公所",
+    "ReferenceSource": "https://www.openstreetmap.org/way/244033533"
+  },
+  {
+    "Code": "10002030",
+    "County": "宜蘭縣",
+    "District": "蘇澳鎮",
+    "PostalCode": "270",
+    "Latitude": 24.594385,
+    "Longitude": 121.842046,
+    "ReferenceName": "蘇澳鎮公所",
+    "ReferenceSource": "https://www.openstreetmap.org/way/697267201"
+  },
+  {
+    "Code": "10002040",
+    "County": "宜蘭縣",
+    "District": "頭城鎮",
+    "PostalCode": "261",
+    "Latitude": 24.854799,
+    "Longitude": 121.82111,
+    "ReferenceName": "頭城鎮公所行政中心",
+    "ReferenceSource": "https://www.openstreetmap.org/way/679645595"
+  },
+  {
+    "Code": "10002050",
+    "County": "宜蘭縣",
+    "District": "礁溪鄉",
+    "PostalCode": "262",
+    "Latitude": 24.823668,
+    "Longitude": 121.771247,
+    "ReferenceName": "礁溪鄉公所",
+    "ReferenceSource": "https://www.openstreetmap.org/node/4061655077"
+  },
+  {
+    "Code": "10002060",
+    "County": "宜蘭縣",
+    "District": "壯圍鄉",
+    "PostalCode": "263",
+    "Latitude": 24.74693,
+    "Longitude": 121.78577,
+    "ReferenceName": "壯圍鄉公所i郵箱",
+    "ReferenceSource": "https://www.openstreetmap.org/node/9625808557"
+  },
+  {
+    "Code": "10002070",
+    "County": "宜蘭縣",
+    "District": "員山鄉",
+    "PostalCode": "264",
+    "Latitude": 24.743131,
+    "Longitude": 121.723425,
+    "ReferenceName": "員山鄉公所",
+    "ReferenceSource": "https://www.openstreetmap.org/relation/14663419"
+  },
+  {
+    "Code": "10002080",
+    "County": "宜蘭縣",
+    "District": "冬山鄉",
+    "PostalCode": "269",
+    "Latitude": 24.634298,
+    "Longitude": 121.793088,
+    "ReferenceName": "冬山鄉公所",
+    "ReferenceSource": "https://www.openstreetmap.org/way/1108911513"
+  },
+  {
+    "Code": "10002090",
+    "County": "宜蘭縣",
+    "District": "五結鄉",
+    "PostalCode": "268",
+    "Latitude": 24.684684,
+    "Longitude": 121.798348,
+    "ReferenceName": "五結鄉公所",
+    "ReferenceSource": "https://www.openstreetmap.org/way/852663542"
+  },
+  {
+    "Code": "10002100",
+    "County": "宜蘭縣",
+    "District": "三星鄉",
+    "PostalCode": "266",
+    "Latitude": 24.66554,
+    "Longitude": 121.653934,
+    "ReferenceName": "三星鄉公所",
+    "ReferenceSource": "https://www.openstreetmap.org/way/864871678"
+  },
+  {
+    "Code": "10002110",
+    "County": "宜蘭縣",
+    "District": "大同鄉",
+    "PostalCode": "267",
+    "Latitude": 24.677285,
+    "Longitude": 121.609117,
+    "ReferenceName": "大同鄉公所",
+    "ReferenceSource": "https://www.openstreetmap.org/way/297891771"
+  },
+  {
+    "Code": "10002120",
+    "County": "宜蘭縣",
+    "District": "南澳鄉",
+    "PostalCode": "272",
+    "Latitude": 24.466121,
+    "Longitude": 121.803771,
+    "ReferenceName": "南澳鄉公所",
+    "ReferenceSource": "https://www.openstreetmap.org/way/766692832"
+  },
+  {
+    "Code": "10004010",
+    "County": "新竹縣",
+    "District": "竹北市",
+    "PostalCode": "302",
+    "Latitude": 24.839773,
+    "Longitude": 121.004137,
+    "ReferenceName": "竹北市公所",
+    "ReferenceSource": "https://www.openstreetmap.org/node/3281561318"
+  },
+  {
+    "Code": "10004020",
+    "County": "新竹縣",
+    "District": "竹東鎮",
+    "PostalCode": "310",
+    "Latitude": 24.736856,
+    "Longitude": 121.091686,
+    "ReferenceName": "竹東鎮公所",
+    "ReferenceSource": "https://www.openstreetmap.org/node/10831444841"
+  },
+  {
+    "Code": "10004030",
+    "County": "新竹縣",
+    "District": "新埔鎮",
+    "PostalCode": "305",
+    "Latitude": 24.825584,
+    "Longitude": 121.074239,
+    "ReferenceName": "新埔鎮公所",
+    "ReferenceSource": "https://www.openstreetmap.org/node/12011613508"
+  },
+  {
+    "Code": "10004040",
+    "County": "新竹縣",
+    "District": "關西鎮",
+    "PostalCode": "306",
+    "Latitude": 24.792444,
+    "Longitude": 121.175744,
+    "ReferenceName": "關西鎮公所",
+    "ReferenceSource": "https://www.openstreetmap.org/way/438844668"
+  },
+  {
+    "Code": "10004050",
+    "County": "新竹縣",
+    "District": "湖口鄉",
+    "PostalCode": "303",
+    "Latitude": 24.900967,
+    "Longitude": 121.04787,
+    "ReferenceName": "湖口鄉公所",
+    "ReferenceSource": "https://www.openstreetmap.org/node/3659646329"
+  },
+  {
+    "Code": "10004060",
+    "County": "新竹縣",
+    "District": "新豐鄉",
+    "PostalCode": "304",
+    "Latitude": 24.900788,
+    "Longitude": 120.985233,
+    "ReferenceName": "新豐鄉公所i郵箱",
+    "ReferenceSource": "https://www.openstreetmap.org/node/9625810045"
+  },
+  {
+    "Code": "10004070",
+    "County": "新竹縣",
+    "District": "芎林鄉",
+    "PostalCode": "307",
+    "Latitude": 24.777592,
+    "Longitude": 121.075031,
+    "ReferenceName": "芎林鄉公所",
+    "ReferenceSource": "https://www.openstreetmap.org/node/13003405899"
+  },
+  {
+    "Code": "10004080",
+    "County": "新竹縣",
+    "District": "橫山鄉",
+    "PostalCode": "312",
+    "Latitude": 24.716904,
+    "Longitude": 121.141569,
+    "ReferenceName": "橫山鄉公所",
+    "ReferenceSource": "https://www.openstreetmap.org/way/363067720"
+  },
+  {
+    "Code": "10004090",
+    "County": "新竹縣",
+    "District": "北埔鄉",
+    "PostalCode": "314",
+    "Latitude": 24.702078,
+    "Longitude": 121.056385,
+    "ReferenceName": "北埔鄉公所",
+    "ReferenceSource": "https://www.openstreetmap.org/way/363696887"
+  },
+  {
+    "Code": "10004100",
+    "County": "新竹縣",
+    "District": "寶山鄉",
+    "PostalCode": "308",
+    "Latitude": 24.7655,
+    "Longitude": 120.991314,
+    "ReferenceName": "寶山鄉公所",
+    "ReferenceSource": "https://www.openstreetmap.org/way/363067717"
+  },
+  {
+    "Code": "10004110",
+    "County": "新竹縣",
+    "District": "峨眉鄉",
+    "PostalCode": "315",
+    "Latitude": 24.686444,
+    "Longitude": 121.017392,
+    "ReferenceName": "峨眉鄉公所",
+    "ReferenceSource": "https://www.openstreetmap.org/node/11425044552"
+  },
+  {
+    "Code": "10004120",
+    "County": "新竹縣",
+    "District": "尖石鄉",
+    "PostalCode": "313",
+    "Latitude": 24.721857,
+    "Longitude": 121.233641,
+    "ReferenceName": "0068 北得拉曼營地→尖石鄉公所站",
+    "ReferenceSource": "https://www.openstreetmap.org/relation/18975363"
+  },
+  {
+    "Code": "10004130",
+    "County": "新竹縣",
+    "District": "五峰鄉",
+    "PostalCode": "311",
+    "Latitude": 24.624538,
+    "Longitude": 121.129486,
+    "ReferenceName": "竹林線 五峰鄉公所→竹林村辦公處",
+    "ReferenceSource": "https://www.openstreetmap.org/relation/18975786"
+  },
+  {
+    "Code": "10005010",
+    "County": "苗栗縣",
+    "District": "苗栗市",
+    "PostalCode": "360",
+    "Latitude": 24.561318,
+    "Longitude": 120.818923,
+    "ReferenceName": "苗栗市公所",
+    "ReferenceSource": "https://www.openstreetmap.org/node/5913957044"
+  },
+  {
+    "Code": "10005020",
+    "County": "苗栗縣",
+    "District": "苑裡鎮",
+    "PostalCode": "358",
+    "Latitude": 24.439698,
+    "Longitude": 120.653134,
+    "ReferenceName": "苑裡鎮公所",
+    "ReferenceSource": "https://www.openstreetmap.org/way/582910796"
+  },
+  {
+    "Code": "10005030",
+    "County": "苗栗縣",
+    "District": "通霄鎮",
+    "PostalCode": "357",
+    "Latitude": 24.491256,
+    "Longitude": 120.684613,
+    "ReferenceName": "通霄鎮公所",
+    "ReferenceSource": "https://www.openstreetmap.org/node/9457185670"
+  },
+  {
+    "Code": "10005040",
+    "County": "苗栗縣",
+    "District": "竹南鎮",
+    "PostalCode": "350",
+    "Latitude": 24.683726,
+    "Longitude": 120.873384,
+    "ReferenceName": "竹南鎮公所",
+    "ReferenceSource": "https://www.openstreetmap.org/node/5913957056"
+  },
+  {
+    "Code": "10005050",
+    "County": "苗栗縣",
+    "District": "頭份市",
+    "PostalCode": "351",
+    "Latitude": 24.686639,
+    "Longitude": 120.912857,
+    "ReferenceName": "頭份市公所",
+    "ReferenceSource": "https://www.openstreetmap.org/node/5913957052"
+  },
+  {
+    "Code": "10005060",
+    "County": "苗栗縣",
+    "District": "後龍鎮",
+    "PostalCode": "356",
+    "Latitude": 24.613794,
+    "Longitude": 120.791995,
+    "ReferenceName": "後龍鎮公所",
+    "ReferenceSource": "https://www.openstreetmap.org/way/556018222"
+  },
+  {
+    "Code": "10005070",
+    "County": "苗栗縣",
+    "District": "卓蘭鎮",
+    "PostalCode": "369",
+    "Latitude": 24.329563,
+    "Longitude": 120.800284,
+    "ReferenceName": "卓蘭鎮公所清潔隊",
+    "ReferenceSource": "https://www.openstreetmap.org/way/1027070519"
+  },
+  {
+    "Code": "10005080",
+    "County": "苗栗縣",
+    "District": "大湖鄉",
+    "PostalCode": "364",
+    "Latitude": 24.423476,
+    "Longitude": 120.866188,
+    "ReferenceName": "大湖鄉公所",
+    "ReferenceSource": "https://www.openstreetmap.org/way/292144284"
+  },
+  {
+    "Code": "10005090",
+    "County": "苗栗縣",
+    "District": "公館鄉",
+    "PostalCode": "363",
+    "Latitude": 24.506607,
+    "Longitude": 120.826884,
+    "ReferenceName": "公館鄉公所",
+    "ReferenceSource": "https://www.openstreetmap.org/relation/13200610"
+  },
+  {
+    "Code": "10005100",
+    "County": "苗栗縣",
+    "District": "銅鑼鄉",
+    "PostalCode": "366",
+    "Latitude": 24.48706,
+    "Longitude": 120.787886,
+    "ReferenceName": "銅鑼鄉公所",
+    "ReferenceSource": "https://www.openstreetmap.org/node/5443122422"
+  },
+  {
+    "Code": "10005110",
+    "County": "苗栗縣",
+    "District": "南庄鄉",
+    "PostalCode": "353",
+    "Latitude": 24.598204,
+    "Longitude": 120.999116,
+    "ReferenceName": "南庄鄉公所公有零售市場",
+    "ReferenceSource": "https://www.openstreetmap.org/way/364055579"
+  },
+  {
+    "Code": "10005120",
+    "County": "苗栗縣",
+    "District": "頭屋鄉",
+    "PostalCode": "362",
+    "Latitude": 24.577788,
+    "Longitude": 120.851094,
+    "ReferenceName": "頭屋鄉公所",
+    "ReferenceSource": "https://www.openstreetmap.org/way/408896728"
+  },
+  {
+    "Code": "10005130",
+    "County": "苗栗縣",
+    "District": "三義鄉",
+    "PostalCode": "367",
+    "Latitude": 24.412798,
+    "Longitude": 120.77025,
+    "ReferenceName": "三義鄉公所",
+    "ReferenceSource": "https://www.openstreetmap.org/way/275433903"
+  },
+  {
+    "Code": "10005140",
+    "County": "苗栗縣",
+    "District": "西湖鄉",
+    "PostalCode": "368",
+    "Latitude": 24.556848,
+    "Longitude": 120.757107,
+    "ReferenceName": "西湖鄉公所",
+    "ReferenceSource": "https://www.openstreetmap.org/node/5443946921"
+  },
+  {
+    "Code": "10005150",
+    "County": "苗栗縣",
+    "District": "造橋鄉",
+    "PostalCode": "361",
+    "Latitude": 24.638623,
+    "Longitude": 120.865175,
+    "ReferenceName": "造橋鄉公所",
+    "ReferenceSource": "https://www.openstreetmap.org/node/3303467174"
+  },
+  {
+    "Code": "10005160",
+    "County": "苗栗縣",
+    "District": "三灣鄉",
+    "PostalCode": "352",
+    "Latitude": 24.653099,
+    "Longitude": 120.956838,
+    "ReferenceName": "三灣鄉公所",
+    "ReferenceSource": "https://www.openstreetmap.org/node/3205650351"
+  },
+  {
+    "Code": "10005170",
+    "County": "苗栗縣",
+    "District": "獅潭鄉",
+    "PostalCode": "354",
+    "Latitude": 24.539328,
+    "Longitude": 120.920575,
+    "ReferenceName": "獅潭鄉公所",
+    "ReferenceSource": "https://www.openstreetmap.org/node/3205650260"
+  },
+  {
+    "Code": "10005180",
+    "County": "苗栗縣",
+    "District": "泰安鄉",
+    "PostalCode": "365",
+    "Latitude": 24.447534,
+    "Longitude": 120.90637,
+    "ReferenceName": "泰安鄉公所",
+    "ReferenceSource": "https://www.openstreetmap.org/way/454484814"
+  },
+  {
+    "Code": "10007010",
+    "County": "彰化縣",
+    "District": "彰化市",
+    "PostalCode": "500",
+    "Latitude": 24.080934,
+    "Longitude": 120.542189,
+    "ReferenceName": "彰化市公所",
+    "ReferenceSource": "https://www.openstreetmap.org/way/100854645"
+  },
+  {
+    "Code": "10007020",
+    "County": "彰化縣",
+    "District": "鹿港鎮",
+    "PostalCode": "505",
+    "Latitude": 24.057318,
+    "Longitude": 120.435038,
+    "ReferenceName": "鹿港鎮公所",
+    "ReferenceSource": "https://www.openstreetmap.org/way/321942706"
+  },
+  {
+    "Code": "10007030",
+    "County": "彰化縣",
+    "District": "和美鎮",
+    "PostalCode": "508",
+    "Latitude": 24.107907,
+    "Longitude": 120.495331,
+    "ReferenceName": "和美鎮公所",
+    "ReferenceSource": "https://www.openstreetmap.org/node/12141762327"
+  },
+  {
+    "Code": "10007040",
+    "County": "彰化縣",
+    "District": "線西鄉",
+    "PostalCode": "507",
+    "Latitude": 24.130689,
+    "Longitude": 120.47056,
+    "ReferenceName": "線西鄉鎮公所",
+    "ReferenceSource": "https://www.openstreetmap.org/way/754985137"
+  },
+  {
+    "Code": "10007050",
+    "County": "彰化縣",
+    "District": "伸港鄉",
+    "PostalCode": "509",
+    "Latitude": 24.159807,
+    "Longitude": 120.486195,
+    "ReferenceName": "伸港鄉公所",
+    "ReferenceSource": "https://www.openstreetmap.org/way/874475492"
+  },
+  {
+    "Code": "10007060",
+    "County": "彰化縣",
+    "District": "福興鄉",
+    "PostalCode": "506",
+    "Latitude": 24.047812,
+    "Longitude": 120.443831,
+    "ReferenceName": "福興鄉公所",
+    "ReferenceSource": "https://www.openstreetmap.org/way/323769994"
+  },
+  {
+    "Code": "10007070",
+    "County": "彰化縣",
+    "District": "秀水鄉",
+    "PostalCode": "504",
+    "Latitude": 24.03532,
+    "Longitude": 120.502853,
+    "ReferenceName": "秀水鄉公所i郵箱",
+    "ReferenceSource": "https://www.openstreetmap.org/node/9625808744"
+  },
+  {
+    "Code": "10007080",
+    "County": "彰化縣",
+    "District": "花壇鄉",
+    "PostalCode": "503",
+    "Latitude": 24.029688,
+    "Longitude": 120.538145,
+    "ReferenceName": "花壇鄉公所",
+    "ReferenceSource": "https://www.openstreetmap.org/node/12141739428"
+  },
+  {
+    "Code": "10007090",
+    "County": "彰化縣",
+    "District": "芬園鄉",
+    "PostalCode": "502",
+    "Latitude": 24.013697,
+    "Longitude": 120.628997,
+    "ReferenceName": "芬園鄉公所",
+    "ReferenceSource": "https://www.openstreetmap.org/way/822003949"
+  },
+  {
+    "Code": "10007100",
+    "County": "彰化縣",
+    "District": "員林市",
+    "PostalCode": "510",
+    "Latitude": 23.959079,
+    "Longitude": 120.574281,
+    "ReferenceName": "員林市公所三樓禮堂",
+    "ReferenceSource": "https://www.openstreetmap.org/node/4891530641"
+  },
+  {
+    "Code": "10007110",
+    "County": "彰化縣",
+    "District": "溪湖鎮",
+    "PostalCode": "514",
+    "Latitude": 23.958117,
+    "Longitude": 120.480114,
+    "ReferenceName": "溪湖鎮公所第一公有零售市場",
+    "ReferenceSource": "https://www.openstreetmap.org/node/2088257064"
+  },
+  {
+    "Code": "10007120",
+    "County": "彰化縣",
+    "District": "田中鎮",
+    "PostalCode": "520",
+    "Latitude": 23.861442,
+    "Longitude": 120.580669,
+    "ReferenceName": "田中鎮公所",
+    "ReferenceSource": "https://www.openstreetmap.org/node/12141739437"
+  },
+  {
+    "Code": "10007130",
+    "County": "彰化縣",
+    "District": "大村鄉",
+    "PostalCode": "515",
+    "Latitude": 23.99364,
+    "Longitude": 120.547175,
+    "ReferenceName": "大村鄉公所",
+    "ReferenceSource": "https://www.openstreetmap.org/way/584408206"
+  },
+  {
+    "Code": "10007140",
+    "County": "彰化縣",
+    "District": "埔鹽鄉",
+    "PostalCode": "516",
+    "Latitude": 24.000597,
+    "Longitude": 120.463694,
+    "ReferenceName": "埔鹽鄉公所",
+    "ReferenceSource": "https://www.openstreetmap.org/way/824802276"
+  },
+  {
+    "Code": "10007150",
+    "County": "彰化縣",
+    "District": "埔心鄉",
+    "PostalCode": "513",
+    "Latitude": 23.953129,
+    "Longitude": 120.54349,
+    "ReferenceName": "埔心鄉公所",
+    "ReferenceSource": "https://www.openstreetmap.org/way/929493382"
+  },
+  {
+    "Code": "10007160",
+    "County": "彰化縣",
+    "District": "永靖鄉",
+    "PostalCode": "512",
+    "Latitude": 23.92148,
+    "Longitude": 120.54594,
+    "ReferenceName": "永靖鄉聚落",
+    "ReferenceSource": "https://www.geonames.org/1665259"
+  },
+  {
+    "Code": "10007170",
+    "County": "彰化縣",
+    "District": "社頭鄉",
+    "PostalCode": "511",
+    "Latitude": 23.896759,
+    "Longitude": 120.585874,
+    "ReferenceName": "社頭鄉公所大禮堂",
+    "ReferenceSource": "https://www.openstreetmap.org/node/4892077332"
+  },
+  {
+    "Code": "10007180",
+    "County": "彰化縣",
+    "District": "二水鄉",
+    "PostalCode": "530",
+    "Latitude": 23.806718,
+    "Longitude": 120.619067,
+    "ReferenceName": "二水鄉公所",
+    "ReferenceSource": "https://www.openstreetmap.org/way/831118102"
+  },
+  {
+    "Code": "10007190",
+    "County": "彰化縣",
+    "District": "北斗鎮",
+    "PostalCode": "521",
+    "Latitude": 23.875786,
+    "Longitude": 120.538389,
+    "ReferenceName": "彰化縣北斗鎮公所垃圾衛生掩埋場",
+    "ReferenceSource": "https://www.openstreetmap.org/node/9103838395"
+  },
+  {
+    "Code": "10007200",
+    "County": "彰化縣",
+    "District": "二林鎮",
+    "PostalCode": "526",
+    "Latitude": 23.899986,
+    "Longitude": 120.374406,
+    "ReferenceName": "二林鎮公所",
+    "ReferenceSource": "https://www.openstreetmap.org/way/1302640129"
+  },
+  {
+    "Code": "10007210",
+    "County": "彰化縣",
+    "District": "田尾鄉",
+    "PostalCode": "522",
+    "Latitude": 23.892174,
+    "Longitude": 120.52594,
+    "ReferenceName": "田尾鄉公所",
+    "ReferenceSource": "https://www.openstreetmap.org/way/281098686"
+  },
+  {
+    "Code": "10007220",
+    "County": "彰化縣",
+    "District": "埤頭鄉",
+    "PostalCode": "523",
+    "Latitude": 23.891671,
+    "Longitude": 120.462151,
+    "ReferenceName": "埤頭鄉公所",
+    "ReferenceSource": "https://www.openstreetmap.org/way/1530230212"
+  },
+  {
+    "Code": "10007230",
+    "County": "彰化縣",
+    "District": "芳苑鄉",
+    "PostalCode": "528",
+    "Latitude": 23.924479,
+    "Longitude": 120.320408,
+    "ReferenceName": "芳苑鄉公所",
+    "ReferenceSource": "https://www.openstreetmap.org/way/544063693"
+  },
+  {
+    "Code": "10007240",
+    "County": "彰化縣",
+    "District": "大城鄉",
+    "PostalCode": "527",
+    "Latitude": 23.852334,
+    "Longitude": 120.321016,
+    "ReferenceName": "大城鄉公所",
+    "ReferenceSource": "https://www.openstreetmap.org/way/407004616"
+  },
+  {
+    "Code": "10007250",
+    "County": "彰化縣",
+    "District": "竹塘鄉",
+    "PostalCode": "525",
+    "Latitude": 23.86052,
+    "Longitude": 120.42779,
+    "ReferenceName": "竹塘鄉公所",
+    "ReferenceSource": "https://www.openstreetmap.org/node/3102175399"
+  },
+  {
+    "Code": "10007260",
+    "County": "彰化縣",
+    "District": "溪州鄉",
+    "PostalCode": "524",
+    "Latitude": 23.851621,
+    "Longitude": 120.499032,
+    "ReferenceName": "溪州鄉公所",
+    "ReferenceSource": "https://www.openstreetmap.org/node/6900454949"
+  },
+  {
+    "Code": "10008010",
+    "County": "南投縣",
+    "District": "南投市",
+    "PostalCode": "540",
+    "Latitude": 23.911506,
+    "Longitude": 120.687225,
+    "ReferenceName": "南投市公所",
+    "ReferenceSource": "https://www.openstreetmap.org/way/293829433"
+  },
+  {
+    "Code": "10008020",
+    "County": "南投縣",
+    "District": "埔里鎮",
+    "PostalCode": "545",
+    "Latitude": 23.96641,
+    "Longitude": 120.969315,
+    "ReferenceName": "埔里鎮公所",
+    "ReferenceSource": "https://www.openstreetmap.org/way/240329673"
+  },
+  {
+    "Code": "10008030",
+    "County": "南投縣",
+    "District": "草屯鎮",
+    "PostalCode": "542",
+    "Latitude": 23.973565,
+    "Longitude": 120.680651,
+    "ReferenceName": "草屯鎮公所",
+    "ReferenceSource": "https://www.openstreetmap.org/way/346128039"
+  },
+  {
+    "Code": "10008040",
+    "County": "南投縣",
+    "District": "竹山鎮",
+    "PostalCode": "557",
+    "Latitude": 23.757899,
+    "Longitude": 120.671575,
+    "ReferenceName": "竹山鎮公所",
+    "ReferenceSource": "https://www.openstreetmap.org/way/336635578"
+  },
+  {
+    "Code": "10008050",
+    "County": "南投縣",
+    "District": "集集鎮",
+    "PostalCode": "552",
+    "Latitude": 23.828347,
+    "Longitude": 120.786587,
+    "ReferenceName": "集集鎮公所",
+    "ReferenceSource": "https://www.openstreetmap.org/way/197166909"
+  },
+  {
+    "Code": "10008060",
+    "County": "南投縣",
+    "District": "名間鄉",
+    "PostalCode": "551",
+    "Latitude": 23.838239,
+    "Longitude": 120.702979,
+    "ReferenceName": "名間鄉公所",
+    "ReferenceSource": "https://www.openstreetmap.org/way/326369251"
+  },
+  {
+    "Code": "10008070",
+    "County": "南投縣",
+    "District": "鹿谷鄉",
+    "PostalCode": "558",
+    "Latitude": 23.745799,
+    "Longitude": 120.753312,
+    "ReferenceName": "鹿谷鄉公所",
+    "ReferenceSource": "https://www.openstreetmap.org/way/292053681"
+  },
+  {
+    "Code": "10008080",
+    "County": "南投縣",
+    "District": "中寮鄉",
+    "PostalCode": "541",
+    "Latitude": 23.879124,
+    "Longitude": 120.766107,
+    "ReferenceName": "中寮鄉公所",
+    "ReferenceSource": "https://www.openstreetmap.org/node/5436502721"
+  },
+  {
+    "Code": "10008090",
+    "County": "南投縣",
+    "District": "魚池鄉",
+    "PostalCode": "555",
+    "Latitude": 23.895752,
+    "Longitude": 120.935447,
+    "ReferenceName": "魚池鄉公所",
+    "ReferenceSource": "https://www.openstreetmap.org/node/5437956021"
+  },
+  {
+    "Code": "10008100",
+    "County": "南投縣",
+    "District": "國姓鄉",
+    "PostalCode": "544",
+    "Latitude": 24.039885,
+    "Longitude": 120.857583,
+    "ReferenceName": "國姓鄉公所",
+    "ReferenceSource": "https://www.openstreetmap.org/node/1909491034"
+  },
+  {
+    "Code": "10008110",
+    "County": "南投縣",
+    "District": "水里鄉",
+    "PostalCode": "553",
+    "Latitude": 23.811373,
+    "Longitude": 120.856075,
+    "ReferenceName": "水里鄉公所",
+    "ReferenceSource": "https://www.openstreetmap.org/way/797191709"
+  },
+  {
+    "Code": "10008120",
+    "County": "南投縣",
+    "District": "信義鄉",
+    "PostalCode": "556",
+    "Latitude": 23.69702,
+    "Longitude": 120.854315,
+    "ReferenceName": "信義鄉公所",
+    "ReferenceSource": "https://www.openstreetmap.org/node/5436545521"
+  },
+  {
+    "Code": "10008130",
+    "County": "南投縣",
+    "District": "仁愛鄉",
+    "PostalCode": "546",
+    "Latitude": 24.021532,
+    "Longitude": 121.131974,
+    "ReferenceName": "仁愛鄉公所",
+    "ReferenceSource": "https://www.openstreetmap.org/way/237322267"
+  },
+  {
+    "Code": "10009010",
+    "County": "雲林縣",
+    "District": "斗六市",
+    "PostalCode": "640",
+    "Latitude": 23.697026,
+    "Longitude": 120.526929,
+    "ReferenceName": "斗六市公所",
+    "ReferenceSource": "https://www.openstreetmap.org/way/496843405"
+  },
+  {
+    "Code": "10009020",
+    "County": "雲林縣",
+    "District": "斗南鎮",
+    "PostalCode": "630",
+    "Latitude": 23.680201,
+    "Longitude": 120.477645,
+    "ReferenceName": "斗南鎮公所",
+    "ReferenceSource": "https://www.openstreetmap.org/way/727655257"
+  },
+  {
+    "Code": "10009030",
+    "County": "雲林縣",
+    "District": "虎尾鎮",
+    "PostalCode": "632",
+    "Latitude": 23.708298,
+    "Longitude": 120.444707,
+    "ReferenceName": "虎尾鎮公所",
+    "ReferenceSource": "https://www.openstreetmap.org/node/12636035819"
+  },
+  {
+    "Code": "10009040",
+    "County": "雲林縣",
+    "District": "西螺鎮",
+    "PostalCode": "648",
+    "Latitude": 23.797583,
+    "Longitude": 120.465428,
+    "ReferenceName": "Moovo西螺鎮公所",
+    "ReferenceSource": "https://www.openstreetmap.org/node/12636035797"
+  },
+  {
+    "Code": "10009050",
+    "County": "雲林縣",
+    "District": "土庫鎮",
+    "PostalCode": "633",
+    "Latitude": 23.682318,
+    "Longitude": 120.389967,
+    "ReferenceName": "土庫鎮公所",
+    "ReferenceSource": "https://www.openstreetmap.org/node/12636016590"
+  },
+  {
+    "Code": "10009060",
+    "County": "雲林縣",
+    "District": "北港鎮",
+    "PostalCode": "651",
+    "Latitude": 23.57593,
+    "Longitude": 120.302658,
+    "ReferenceName": "Moovo北港鎮公所",
+    "ReferenceSource": "https://www.openstreetmap.org/node/12636016596"
+  },
+  {
+    "Code": "10009070",
+    "County": "雲林縣",
+    "District": "古坑鄉",
+    "PostalCode": "646",
+    "Latitude": 23.645,
+    "Longitude": 120.56278,
+    "ReferenceName": "古坑鄉聚落",
+    "ReferenceSource": "https://www.geonames.org/1673388"
+  },
+  {
+    "Code": "10009080",
+    "County": "雲林縣",
+    "District": "大埤鄉",
+    "PostalCode": "631",
+    "Latitude": 23.64606,
+    "Longitude": 120.431413,
+    "ReferenceName": "大埤鄉公所",
+    "ReferenceSource": "https://www.openstreetmap.org/way/823179492"
+  },
+  {
+    "Code": "10009090",
+    "County": "雲林縣",
+    "District": "莿桐鄉",
+    "PostalCode": "647",
+    "Latitude": 23.761105,
+    "Longitude": 120.502355,
+    "ReferenceName": "莿桐鄉公所4樓禮堂",
+    "ReferenceSource": "https://www.openstreetmap.org/node/4891527254"
+  },
+  {
+    "Code": "10009100",
+    "County": "雲林縣",
+    "District": "林內鄉",
+    "PostalCode": "643",
+    "Latitude": 23.756237,
+    "Longitude": 120.612947,
+    "ReferenceName": "林內鄉公所",
+    "ReferenceSource": "https://www.openstreetmap.org/way/670727817"
+  },
+  {
+    "Code": "10009110",
+    "County": "雲林縣",
+    "District": "二崙鄉",
+    "PostalCode": "649",
+    "Latitude": 23.771064,
+    "Longitude": 120.412934,
+    "ReferenceName": "二崙鄉公所",
+    "ReferenceSource": "https://www.openstreetmap.org/way/163162927"
+  },
+  {
+    "Code": "10009120",
+    "County": "雲林縣",
+    "District": "崙背鄉",
+    "PostalCode": "637",
+    "Latitude": 23.756616,
+    "Longitude": 120.346512,
+    "ReferenceName": "崙背鄉公所游泳池",
+    "ReferenceSource": "https://www.openstreetmap.org/node/6885644570"
+  },
+  {
+    "Code": "10009130",
+    "County": "雲林縣",
+    "District": "麥寮鄉",
+    "PostalCode": "638",
+    "Latitude": 23.753949,
+    "Longitude": 120.251225,
+    "ReferenceName": "麥寮鄉公所",
+    "ReferenceSource": "https://www.openstreetmap.org/way/985106697"
+  },
+  {
+    "Code": "10009140",
+    "County": "雲林縣",
+    "District": "東勢鄉",
+    "PostalCode": "635",
+    "Latitude": 23.674871,
+    "Longitude": 120.252576,
+    "ReferenceName": "東勢鄉公所3樓",
+    "ReferenceSource": "https://www.openstreetmap.org/node/4891229522"
+  },
+  {
+    "Code": "10009150",
+    "County": "雲林縣",
+    "District": "褒忠鄉",
+    "PostalCode": "634",
+    "Latitude": 23.691038,
+    "Longitude": 120.303691,
+    "ReferenceName": "褒忠鄉公所",
+    "ReferenceSource": "https://www.openstreetmap.org/way/1350907286"
+  },
+  {
+    "Code": "10009160",
+    "County": "雲林縣",
+    "District": "臺西鄉",
+    "PostalCode": "636",
+    "Latitude": 23.70111,
+    "Longitude": 120.19889,
+    "ReferenceName": "臺西鄉聚落",
+    "ReferenceSource": "https://www.geonames.org/1668382"
+  },
+  {
+    "Code": "10009170",
+    "County": "雲林縣",
+    "District": "元長鄉",
+    "PostalCode": "655",
+    "Latitude": 23.654734,
+    "Longitude": 120.279235,
+    "ReferenceName": "雲林縣元長鄉公所五塊村辦公處",
+    "ReferenceSource": "https://www.openstreetmap.org/node/6621608322"
+  },
+  {
+    "Code": "10009180",
+    "County": "雲林縣",
+    "District": "四湖鄉",
+    "PostalCode": "654",
+    "Latitude": 23.638097,
+    "Longitude": 120.224334,
+    "ReferenceName": "四湖鄉公所",
+    "ReferenceSource": "https://www.openstreetmap.org/way/1231613019"
+  },
+  {
+    "Code": "10009190",
+    "County": "雲林縣",
+    "District": "口湖鄉",
+    "PostalCode": "653",
+    "Latitude": 23.582636,
+    "Longitude": 120.185799,
+    "ReferenceName": "口湖鄉公所",
+    "ReferenceSource": "https://www.openstreetmap.org/way/663142032"
+  },
+  {
+    "Code": "10009200",
+    "County": "雲林縣",
+    "District": "水林鄉",
+    "PostalCode": "652",
+    "Latitude": 23.572649,
+    "Longitude": 120.24569,
+    "ReferenceName": "Moovo水林鄉公所",
+    "ReferenceSource": "https://www.openstreetmap.org/node/12636016572"
+  },
+  {
+    "Code": "10010010",
+    "County": "嘉義縣",
+    "District": "太保市",
+    "PostalCode": "612",
+    "Latitude": 23.4585,
+    "Longitude": 120.33253,
+    "ReferenceName": "太保市公所",
+    "ReferenceSource": "https://www.openstreetmap.org/node/12640062169"
+  },
+  {
+    "Code": "10010020",
+    "County": "嘉義縣",
+    "District": "朴子市",
+    "PostalCode": "613",
+    "Latitude": 23.45798,
+    "Longitude": 120.24552,
+    "ReferenceName": "朴子市公所",
+    "ReferenceSource": "https://www.openstreetmap.org/node/12608955328"
+  },
+  {
+    "Code": "10010030",
+    "County": "嘉義縣",
+    "District": "布袋鎮",
+    "PostalCode": "625",
+    "Latitude": 23.378103,
+    "Longitude": 120.166943,
+    "ReferenceName": "布袋鎮公所",
+    "ReferenceSource": "https://www.openstreetmap.org/node/7931131201"
+  },
+  {
+    "Code": "10010040",
+    "County": "嘉義縣",
+    "District": "大林鎮",
+    "PostalCode": "622",
+    "Latitude": 23.604024,
+    "Longitude": 120.471215,
+    "ReferenceName": "大林鎮公所",
+    "ReferenceSource": "https://www.openstreetmap.org/node/7679355854"
+  },
+  {
+    "Code": "10010050",
+    "County": "嘉義縣",
+    "District": "民雄鄉",
+    "PostalCode": "621",
+    "Latitude": 23.55146,
+    "Longitude": 120.42875,
+    "ReferenceName": "民雄鄉公所",
+    "ReferenceSource": "https://www.openstreetmap.org/node/12640028900"
+  },
+  {
+    "Code": "10010060",
+    "County": "嘉義縣",
+    "District": "溪口鄉",
+    "PostalCode": "623",
+    "Latitude": 23.602641,
+    "Longitude": 120.392284,
+    "ReferenceName": "溪口鄉公所三樓禮堂",
+    "ReferenceSource": "https://www.openstreetmap.org/node/4891582021"
+  },
+  {
+    "Code": "10010070",
+    "County": "嘉義縣",
+    "District": "新港鄉",
+    "PostalCode": "616",
+    "Latitude": 23.551938,
+    "Longitude": 120.347524,
+    "ReferenceName": "新港鄉公所",
+    "ReferenceSource": "https://www.openstreetmap.org/node/5798334709"
+  },
+  {
+    "Code": "10010080",
+    "County": "嘉義縣",
+    "District": "六腳鄉",
+    "PostalCode": "615",
+    "Latitude": 23.4935,
+    "Longitude": 120.290686,
+    "ReferenceName": "六腳鄉公所新行政大樓",
+    "ReferenceSource": "https://www.openstreetmap.org/way/1385226404"
+  },
+  {
+    "Code": "10010090",
+    "County": "嘉義縣",
+    "District": "東石鄉",
+    "PostalCode": "614",
+    "Latitude": 23.45654,
+    "Longitude": 120.150213,
+    "ReferenceName": "東石鄉公所臨時攤販集市場",
+    "ReferenceSource": "https://www.openstreetmap.org/node/3222177620"
+  },
+  {
+    "Code": "10010100",
+    "County": "嘉義縣",
+    "District": "義竹鄉",
+    "PostalCode": "624",
+    "Latitude": 23.3364,
+    "Longitude": 120.24545,
+    "ReferenceName": "義竹鄉聚落",
+    "ReferenceSource": "https://www.geonames.org/1674229"
+  },
+  {
+    "Code": "10010110",
+    "County": "嘉義縣",
+    "District": "鹿草鄉",
+    "PostalCode": "611",
+    "Latitude": 23.41333,
+    "Longitude": 120.30917,
+    "ReferenceName": "鹿草鄉聚落",
+    "ReferenceSource": "https://www.geonames.org/1672306"
+  },
+  {
+    "Code": "10010120",
+    "County": "嘉義縣",
+    "District": "水上鄉",
+    "PostalCode": "608",
+    "Latitude": 23.43002,
+    "Longitude": 120.40909,
+    "ReferenceName": "水上鄉公所",
+    "ReferenceSource": "https://www.openstreetmap.org/node/12640028871"
+  },
+  {
+    "Code": "10010130",
+    "County": "嘉義縣",
+    "District": "中埔鄉",
+    "PostalCode": "606",
+    "Latitude": 23.42493,
+    "Longitude": 120.52228,
+    "ReferenceName": "中埔鄉公所",
+    "ReferenceSource": "https://www.openstreetmap.org/node/12640028880"
+  },
+  {
+    "Code": "10010140",
+    "County": "嘉義縣",
+    "District": "竹崎鄉",
+    "PostalCode": "604",
+    "Latitude": 23.52308,
+    "Longitude": 120.551402,
+    "ReferenceName": "竹崎鄉公所",
+    "ReferenceSource": "https://www.openstreetmap.org/way/557557354"
+  },
+  {
+    "Code": "10010150",
+    "County": "嘉義縣",
+    "District": "梅山鄉",
+    "PostalCode": "603",
+    "Latitude": 23.585263,
+    "Longitude": 120.555659,
+    "ReferenceName": "梅山鄉公所",
+    "ReferenceSource": "https://www.openstreetmap.org/way/255998948"
+  },
+  {
+    "Code": "10010160",
+    "County": "嘉義縣",
+    "District": "番路鄉",
+    "PostalCode": "602",
+    "Latitude": 23.464516,
+    "Longitude": 120.55432,
+    "ReferenceName": "番路鄉公所",
+    "ReferenceSource": "https://www.openstreetmap.org/way/1240470416"
+  },
+  {
+    "Code": "10010170",
+    "County": "嘉義縣",
+    "District": "大埔鄉",
+    "PostalCode": "607",
+    "Latitude": 23.294765,
+    "Longitude": 120.593546,
+    "ReferenceName": "大埔鄉公所",
+    "ReferenceSource": "https://www.openstreetmap.org/way/914454216"
+  },
+  {
+    "Code": "10010180",
+    "County": "嘉義縣",
+    "District": "阿里山鄉",
+    "PostalCode": "605",
+    "Latitude": 23.471286,
+    "Longitude": 120.713587,
+    "ReferenceName": "阿里山鄉公所",
+    "ReferenceSource": "https://www.openstreetmap.org/node/2537457059"
+  },
+  {
+    "Code": "10013010",
+    "County": "屏東縣",
+    "District": "屏東市",
+    "PostalCode": "900",
+    "Latitude": 22.662723,
+    "Longitude": 120.488827,
+    "ReferenceName": "屏東市公所站",
+    "ReferenceSource": "https://www.openstreetmap.org/node/3222270181"
+  },
+  {
+    "Code": "10013020",
+    "County": "屏東縣",
+    "District": "潮州鎮",
+    "PostalCode": "920",
+    "Latitude": 22.54987,
+    "Longitude": 120.54067,
+    "ReferenceName": "潮州鎮聚落",
+    "ReferenceSource": "https://www.geonames.org/1679047"
+  },
+  {
+    "Code": "10013030",
+    "County": "屏東縣",
+    "District": "東港鎮",
+    "PostalCode": "928",
+    "Latitude": 22.46397,
+    "Longitude": 120.459198,
+    "ReferenceName": "東港鎮公所",
+    "ReferenceSource": "https://www.openstreetmap.org/way/929277203"
+  },
+  {
+    "Code": "10013040",
+    "County": "屏東縣",
+    "District": "恆春鎮",
+    "PostalCode": "946",
+    "Latitude": 22.003732,
+    "Longitude": 120.747373,
+    "ReferenceName": "恆春鎮公所",
+    "ReferenceSource": "https://www.openstreetmap.org/way/772270835"
+  },
+  {
+    "Code": "10013050",
+    "County": "屏東縣",
+    "District": "萬丹鄉",
+    "PostalCode": "913",
+    "Latitude": 22.589331,
+    "Longitude": 120.484994,
+    "ReferenceName": "萬丹鄉公所",
+    "ReferenceSource": "https://www.openstreetmap.org/way/253063735"
+  },
+  {
+    "Code": "10013060",
+    "County": "屏東縣",
+    "District": "長治鄉",
+    "PostalCode": "908",
+    "Latitude": 22.676492,
+    "Longitude": 120.527228,
+    "ReferenceName": "長治鄉公所",
+    "ReferenceSource": "https://www.openstreetmap.org/way/335696520"
+  },
+  {
+    "Code": "10013070",
+    "County": "屏東縣",
+    "District": "麟洛鄉",
+    "PostalCode": "909",
+    "Latitude": 22.641,
+    "Longitude": 120.536,
+    "ReferenceName": "麟洛鄉公所",
+    "ReferenceSource": "https://www.openstreetmap.org/node/4891092228"
+  },
+  {
+    "Code": "10013080",
+    "County": "屏東縣",
+    "District": "九如鄉",
+    "PostalCode": "904",
+    "Latitude": 22.7404,
+    "Longitude": 120.4904,
+    "ReferenceName": "九如鄉公所禮堂",
+    "ReferenceSource": "https://www.openstreetmap.org/node/4891093922"
+  },
+  {
+    "Code": "10013090",
+    "County": "屏東縣",
+    "District": "里港鄉",
+    "PostalCode": "905",
+    "Latitude": 22.77806,
+    "Longitude": 120.49528,
+    "ReferenceName": "里港鄉聚落",
+    "ReferenceSource": "https://www.geonames.org/1672944"
+  },
+  {
+    "Code": "10013100",
+    "County": "屏東縣",
+    "District": "鹽埔鄉",
+    "PostalCode": "907",
+    "Latitude": 22.7546,
+    "Longitude": 120.5785,
+    "ReferenceName": "鹽埔鄉聚落",
+    "ReferenceSource": "https://www.geonames.org/1665536"
+  },
+  {
+    "Code": "10013110",
+    "County": "屏東縣",
+    "District": "高樹鄉",
+    "PostalCode": "906",
+    "Latitude": 22.826416,
+    "Longitude": 120.600809,
+    "ReferenceName": "高樹鄉公所",
+    "ReferenceSource": "https://www.openstreetmap.org/way/307878076"
+  },
+  {
+    "Code": "10013120",
+    "County": "屏東縣",
+    "District": "萬巒鄉",
+    "PostalCode": "923",
+    "Latitude": 22.5725,
+    "Longitude": 120.5678,
+    "ReferenceName": "萬巒鄉公所展覽廳",
+    "ReferenceSource": "https://www.openstreetmap.org/node/4891093946"
+  },
+  {
+    "Code": "10013130",
+    "County": "屏東縣",
+    "District": "內埔鄉",
+    "PostalCode": "912",
+    "Latitude": 22.611998,
+    "Longitude": 120.566781,
+    "ReferenceName": "內埔鄉公所",
+    "ReferenceSource": "https://www.openstreetmap.org/node/4892149236"
+  },
+  {
+    "Code": "10013140",
+    "County": "屏東縣",
+    "District": "竹田鄉",
+    "PostalCode": "911",
+    "Latitude": 22.584776,
+    "Longitude": 120.543931,
+    "ReferenceName": "竹田鄉公所",
+    "ReferenceSource": "https://www.openstreetmap.org/way/948468410"
+  },
+  {
+    "Code": "10013150",
+    "County": "屏東縣",
+    "District": "新埤鄉",
+    "PostalCode": "925",
+    "Latitude": 22.46833,
+    "Longitude": 120.54972,
+    "ReferenceName": "新埤鄉聚落",
+    "ReferenceSource": "https://www.geonames.org/1674896"
+  },
+  {
+    "Code": "10013160",
+    "County": "屏東縣",
+    "District": "枋寮鄉",
+    "PostalCode": "940",
+    "Latitude": 22.365616,
+    "Longitude": 120.593498,
+    "ReferenceName": "枋寮鄉公所",
+    "ReferenceSource": "https://www.openstreetmap.org/way/101808637"
+  },
+  {
+    "Code": "10013170",
+    "County": "屏東縣",
+    "District": "新園鄉",
+    "PostalCode": "932",
+    "Latitude": 22.543809,
+    "Longitude": 120.461511,
+    "ReferenceName": "新園鄉公所",
+    "ReferenceSource": "https://www.openstreetmap.org/way/555223577"
+  },
+  {
+    "Code": "10013180",
+    "County": "屏東縣",
+    "District": "崁頂鄉",
+    "PostalCode": "924",
+    "Latitude": 22.51278,
+    "Longitude": 120.51162,
+    "ReferenceName": "崁頂鄉聚落",
+    "ReferenceSource": "https://www.geonames.org/1673883"
+  },
+  {
+    "Code": "10013190",
+    "County": "屏東縣",
+    "District": "林邊鄉",
+    "PostalCode": "927",
+    "Latitude": 22.431276,
+    "Longitude": 120.510377,
+    "ReferenceName": "屏東縣林邊鄉公所",
+    "ReferenceSource": "https://www.openstreetmap.org/way/267594307"
+  },
+  {
+    "Code": "10013200",
+    "County": "屏東縣",
+    "District": "南州鄉",
+    "PostalCode": "926",
+    "Latitude": 22.490449,
+    "Longitude": 120.510182,
+    "ReferenceName": "南州鄉公所",
+    "ReferenceSource": "https://www.openstreetmap.org/node/4838554921"
+  },
+  {
+    "Code": "10013210",
+    "County": "屏東縣",
+    "District": "佳冬鄉",
+    "PostalCode": "931",
+    "Latitude": 22.419305,
+    "Longitude": 120.552338,
+    "ReferenceName": "佳冬鄉公所",
+    "ReferenceSource": "https://www.openstreetmap.org/way/310011170"
+  },
+  {
+    "Code": "10013220",
+    "County": "屏東縣",
+    "District": "琉球鄉",
+    "PostalCode": "929",
+    "Latitude": 22.348445,
+    "Longitude": 120.382634,
+    "ReferenceName": "琉球鄉公所",
+    "ReferenceSource": "https://www.openstreetmap.org/node/2406618888"
+  },
+  {
+    "Code": "10013230",
+    "County": "屏東縣",
+    "District": "車城鄉",
+    "PostalCode": "944",
+    "Latitude": 22.07401,
+    "Longitude": 120.714274,
+    "ReferenceName": "車城鄉公所",
+    "ReferenceSource": "https://www.openstreetmap.org/way/232037157"
+  },
+  {
+    "Code": "10013240",
+    "County": "屏東縣",
+    "District": "滿州鄉",
+    "PostalCode": "947",
+    "Latitude": 22.02091,
+    "Longitude": 120.838621,
+    "ReferenceName": "滿州鄉公所",
+    "ReferenceSource": "https://www.openstreetmap.org/way/457373974"
+  },
+  {
+    "Code": "10013250",
+    "County": "屏東縣",
+    "District": "枋山鄉",
+    "PostalCode": "941",
+    "Latitude": 22.263914,
+    "Longitude": 120.652443,
+    "ReferenceName": "枋山鄉公所",
+    "ReferenceSource": "https://www.openstreetmap.org/way/1348714404"
+  },
+  {
+    "Code": "10013260",
+    "County": "屏東縣",
+    "District": "三地門鄉",
+    "PostalCode": "901",
+    "Latitude": 22.716162,
+    "Longitude": 120.654221,
+    "ReferenceName": "三地門鄉公所i郵箱",
+    "ReferenceSource": "https://www.openstreetmap.org/node/9625810474"
+  },
+  {
+    "Code": "10013270",
+    "County": "屏東縣",
+    "District": "霧臺鄉",
+    "PostalCode": "902",
+    "Latitude": 22.749029,
+    "Longitude": 120.728305,
+    "ReferenceName": "霧台鄉公所",
+    "ReferenceSource": "https://www.openstreetmap.org/way/369327419"
+  },
+  {
+    "Code": "10013280",
+    "County": "屏東縣",
+    "District": "瑪家鄉",
+    "PostalCode": "903",
+    "Latitude": 22.67585,
+    "Longitude": 120.68696,
+    "ReferenceName": "瑪家鄉聚落",
+    "ReferenceSource": "https://www.geonames.org/1672278"
+  },
+  {
+    "Code": "10013290",
+    "County": "屏東縣",
+    "District": "泰武鄉",
+    "PostalCode": "921",
+    "Latitude": 22.58673,
+    "Longitude": 120.66533,
+    "ReferenceName": "泰武鄉聚落",
+    "ReferenceSource": "https://www.geonames.org/1668279"
+  },
+  {
+    "Code": "10013300",
+    "County": "屏東縣",
+    "District": "來義鄉",
+    "PostalCode": "922",
+    "Latitude": 22.526266,
+    "Longitude": 120.631663,
+    "ReferenceName": "來義鄉公所",
+    "ReferenceSource": "https://www.openstreetmap.org/way/376793359"
+  },
+  {
+    "Code": "10013310",
+    "County": "屏東縣",
+    "District": "春日鄉",
+    "PostalCode": "942",
+    "Latitude": 22.36944,
+    "Longitude": 120.62472,
+    "ReferenceName": "春日鄉聚落",
+    "ReferenceSource": "https://www.geonames.org/1677155"
+  },
+  {
+    "Code": "10013320",
+    "County": "屏東縣",
+    "District": "獅子鄉",
+    "PostalCode": "943",
+    "Latitude": 22.292881,
+    "Longitude": 120.698939,
+    "ReferenceName": "卡悠峰瀑布(獅子鄉公所)",
+    "ReferenceSource": "https://www.openstreetmap.org/node/7579249944"
+  },
+  {
+    "Code": "10013330",
+    "County": "屏東縣",
+    "District": "牡丹鄉",
+    "PostalCode": "945",
+    "Latitude": 22.126247,
+    "Longitude": 120.774225,
+    "ReferenceName": "牡丹鄉公所",
+    "ReferenceSource": "https://www.openstreetmap.org/way/305085837"
+  },
+  {
+    "Code": "10014010",
+    "County": "臺東縣",
+    "District": "臺東市",
+    "PostalCode": "950",
+    "Latitude": 22.754695,
+    "Longitude": 121.146637,
+    "ReferenceName": "臺東市公所",
+    "ReferenceSource": "https://www.openstreetmap.org/node/4891030211"
+  },
+  {
+    "Code": "10014020",
+    "County": "臺東縣",
+    "District": "成功鎮",
+    "PostalCode": "961",
+    "Latitude": 23.105136,
+    "Longitude": 121.3808,
+    "ReferenceName": "成功鎮公所",
+    "ReferenceSource": "https://www.openstreetmap.org/way/300896018"
+  },
+  {
+    "Code": "10014030",
+    "County": "臺東縣",
+    "District": "關山鎮",
+    "PostalCode": "956",
+    "Latitude": 23.047487,
+    "Longitude": 121.163089,
+    "ReferenceName": "關山鎮公所",
+    "ReferenceSource": "https://www.openstreetmap.org/way/301894536"
+  },
+  {
+    "Code": "10014040",
+    "County": "臺東縣",
+    "District": "卑南鄉",
+    "PostalCode": "954",
+    "Latitude": 22.769593,
+    "Longitude": 121.059072,
+    "ReferenceName": "卑南鄉公所清潔隊",
+    "ReferenceSource": "https://www.openstreetmap.org/node/9875633688"
+  },
+  {
+    "Code": "10014050",
+    "County": "臺東縣",
+    "District": "鹿野鄉",
+    "PostalCode": "955",
+    "Latitude": 22.91416,
+    "Longitude": 121.13636,
+    "ReferenceName": "鹿野鄉公所",
+    "ReferenceSource": "https://www.openstreetmap.org/relation/14730932"
+  },
+  {
+    "Code": "10014060",
+    "County": "臺東縣",
+    "District": "池上鄉",
+    "PostalCode": "958",
+    "Latitude": 23.122527,
+    "Longitude": 121.214955,
+    "ReferenceName": "池上鄉公所",
+    "ReferenceSource": "https://www.openstreetmap.org/way/364447182"
+  },
+  {
+    "Code": "10014070",
+    "County": "臺東縣",
+    "District": "東河鄉",
+    "PostalCode": "959",
+    "Latitude": 22.969096,
+    "Longitude": 121.302729,
+    "ReferenceName": "東河鄉公所2樓大會議室",
+    "ReferenceSource": "https://www.openstreetmap.org/node/4891066629"
+  },
+  {
+    "Code": "10014080",
+    "County": "臺東縣",
+    "District": "長濱鄉",
+    "PostalCode": "962",
+    "Latitude": 23.315117,
+    "Longitude": 121.451352,
+    "ReferenceName": "長濱鄉公所",
+    "ReferenceSource": "https://www.openstreetmap.org/way/383381103"
+  },
+  {
+    "Code": "10014090",
+    "County": "臺東縣",
+    "District": "太麻里鄉",
+    "PostalCode": "963",
+    "Latitude": 22.615528,
+    "Longitude": 121.007589,
+    "ReferenceName": "太麻里鄉公所",
+    "ReferenceSource": "https://www.openstreetmap.org/node/5316152153"
+  },
+  {
+    "Code": "10014100",
+    "County": "臺東縣",
+    "District": "大武鄉",
+    "PostalCode": "965",
+    "Latitude": 22.340534,
+    "Longitude": 120.889937,
+    "ReferenceName": "大武鄉鄉公所",
+    "ReferenceSource": "https://www.openstreetmap.org/way/369606394"
+  },
+  {
+    "Code": "10014110",
+    "County": "臺東縣",
+    "District": "綠島鄉",
+    "PostalCode": "951",
+    "Latitude": 22.669287,
+    "Longitude": 121.468434,
+    "ReferenceName": "綠島鄉公所",
+    "ReferenceSource": "https://www.openstreetmap.org/way/430604120"
+  },
+  {
+    "Code": "10014120",
+    "County": "臺東縣",
+    "District": "海端鄉",
+    "PostalCode": "957",
+    "Latitude": 23.102107,
+    "Longitude": 121.176564,
+    "ReferenceName": "海端鄉公所",
+    "ReferenceSource": "https://www.openstreetmap.org/way/301870867"
+  },
+  {
+    "Code": "10014130",
+    "County": "臺東縣",
+    "District": "延平鄉",
+    "PostalCode": "953",
+    "Latitude": 22.902526,
+    "Longitude": 121.085869,
+    "ReferenceName": "公所桌球室",
+    "ReferenceSource": "https://www.openstreetmap.org/way/547939173"
+  },
+  {
+    "Code": "10014140",
+    "County": "臺東縣",
+    "District": "金峰鄉",
+    "PostalCode": "964",
+    "Latitude": 22.594912,
+    "Longitude": 120.960656,
+    "ReferenceName": "金峰鄉公所i郵箱",
+    "ReferenceSource": "https://www.openstreetmap.org/node/9625810326"
+  },
+  {
+    "Code": "10014150",
+    "County": "臺東縣",
+    "District": "達仁鄉",
+    "PostalCode": "966",
+    "Latitude": 22.2972,
+    "Longitude": 120.883042,
+    "ReferenceName": "達仁鄉公所禮堂",
+    "ReferenceSource": "https://www.openstreetmap.org/way/1063188021"
+  },
+  {
+    "Code": "10014160",
+    "County": "臺東縣",
+    "District": "蘭嶼鄉",
+    "PostalCode": "952",
+    "Latitude": 22.05784,
+    "Longitude": 121.509667,
+    "ReferenceName": "蘭嶼鄉公所",
+    "ReferenceSource": "https://www.openstreetmap.org/node/1888036637"
+  },
+  {
+    "Code": "10015010",
+    "County": "花蓮縣",
+    "District": "花蓮市",
+    "PostalCode": "970",
+    "Latitude": 23.982054,
+    "Longitude": 121.606773,
+    "ReferenceName": "花蓮市公所",
+    "ReferenceSource": "https://www.openstreetmap.org/way/96749833"
+  },
+  {
+    "Code": "10015020",
+    "County": "花蓮縣",
+    "District": "鳳林鎮",
+    "PostalCode": "975",
+    "Latitude": 23.744697,
+    "Longitude": 121.451817,
+    "ReferenceName": "鳳林鎮公所",
+    "ReferenceSource": "https://www.openstreetmap.org/way/1530881173"
+  },
+  {
+    "Code": "10015030",
+    "County": "花蓮縣",
+    "District": "玉里鎮",
+    "PostalCode": "981",
+    "Latitude": 23.335587,
+    "Longitude": 121.315301,
+    "ReferenceName": "玉里鎮公所",
+    "ReferenceSource": "https://www.openstreetmap.org/way/717909544"
+  },
+  {
+    "Code": "10015040",
+    "County": "花蓮縣",
+    "District": "新城鄉",
+    "PostalCode": "971",
+    "Latitude": 24.039394,
+    "Longitude": 121.604464,
+    "ReferenceName": "新城鄉公所",
+    "ReferenceSource": "https://www.openstreetmap.org/way/659299529"
+  },
+  {
+    "Code": "10015050",
+    "County": "花蓮縣",
+    "District": "吉安鄉",
+    "PostalCode": "973",
+    "Latitude": 23.972893,
+    "Longitude": 121.563656,
+    "ReferenceName": "吉安鄉公所",
+    "ReferenceSource": "https://www.openstreetmap.org/way/355129888"
+  },
+  {
+    "Code": "10015060",
+    "County": "花蓮縣",
+    "District": "壽豐鄉",
+    "PostalCode": "974",
+    "Latitude": 23.777146,
+    "Longitude": 121.514613,
+    "ReferenceName": "壽豐鄉公所米棧村辦公處",
+    "ReferenceSource": "https://www.openstreetmap.org/node/7555390585"
+  },
+  {
+    "Code": "10015070",
+    "County": "花蓮縣",
+    "District": "光復鄉",
+    "PostalCode": "976",
+    "Latitude": 23.669382,
+    "Longitude": 121.42328,
+    "ReferenceName": "光復鄉公所",
+    "ReferenceSource": "https://www.openstreetmap.org/way/963147088"
+  },
+  {
+    "Code": "10015080",
+    "County": "花蓮縣",
+    "District": "豐濱鄉",
+    "PostalCode": "977",
+    "Latitude": 23.60116,
+    "Longitude": 121.521032,
+    "ReferenceName": "豐濱鄉公所",
+    "ReferenceSource": "https://www.openstreetmap.org/way/827558520"
+  },
+  {
+    "Code": "10015090",
+    "County": "花蓮縣",
+    "District": "瑞穗鄉",
+    "PostalCode": "978",
+    "Latitude": 23.49862,
+    "Longitude": 121.37809,
+    "ReferenceName": "瑞穗鄉聚落",
+    "ReferenceSource": "https://www.geonames.org/1674081"
+  },
+  {
+    "Code": "10015100",
+    "County": "花蓮縣",
+    "District": "富里鄉",
+    "PostalCode": "983",
+    "Latitude": 23.1795,
+    "Longitude": 121.2503,
+    "ReferenceName": "富里鄉公所2樓",
+    "ReferenceSource": "https://www.openstreetmap.org/node/4891370522"
+  },
+  {
+    "Code": "10015110",
+    "County": "花蓮縣",
+    "District": "秀林鄉",
+    "PostalCode": "972",
+    "Latitude": 24.118592,
+    "Longitude": 121.624848,
+    "ReferenceName": "秀林鄉公所",
+    "ReferenceSource": "https://www.openstreetmap.org/way/278010636"
+  },
+  {
+    "Code": "10015120",
+    "County": "花蓮縣",
+    "District": "萬榮鄉",
+    "PostalCode": "979",
+    "Latitude": 23.71459,
+    "Longitude": 121.410992,
+    "ReferenceName": "萬榮鄉公所",
+    "ReferenceSource": "https://www.openstreetmap.org/node/3432334140"
+  },
+  {
+    "Code": "10015130",
+    "County": "花蓮縣",
+    "District": "卓溪鄉",
+    "PostalCode": "982",
+    "Latitude": 23.346431,
+    "Longitude": 121.30347,
+    "ReferenceName": "卓溪鄉公所",
+    "ReferenceSource": "https://www.openstreetmap.org/node/3432311877"
+  },
+  {
+    "Code": "10016010",
+    "County": "澎湖縣",
+    "District": "馬公市",
+    "PostalCode": "880",
+    "Latitude": 23.5654,
+    "Longitude": 119.58627,
+    "ReferenceName": "馬公市聚落",
+    "ReferenceSource": "https://www.geonames.org/1672228"
+  },
+  {
+    "Code": "10016020",
+    "County": "澎湖縣",
+    "District": "湖西鄉",
+    "PostalCode": "885",
+    "Latitude": 23.5853,
+    "Longitude": 119.65965,
+    "ReferenceName": "湖西鄉聚落",
+    "ReferenceSource": "https://www.geonames.org/1674434"
+  },
+  {
+    "Code": "10016030",
+    "County": "澎湖縣",
+    "District": "白沙鄉",
+    "PostalCode": "884",
+    "Latitude": 23.66795,
+    "Longitude": 119.59951,
+    "ReferenceName": "大赤崁聚落",
+    "ReferenceSource": "https://www.geonames.org/1668588"
+  },
+  {
+    "Code": "10016040",
+    "County": "澎湖縣",
+    "District": "西嶼鄉",
+    "PostalCode": "881",
+    "Latitude": 23.58639,
+    "Longitude": 119.50722,
+    "ReferenceName": "赤馬聚落",
+    "ReferenceSource": "https://www.geonames.org/1678216"
+  },
+  {
+    "Code": "10016050",
+    "County": "澎湖縣",
+    "District": "望安鄉",
+    "PostalCode": "882",
+    "Latitude": 23.357595,
+    "Longitude": 119.500208,
+    "ReferenceName": "望安鄉公所",
+    "ReferenceSource": "https://www.openstreetmap.org/way/1056658255"
+  },
+  {
+    "Code": "10016060",
+    "County": "澎湖縣",
+    "District": "七美鄉",
+    "PostalCode": "883",
+    "Latitude": 23.206719,
+    "Longitude": 119.424519,
+    "ReferenceName": "七美鄉公所",
+    "ReferenceSource": "https://www.openstreetmap.org/way/688053833"
+  },
+  {
+    "Code": "10017010",
+    "County": "基隆市",
+    "District": "中正區",
+    "PostalCode": "202",
+    "Latitude": 25.141041,
+    "Longitude": 121.759344,
+    "ReferenceName": "基隆市中正區公所",
+    "ReferenceSource": "https://www.openstreetmap.org/node/5353890779"
+  },
+  {
+    "Code": "10017020",
+    "County": "基隆市",
+    "District": "七堵區",
+    "PostalCode": "206",
+    "Latitude": 25.09723,
+    "Longitude": 121.71334,
+    "ReferenceName": "七堵區聚落",
+    "ReferenceSource": "https://www.geonames.org/1677916"
+  },
+  {
+    "Code": "10017030",
+    "County": "基隆市",
+    "District": "暖暖區",
+    "PostalCode": "205",
+    "Latitude": 25.100174,
+    "Longitude": 121.735892,
+    "ReferenceName": "暖暖區公所",
+    "ReferenceSource": "https://www.openstreetmap.org/way/158081013"
+  },
+  {
+    "Code": "10017040",
+    "County": "基隆市",
+    "District": "仁愛區",
+    "PostalCode": "200",
+    "Latitude": 25.125037,
+    "Longitude": 121.736593,
+    "ReferenceName": "基隆市仁愛區公所",
+    "ReferenceSource": "https://www.openstreetmap.org/node/8435917787"
+  },
+  {
+    "Code": "10017050",
+    "County": "基隆市",
+    "District": "中山區",
+    "PostalCode": "203",
+    "Latitude": 25.153001,
+    "Longitude": 121.729513,
+    "ReferenceName": "基隆市中山區公所",
+    "ReferenceSource": "https://www.openstreetmap.org/node/5349588389"
+  },
+  {
+    "Code": "10017060",
+    "County": "基隆市",
+    "District": "安樂區",
+    "PostalCode": "204",
+    "Latitude": 25.121128,
+    "Longitude": 121.723109,
+    "ReferenceName": "基隆市安樂區公所",
+    "ReferenceSource": "https://www.openstreetmap.org/node/5251208271"
+  },
+  {
+    "Code": "10017070",
+    "County": "基隆市",
+    "District": "信義區",
+    "PostalCode": "201",
+    "Latitude": 25.129403,
+    "Longitude": 121.751374,
+    "ReferenceName": "基隆市信義區公所",
+    "ReferenceSource": "https://www.openstreetmap.org/way/366057239"
+  },
+  {
+    "Code": "10018010",
+    "County": "新竹市",
+    "District": "東區",
+    "PostalCode": "300",
+    "Latitude": 24.789117,
+    "Longitude": 120.983262,
+    "ReferenceName": "0506 鄉公所→果菜市場",
+    "ReferenceSource": "https://www.openstreetmap.org/relation/18972691"
+  },
+  {
+    "Code": "10018020",
+    "County": "新竹市",
+    "District": "北區",
+    "PostalCode": "300",
+    "Latitude": 24.80249,
+    "Longitude": 120.957804,
+    "ReferenceName": "50 香山區公所→火車站（先經中華路）",
+    "ReferenceSource": "https://www.openstreetmap.org/relation/4625729"
+  },
+  {
+    "Code": "10018030",
+    "County": "新竹市",
+    "District": "香山區",
+    "PostalCode": "300",
+    "Latitude": 24.794491,
+    "Longitude": 120.942524,
+    "ReferenceName": "香山區公所",
+    "ReferenceSource": "https://www.openstreetmap.org/way/582910818"
+  },
+  {
+    "Code": "10020010",
+    "County": "嘉義市",
+    "District": "東區",
+    "PostalCode": "600",
+    "Latitude": 23.478739,
+    "Longitude": 120.453546,
+    "ReferenceName": "東區區公所",
+    "ReferenceSource": "https://www.openstreetmap.org/node/4891308862"
+  },
+  {
+    "Code": "10020020",
+    "County": "嘉義市",
+    "District": "西區",
+    "PostalCode": "600",
+    "Latitude": 23.464547,
+    "Longitude": 120.43546,
+    "ReferenceName": "西區區公所",
+    "ReferenceSource": "https://www.openstreetmap.org/relation/11340988"
+  },
+  {
+    "Code": "63000010",
+    "County": "臺北市",
+    "District": "松山區",
+    "PostalCode": "105",
+    "Latitude": 25.049655,
+    "Longitude": 121.577251,
+    "ReferenceName": "松山區公所",
+    "ReferenceSource": "https://www.openstreetmap.org/node/3924733488"
+  },
+  {
+    "Code": "63000020",
+    "County": "臺北市",
+    "District": "信義區",
+    "PostalCode": "110",
+    "Latitude": 25.033371,
+    "Longitude": 121.566926,
+    "ReferenceName": "信義區公所i郵箱",
+    "ReferenceSource": "https://www.openstreetmap.org/node/9625808829"
+  },
+  {
+    "Code": "63000030",
+    "County": "臺北市",
+    "District": "大安區",
+    "PostalCode": "106",
+    "Latitude": 25.026539,
+    "Longitude": 121.534393,
+    "ReferenceName": "大安區行政中心",
+    "ReferenceSource": "https://www.openstreetmap.org/way/232321631"
+  },
+  {
+    "Code": "63000040",
+    "County": "臺北市",
+    "District": "中山區",
+    "PostalCode": "104",
+    "Latitude": 25.084266,
+    "Longitude": 121.549887,
+    "ReferenceName": "台北市中山區公所成功里辦公處",
+    "ReferenceSource": "https://www.openstreetmap.org/node/14028174129"
+  },
+  {
+    "Code": "63000050",
+    "County": "臺北市",
+    "District": "中正區",
+    "PostalCode": "100",
+    "Latitude": 25.032207,
+    "Longitude": 121.518202,
+    "ReferenceName": "中正區公所",
+    "ReferenceSource": "https://www.openstreetmap.org/node/4896347421"
+  },
+  {
+    "Code": "63000060",
+    "County": "臺北市",
+    "District": "大同區",
+    "PostalCode": "103",
+    "Latitude": 25.06603,
+    "Longitude": 121.51481,
+    "ReferenceName": "大同行政中心",
+    "ReferenceSource": "https://www.openstreetmap.org/node/11453087719"
+  },
+  {
+    "Code": "63000070",
+    "County": "臺北市",
+    "District": "萬華區",
+    "PostalCode": "108",
+    "Latitude": 25.034843,
+    "Longitude": 121.499803,
+    "ReferenceName": "臺北市萬華區公所",
+    "ReferenceSource": "https://www.openstreetmap.org/node/11252882052"
+  },
+  {
+    "Code": "63000080",
+    "County": "臺北市",
+    "District": "文山區",
+    "PostalCode": "116",
+    "Latitude": 25.00115,
+    "Longitude": 121.55142,
+    "ReferenceName": "文山第二行政中心",
+    "ReferenceSource": "https://www.openstreetmap.org/node/9628105514"
+  },
+  {
+    "Code": "63000090",
+    "County": "臺北市",
+    "District": "南港區",
+    "PostalCode": "115",
+    "Latitude": 25.054668,
+    "Longitude": 121.606688,
+    "ReferenceName": "南港區公所",
+    "ReferenceSource": "https://www.openstreetmap.org/way/222428544"
+  },
+  {
+    "Code": "63000100",
+    "County": "臺北市",
+    "District": "內湖區",
+    "PostalCode": "114",
+    "Latitude": 25.0693,
+    "Longitude": 121.589108,
+    "ReferenceName": "內湖區公所",
+    "ReferenceSource": "https://www.openstreetmap.org/node/4863008494"
+  },
+  {
+    "Code": "63000110",
+    "County": "臺北市",
+    "District": "士林區",
+    "PostalCode": "111",
+    "Latitude": 25.093003,
+    "Longitude": 121.520062,
+    "ReferenceName": "士林區公所i郵箱",
+    "ReferenceSource": "https://www.openstreetmap.org/node/9625809142"
+  },
+  {
+    "Code": "63000120",
+    "County": "臺北市",
+    "District": "北投區",
+    "PostalCode": "112",
+    "Latitude": 25.132276,
+    "Longitude": 121.502828,
+    "ReferenceName": "北投區行政中心",
+    "ReferenceSource": "https://www.openstreetmap.org/way/375327748"
+  },
+  {
+    "Code": "64000010",
+    "County": "高雄市",
+    "District": "鹽埕區",
+    "PostalCode": "803",
+    "Latitude": 22.624692,
+    "Longitude": 120.286744,
+    "ReferenceName": "鹽埕行政中心",
+    "ReferenceSource": "https://www.openstreetmap.org/way/95666452"
+  },
+  {
+    "Code": "64000020",
+    "County": "高雄市",
+    "District": "鼓山區",
+    "PostalCode": "804",
+    "Latitude": 22.636032,
+    "Longitude": 120.282591,
+    "ReferenceName": "鼓山區公所",
+    "ReferenceSource": "https://www.openstreetmap.org/node/5963967382"
+  },
+  {
+    "Code": "64000030",
+    "County": "高雄市",
+    "District": "左營區",
+    "PostalCode": "813",
+    "Latitude": 22.68979,
+    "Longitude": 120.29516,
+    "ReferenceName": "左營區公所",
+    "ReferenceSource": "https://www.openstreetmap.org/node/8270288934"
+  },
+  {
+    "Code": "64000040",
+    "County": "高雄市",
+    "District": "楠梓區",
+    "PostalCode": "811",
+    "Latitude": 22.7287,
+    "Longitude": 120.32639,
+    "ReferenceName": "楠梓區公所",
+    "ReferenceSource": "https://www.openstreetmap.org/node/8270288835"
+  },
+  {
+    "Code": "64000050",
+    "County": "高雄市",
+    "District": "三民區",
+    "PostalCode": "807",
+    "Latitude": 22.64779,
+    "Longitude": 120.29993,
+    "ReferenceName": "三民區公所",
+    "ReferenceSource": "https://www.openstreetmap.org/node/8882102168"
+  },
+  {
+    "Code": "64000060",
+    "County": "高雄市",
+    "District": "新興區",
+    "PostalCode": "800",
+    "Latitude": 22.631213,
+    "Longitude": 120.310047,
+    "ReferenceName": "新興區行政中心",
+    "ReferenceSource": "https://www.openstreetmap.org/way/260724148"
+  },
+  {
+    "Code": "64000070",
+    "County": "高雄市",
+    "District": "前金區",
+    "PostalCode": "801",
+    "Latitude": 22.6276,
+    "Longitude": 120.2943,
+    "ReferenceName": "前金區公所5樓大禮堂",
+    "ReferenceSource": "https://www.openstreetmap.org/node/4891252387"
+  },
+  {
+    "Code": "64000080",
+    "County": "高雄市",
+    "District": "苓雅區",
+    "PostalCode": "802",
+    "Latitude": 22.621674,
+    "Longitude": 120.311682,
+    "ReferenceName": "高雄市苓雅區公所",
+    "ReferenceSource": "https://www.openstreetmap.org/node/3240808662"
+  },
+  {
+    "Code": "64000090",
+    "County": "高雄市",
+    "District": "前鎮區",
+    "PostalCode": "806",
+    "Latitude": 22.5871,
+    "Longitude": 120.31801,
+    "ReferenceName": "前鎮區公所",
+    "ReferenceSource": "https://www.openstreetmap.org/node/8270288860"
+  },
+  {
+    "Code": "64000100",
+    "County": "高雄市",
+    "District": "旗津區",
+    "PostalCode": "805",
+    "Latitude": 22.590431,
+    "Longitude": 120.284526,
+    "ReferenceName": "旗津區公所",
+    "ReferenceSource": "https://www.openstreetmap.org/way/212391793"
+  },
+  {
+    "Code": "64000110",
+    "County": "高雄市",
+    "District": "小港區",
+    "PostalCode": "812",
+    "Latitude": 22.56507,
+    "Longitude": 120.33839,
+    "ReferenceName": "小港區公所",
+    "ReferenceSource": "https://www.openstreetmap.org/node/8270288578"
+  },
+  {
+    "Code": "64000120",
+    "County": "高雄市",
+    "District": "鳳山區",
+    "PostalCode": "830",
+    "Latitude": 22.627082,
+    "Longitude": 120.362821,
+    "ReferenceName": "鳳山區公所大禮堂",
+    "ReferenceSource": "https://www.openstreetmap.org/node/4891250587"
+  },
+  {
+    "Code": "64000130",
+    "County": "高雄市",
+    "District": "林園區",
+    "PostalCode": "832",
+    "Latitude": 22.51305,
+    "Longitude": 120.39468,
+    "ReferenceName": "林園行政中心",
+    "ReferenceSource": "https://www.openstreetmap.org/node/8270288828"
+  },
+  {
+    "Code": "64000140",
+    "County": "高雄市",
+    "District": "大寮區",
+    "PostalCode": "831",
+    "Latitude": 22.6054,
+    "Longitude": 120.39546,
+    "ReferenceName": "大寮區公所",
+    "ReferenceSource": "https://www.openstreetmap.org/node/8270288518"
+  },
+  {
+    "Code": "64000150",
+    "County": "高雄市",
+    "District": "大樹區",
+    "PostalCode": "840",
+    "Latitude": 22.683887,
+    "Longitude": 120.414092,
+    "ReferenceName": "大樹區公所",
+    "ReferenceSource": "https://www.openstreetmap.org/relation/19266177"
+  },
+  {
+    "Code": "64000160",
+    "County": "高雄市",
+    "District": "大社區",
+    "PostalCode": "815",
+    "Latitude": 22.73,
+    "Longitude": 120.34664,
+    "ReferenceName": "大社區公所",
+    "ReferenceSource": "https://www.openstreetmap.org/node/11479394799"
+  },
+  {
+    "Code": "64000170",
+    "County": "高雄市",
+    "District": "仁武區",
+    "PostalCode": "814",
+    "Latitude": 22.701163,
+    "Longitude": 120.347727,
+    "ReferenceName": "仁武區公所",
+    "ReferenceSource": "https://www.openstreetmap.org/way/231329070"
+  },
+  {
+    "Code": "64000180",
+    "County": "高雄市",
+    "District": "鳥松區",
+    "PostalCode": "833",
+    "Latitude": 22.660012,
+    "Longitude": 120.364397,
+    "ReferenceName": "鳥松區公所三樓",
+    "ReferenceSource": "https://www.openstreetmap.org/node/4891250602"
+  },
+  {
+    "Code": "64000190",
+    "County": "高雄市",
+    "District": "岡山區",
+    "PostalCode": "820",
+    "Latitude": 22.797341,
+    "Longitude": 120.294943,
+    "ReferenceName": "岡山區公所",
+    "ReferenceSource": "https://www.openstreetmap.org/way/642352341"
+  },
+  {
+    "Code": "64000200",
+    "County": "高雄市",
+    "District": "橋頭區",
+    "PostalCode": "825",
+    "Latitude": 22.757617,
+    "Longitude": 120.305718,
+    "ReferenceName": "橋頭區公所",
+    "ReferenceSource": "https://www.openstreetmap.org/way/395738982"
+  },
+  {
+    "Code": "64000210",
+    "County": "高雄市",
+    "District": "燕巢區",
+    "PostalCode": "824",
+    "Latitude": 22.7881,
+    "Longitude": 120.36242,
+    "ReferenceName": "燕巢區公所",
+    "ReferenceSource": "https://www.openstreetmap.org/node/8270288834"
+  },
+  {
+    "Code": "64000220",
+    "County": "高雄市",
+    "District": "田寮區",
+    "PostalCode": "823",
+    "Latitude": 22.869895,
+    "Longitude": 120.359431,
+    "ReferenceName": "高雄市田寮區公所",
+    "ReferenceSource": "https://www.openstreetmap.org/way/838100399"
+  },
+  {
+    "Code": "64000230",
+    "County": "高雄市",
+    "District": "阿蓮區",
+    "PostalCode": "822",
+    "Latitude": 22.88305,
+    "Longitude": 120.32728,
+    "ReferenceName": "阿蓮區公所",
+    "ReferenceSource": "https://www.openstreetmap.org/node/8882051674"
+  },
+  {
+    "Code": "64000240",
+    "County": "高雄市",
+    "District": "路竹區",
+    "PostalCode": "821",
+    "Latitude": 22.854869,
+    "Longitude": 120.259279,
+    "ReferenceName": "路竹區公所",
+    "ReferenceSource": "https://www.openstreetmap.org/way/313795395"
+  },
+  {
+    "Code": "64000250",
+    "County": "高雄市",
+    "District": "湖內區",
+    "PostalCode": "829",
+    "Latitude": 22.88472,
+    "Longitude": 120.23667,
+    "ReferenceName": "湖內區聚落",
+    "ReferenceSource": "https://www.geonames.org/1674395"
+  },
+  {
+    "Code": "64000260",
+    "County": "高雄市",
+    "District": "茄萣區",
+    "PostalCode": "852",
+    "Latitude": 22.906475,
+    "Longitude": 120.182515,
+    "ReferenceName": "高雄市茄萣區公所",
+    "ReferenceSource": "https://www.openstreetmap.org/way/437137049"
+  },
+  {
+    "Code": "64000270",
+    "County": "高雄市",
+    "District": "永安區",
+    "PostalCode": "828",
+    "Latitude": 22.818521,
+    "Longitude": 120.224312,
+    "ReferenceName": "永安區公所",
+    "ReferenceSource": "https://www.openstreetmap.org/way/1090666723"
+  },
+  {
+    "Code": "64000280",
+    "County": "高雄市",
+    "District": "彌陀區",
+    "PostalCode": "827",
+    "Latitude": 22.781666,
+    "Longitude": 120.250639,
+    "ReferenceName": "彌陀區公所",
+    "ReferenceSource": "https://www.openstreetmap.org/way/840374158"
+  },
+  {
+    "Code": "64000290",
+    "County": "高雄市",
+    "District": "梓官區",
+    "PostalCode": "826",
+    "Latitude": 22.76061,
+    "Longitude": 120.267237,
+    "ReferenceName": "梓官區公所",
+    "ReferenceSource": "https://www.openstreetmap.org/way/301928629"
+  },
+  {
+    "Code": "64000300",
+    "County": "高雄市",
+    "District": "旗山區",
+    "PostalCode": "842",
+    "Latitude": 22.88859,
+    "Longitude": 120.48328,
+    "ReferenceName": "旗山區公所",
+    "ReferenceSource": "https://www.openstreetmap.org/node/8270288338"
+  },
+  {
+    "Code": "64000310",
+    "County": "高雄市",
+    "District": "美濃區",
+    "PostalCode": "843",
+    "Latitude": 22.894851,
+    "Longitude": 120.54186,
+    "ReferenceName": "美濃區公所",
+    "ReferenceSource": "https://www.openstreetmap.org/way/842603582"
+  },
+  {
+    "Code": "64000320",
+    "County": "高雄市",
+    "District": "六龜區",
+    "PostalCode": "844",
+    "Latitude": 22.99847,
+    "Longitude": 120.632727,
+    "ReferenceName": "高雄市六龜區公所",
+    "ReferenceSource": "https://www.openstreetmap.org/node/8198157753"
+  },
+  {
+    "Code": "64000330",
+    "County": "高雄市",
+    "District": "甲仙區",
+    "PostalCode": "847",
+    "Latitude": 23.084005,
+    "Longitude": 120.58773,
+    "ReferenceName": "甲仙區公所",
+    "ReferenceSource": "https://www.openstreetmap.org/way/491491748"
+  },
+  {
+    "Code": "64000340",
+    "County": "高雄市",
+    "District": "杉林區",
+    "PostalCode": "846",
+    "Latitude": 23.00167,
+    "Longitude": 120.54889,
+    "ReferenceName": "杉林區聚落",
+    "ReferenceSource": "https://www.geonames.org/1669702"
+  },
+  {
+    "Code": "64000350",
+    "County": "高雄市",
+    "District": "內門區",
+    "PostalCode": "845",
+    "Latitude": 22.93722,
+    "Longitude": 120.4625,
+    "ReferenceName": "內門區聚落",
+    "ReferenceSource": "https://www.geonames.org/6601027"
+  },
+  {
+    "Code": "64000360",
+    "County": "高雄市",
+    "District": "茂林區",
+    "PostalCode": "851",
+    "Latitude": 22.88617,
+    "Longitude": 120.663437,
+    "ReferenceName": "茂林區行政中心",
+    "ReferenceSource": "https://www.openstreetmap.org/way/228042397"
+  },
+  {
+    "Code": "64000370",
+    "County": "高雄市",
+    "District": "桃源區",
+    "PostalCode": "848",
+    "Latitude": 23.159348,
+    "Longitude": 120.764057,
+    "ReferenceName": "高雄市桃源區公所",
+    "ReferenceSource": "https://www.openstreetmap.org/way/882190447"
+  },
+  {
+    "Code": "64000380",
+    "County": "高雄市",
+    "District": "那瑪夏區",
+    "PostalCode": "849",
+    "Latitude": 23.276909,
+    "Longitude": 120.72019,
+    "ReferenceName": "高雄市那瑪夏區聯合行政中心",
+    "ReferenceSource": "https://www.openstreetmap.org/way/550260679"
+  },
+  {
+    "Code": "65000010",
+    "County": "新北市",
+    "District": "板橋區",
+    "PostalCode": "220",
+    "Latitude": 25.009714,
+    "Longitude": 121.459096,
+    "ReferenceName": "板橋區公所",
+    "ReferenceSource": "https://www.openstreetmap.org/way/218099547"
+  },
+  {
+    "Code": "65000020",
+    "County": "新北市",
+    "District": "三重區",
+    "PostalCode": "241",
+    "Latitude": 25.060782,
+    "Longitude": 121.48841,
+    "ReferenceName": "三重區公所",
+    "ReferenceSource": "https://www.openstreetmap.org/way/437911629"
+  },
+  {
+    "Code": "65000030",
+    "County": "新北市",
+    "District": "中和區",
+    "PostalCode": "235",
+    "Latitude": 24.99856,
+    "Longitude": 121.50053,
+    "ReferenceName": "中和區公所",
+    "ReferenceSource": "https://www.openstreetmap.org/node/9230254096"
+  },
+  {
+    "Code": "65000040",
+    "County": "新北市",
+    "District": "永和區",
+    "PostalCode": "234",
+    "Latitude": 25.01402,
+    "Longitude": 121.50704,
+    "ReferenceName": "永和區公所公有新生市場",
+    "ReferenceSource": "https://www.openstreetmap.org/node/9410158439"
+  },
+  {
+    "Code": "65000050",
+    "County": "新北市",
+    "District": "新莊區",
+    "PostalCode": "242",
+    "Latitude": 25.035943,
+    "Longitude": 121.450339,
+    "ReferenceName": "新莊區公所",
+    "ReferenceSource": "https://www.openstreetmap.org/node/2394979581"
+  },
+  {
+    "Code": "65000060",
+    "County": "新北市",
+    "District": "新店區",
+    "PostalCode": "231",
+    "Latitude": 24.967386,
+    "Longitude": 121.541351,
+    "ReferenceName": "新店區公所",
+    "ReferenceSource": "https://www.openstreetmap.org/node/3502209233"
+  },
+  {
+    "Code": "65000070",
+    "County": "新北市",
+    "District": "樹林區",
+    "PostalCode": "238",
+    "Latitude": 24.98976,
+    "Longitude": 121.42477,
+    "ReferenceName": "樹林區公所",
+    "ReferenceSource": "https://www.openstreetmap.org/node/12434854414"
+  },
+  {
+    "Code": "65000080",
+    "County": "新北市",
+    "District": "鶯歌區",
+    "PostalCode": "239",
+    "Latitude": 24.956004,
+    "Longitude": 121.354323,
+    "ReferenceName": "鶯歌區公所",
+    "ReferenceSource": "https://www.openstreetmap.org/way/296994325"
+  },
+  {
+    "Code": "65000090",
+    "County": "新北市",
+    "District": "三峽區",
+    "PostalCode": "237",
+    "Latitude": 24.9339,
+    "Longitude": 121.36929,
+    "ReferenceName": "三峽區公所(三峽老街)",
+    "ReferenceSource": "https://www.openstreetmap.org/node/9363053182"
+  },
+  {
+    "Code": "65000100",
+    "County": "新北市",
+    "District": "淡水區",
+    "PostalCode": "251",
+    "Latitude": 25.188953,
+    "Longitude": 121.444504,
+    "ReferenceName": "淡水行政中心",
+    "ReferenceSource": "https://www.openstreetmap.org/node/6155745371"
+  },
+  {
+    "Code": "65000110",
+    "County": "新北市",
+    "District": "汐止區",
+    "PostalCode": "221",
+    "Latitude": 25.06416,
+    "Longitude": 121.6583,
+    "ReferenceName": "汐止區公所",
+    "ReferenceSource": "https://www.openstreetmap.org/node/9230254189"
+  },
+  {
+    "Code": "65000120",
+    "County": "新北市",
+    "District": "瑞芳區",
+    "PostalCode": "224",
+    "Latitude": 25.108876,
+    "Longitude": 121.80997,
+    "ReferenceName": "瑞芳區公所",
+    "ReferenceSource": "https://www.openstreetmap.org/way/196809777"
+  },
+  {
+    "Code": "65000130",
+    "County": "新北市",
+    "District": "土城區",
+    "PostalCode": "236",
+    "Latitude": 24.9719,
+    "Longitude": 121.44316,
+    "ReferenceName": "土城區公所",
+    "ReferenceSource": "https://www.openstreetmap.org/node/11449095101"
+  },
+  {
+    "Code": "65000140",
+    "County": "新北市",
+    "District": "蘆洲區",
+    "PostalCode": "247",
+    "Latitude": 25.084664,
+    "Longitude": 121.473676,
+    "ReferenceName": "蘆洲區公所",
+    "ReferenceSource": "https://www.openstreetmap.org/way/469423727"
+  },
+  {
+    "Code": "65000150",
+    "County": "新北市",
+    "District": "五股區",
+    "PostalCode": "248",
+    "Latitude": 25.08402,
+    "Longitude": 121.4378,
+    "ReferenceName": "五股區聚落",
+    "ReferenceSource": "https://www.geonames.org/1665844"
+  },
+  {
+    "Code": "65000160",
+    "County": "新北市",
+    "District": "泰山區",
+    "PostalCode": "243",
+    "Latitude": 25.059375,
+    "Longitude": 121.431224,
+    "ReferenceName": "泰山區公所",
+    "ReferenceSource": "https://www.openstreetmap.org/way/844720236"
+  },
+  {
+    "Code": "65000170",
+    "County": "新北市",
+    "District": "林口區",
+    "PostalCode": "244",
+    "Latitude": 25.07674,
+    "Longitude": 121.38818,
+    "ReferenceName": "林口區公所",
+    "ReferenceSource": "https://www.openstreetmap.org/node/9410139108"
+  },
+  {
+    "Code": "65000180",
+    "County": "新北市",
+    "District": "深坑區",
+    "PostalCode": "222",
+    "Latitude": 25.002626,
+    "Longitude": 121.615897,
+    "ReferenceName": "深坑區公所",
+    "ReferenceSource": "https://www.openstreetmap.org/way/422146543"
+  },
+  {
+    "Code": "65000190",
+    "County": "新北市",
+    "District": "石碇區",
+    "PostalCode": "223",
+    "Latitude": 24.991552,
+    "Longitude": 121.657989,
+    "ReferenceName": "石碇區公所",
+    "ReferenceSource": "https://www.openstreetmap.org/way/845536574"
+  },
+  {
+    "Code": "65000200",
+    "County": "新北市",
+    "District": "坪林區",
+    "PostalCode": "232",
+    "Latitude": 24.936199,
+    "Longitude": 121.711668,
+    "ReferenceName": "坪林區公所",
+    "ReferenceSource": "https://www.openstreetmap.org/way/525270346"
+  },
+  {
+    "Code": "65000210",
+    "County": "新北市",
+    "District": "三芝區",
+    "PostalCode": "252",
+    "Latitude": 25.25788,
+    "Longitude": 121.50082,
+    "ReferenceName": "三芝區公所",
+    "ReferenceSource": "https://www.openstreetmap.org/node/12434854529"
+  },
+  {
+    "Code": "65000220",
+    "County": "新北市",
+    "District": "石門區",
+    "PostalCode": "253",
+    "Latitude": 25.291231,
+    "Longitude": 121.567844,
+    "ReferenceName": "石門區公所",
+    "ReferenceSource": "https://www.openstreetmap.org/way/577399382"
+  },
+  {
+    "Code": "65000230",
+    "County": "新北市",
+    "District": "八里區",
+    "PostalCode": "249",
+    "Latitude": 25.154075,
+    "Longitude": 121.406057,
+    "ReferenceName": "八里區公所",
+    "ReferenceSource": "https://www.openstreetmap.org/node/7083652051"
+  },
+  {
+    "Code": "65000240",
+    "County": "新北市",
+    "District": "平溪區",
+    "PostalCode": "226",
+    "Latitude": 25.029695,
+    "Longitude": 121.721928,
+    "ReferenceName": "新北市平溪區公所警告牌",
+    "ReferenceSource": "https://www.openstreetmap.org/node/2689726121"
+  },
+  {
+    "Code": "65000250",
+    "County": "新北市",
+    "District": "雙溪區",
+    "PostalCode": "227",
+    "Latitude": 25.03372,
+    "Longitude": 121.865813,
+    "ReferenceName": "雙溪區公所",
+    "ReferenceSource": "https://www.openstreetmap.org/way/370524461"
+  },
+  {
+    "Code": "65000260",
+    "County": "新北市",
+    "District": "貢寮區",
+    "PostalCode": "228",
+    "Latitude": 25.02088,
+    "Longitude": 121.90614,
+    "ReferenceName": "貢寮區公所",
+    "ReferenceSource": "https://www.openstreetmap.org/node/13601848220"
+  },
+  {
+    "Code": "65000270",
+    "County": "新北市",
+    "District": "金山區",
+    "PostalCode": "208",
+    "Latitude": 25.222204,
+    "Longitude": 121.636505,
+    "ReferenceName": "金山區公所",
+    "ReferenceSource": "https://www.openstreetmap.org/way/700516977"
+  },
+  {
+    "Code": "65000280",
+    "County": "新北市",
+    "District": "萬里區",
+    "PostalCode": "207",
+    "Latitude": 25.17811,
+    "Longitude": 121.68907,
+    "ReferenceName": "萬里區行政中心",
+    "ReferenceSource": "https://www.openstreetmap.org/node/11449094908"
+  },
+  {
+    "Code": "65000290",
+    "County": "新北市",
+    "District": "烏來區",
+    "PostalCode": "233",
+    "Latitude": 24.86397,
+    "Longitude": 121.55133,
+    "ReferenceName": "烏來區聚落",
+    "ReferenceSource": "https://www.geonames.org/1665813"
+  },
+  {
+    "Code": "66000010",
+    "County": "臺中市",
+    "District": "中區",
+    "PostalCode": "400",
+    "Latitude": 24.143867,
+    "Longitude": 120.679558,
+    "ReferenceName": "中區區公所",
+    "ReferenceSource": "https://www.openstreetmap.org/node/2768896901"
+  },
+  {
+    "Code": "66000020",
+    "County": "臺中市",
+    "District": "東區",
+    "PostalCode": "401",
+    "Latitude": 24.136564,
+    "Longitude": 120.703941,
+    "ReferenceName": "臺中東區區公所i郵箱",
+    "ReferenceSource": "https://www.openstreetmap.org/node/9625809970"
+  },
+  {
+    "Code": "66000030",
+    "County": "臺中市",
+    "District": "南區",
+    "PostalCode": "402",
+    "Latitude": 24.117107,
+    "Longitude": 120.663598,
+    "ReferenceName": "南區公所",
+    "ReferenceSource": "https://www.openstreetmap.org/node/13775849116"
+  },
+  {
+    "Code": "66000040",
+    "County": "臺中市",
+    "District": "西區",
+    "PostalCode": "403",
+    "Latitude": 24.141235,
+    "Longitude": 120.67117,
+    "ReferenceName": "西區區公所",
+    "ReferenceSource": "https://www.openstreetmap.org/way/758888491"
+  },
+  {
+    "Code": "66000050",
+    "County": "臺中市",
+    "District": "北區",
+    "PostalCode": "404",
+    "Latitude": 24.165899,
+    "Longitude": 120.682312,
+    "ReferenceName": "北區區公所",
+    "ReferenceSource": "https://www.openstreetmap.org/node/2833196368"
+  },
+  {
+    "Code": "66000060",
+    "County": "臺中市",
+    "District": "西屯區",
+    "PostalCode": "407",
+    "Latitude": 24.165461,
+    "Longitude": 120.633618,
+    "ReferenceName": "西屯區公所",
+    "ReferenceSource": "https://www.openstreetmap.org/node/2673110777"
+  },
+  {
+    "Code": "66000070",
+    "County": "臺中市",
+    "District": "南屯區",
+    "PostalCode": "408",
+    "Latitude": 24.134452,
+    "Longitude": 120.644293,
+    "ReferenceName": "南屯區公所",
+    "ReferenceSource": "https://www.openstreetmap.org/node/3513600766"
+  },
+  {
+    "Code": "66000080",
+    "County": "臺中市",
+    "District": "北屯區",
+    "PostalCode": "406",
+    "Latitude": 24.18299,
+    "Longitude": 120.68631,
+    "ReferenceName": "北屯區公所",
+    "ReferenceSource": "https://www.openstreetmap.org/node/9453528289"
+  },
+  {
+    "Code": "66000090",
+    "County": "臺中市",
+    "District": "豐原區",
+    "PostalCode": "420",
+    "Latitude": 24.24243,
+    "Longitude": 120.71827,
+    "ReferenceName": "豐原區公所",
+    "ReferenceSource": "https://www.openstreetmap.org/node/9453528235"
+  },
+  {
+    "Code": "66000100",
+    "County": "臺中市",
+    "District": "東勢區",
+    "PostalCode": "423",
+    "Latitude": 24.258677,
+    "Longitude": 120.827964,
+    "ReferenceName": "東勢區公所",
+    "ReferenceSource": "https://www.openstreetmap.org/way/222420272"
+  },
+  {
+    "Code": "66000110",
+    "County": "臺中市",
+    "District": "大甲區",
+    "PostalCode": "437",
+    "Latitude": 24.34981,
+    "Longitude": 120.62264,
+    "ReferenceName": "大甲區公所",
+    "ReferenceSource": "https://www.openstreetmap.org/node/9453528060"
+  },
+  {
+    "Code": "66000120",
+    "County": "臺中市",
+    "District": "清水區",
+    "PostalCode": "436",
+    "Latitude": 24.26848,
+    "Longitude": 120.55998,
+    "ReferenceName": "清水區公所",
+    "ReferenceSource": "https://www.openstreetmap.org/node/9453528096"
+  },
+  {
+    "Code": "66000130",
+    "County": "臺中市",
+    "District": "沙鹿區",
+    "PostalCode": "433",
+    "Latitude": 24.23392,
+    "Longitude": 120.56586,
+    "ReferenceName": "沙鹿區公所",
+    "ReferenceSource": "https://www.openstreetmap.org/node/9453528076"
+  },
+  {
+    "Code": "66000140",
+    "County": "臺中市",
+    "District": "梧棲區",
+    "PostalCode": "435",
+    "Latitude": 24.25492,
+    "Longitude": 120.5315,
+    "ReferenceName": "梧棲區公所",
+    "ReferenceSource": "https://www.openstreetmap.org/node/9453528034"
+  },
+  {
+    "Code": "66000150",
+    "County": "臺中市",
+    "District": "后里區",
+    "PostalCode": "421",
+    "Latitude": 24.305017,
+    "Longitude": 120.710747,
+    "ReferenceName": "后里區公所",
+    "ReferenceSource": "https://www.openstreetmap.org/way/222427560"
+  },
+  {
+    "Code": "66000160",
+    "County": "臺中市",
+    "District": "神岡區",
+    "PostalCode": "429",
+    "Latitude": 24.260427,
+    "Longitude": 120.693055,
+    "ReferenceName": "臺中市 218 豐原轉運中心 - 神岡區公所(往豐原轉運中心)",
+    "ReferenceSource": "https://www.openstreetmap.org/relation/17922469"
+  },
+  {
+    "Code": "66000170",
+    "County": "臺中市",
+    "District": "潭子區",
+    "PostalCode": "427",
+    "Latitude": 24.203614,
+    "Longitude": 120.72336,
+    "ReferenceName": "潭子區公所",
+    "ReferenceSource": "https://www.openstreetmap.org/node/6161186475"
+  },
+  {
+    "Code": "66000180",
+    "County": "臺中市",
+    "District": "大雅區",
+    "PostalCode": "428",
+    "Latitude": 24.229169,
+    "Longitude": 120.648192,
+    "ReferenceName": "大雅區公所",
+    "ReferenceSource": "https://www.openstreetmap.org/node/9453527975"
+  },
+  {
+    "Code": "66000190",
+    "County": "臺中市",
+    "District": "新社區",
+    "PostalCode": "426",
+    "Latitude": 24.233862,
+    "Longitude": 120.808475,
+    "ReferenceName": "新社區公所",
+    "ReferenceSource": "https://www.openstreetmap.org/node/9453507686"
+  },
+  {
+    "Code": "66000200",
+    "County": "臺中市",
+    "District": "石岡區",
+    "PostalCode": "422",
+    "Latitude": 24.27508,
+    "Longitude": 120.78055,
+    "ReferenceName": "石岡區公所",
+    "ReferenceSource": "https://www.openstreetmap.org/node/9453507694"
+  },
+  {
+    "Code": "66000210",
+    "County": "臺中市",
+    "District": "外埔區",
+    "PostalCode": "438",
+    "Latitude": 24.33212,
+    "Longitude": 120.65459,
+    "ReferenceName": "外埔區公所",
+    "ReferenceSource": "https://www.openstreetmap.org/node/9453507700"
+  },
+  {
+    "Code": "66000220",
+    "County": "臺中市",
+    "District": "大安區",
+    "PostalCode": "439",
+    "Latitude": 24.346286,
+    "Longitude": 120.586686,
+    "ReferenceName": "大安區公所禮堂",
+    "ReferenceSource": "https://www.openstreetmap.org/node/4891421424"
+  },
+  {
+    "Code": "66000230",
+    "County": "臺中市",
+    "District": "烏日區",
+    "PostalCode": "414",
+    "Latitude": 24.1045,
+    "Longitude": 120.62397,
+    "ReferenceName": "烏日區公所(新興路)",
+    "ReferenceSource": "https://www.openstreetmap.org/node/8595615078"
+  },
+  {
+    "Code": "66000240",
+    "County": "臺中市",
+    "District": "大肚區",
+    "PostalCode": "432",
+    "Latitude": 24.151189,
+    "Longitude": 120.545649,
+    "ReferenceName": "大肚區公所五樓",
+    "ReferenceSource": "https://www.openstreetmap.org/node/4891373062"
+  },
+  {
+    "Code": "66000250",
+    "County": "臺中市",
+    "District": "龍井區",
+    "PostalCode": "434",
+    "Latitude": 24.192803,
+    "Longitude": 120.545641,
+    "ReferenceName": "龍井區公所",
+    "ReferenceSource": "https://www.openstreetmap.org/way/222446541"
+  },
+  {
+    "Code": "66000260",
+    "County": "臺中市",
+    "District": "霧峰區",
+    "PostalCode": "413",
+    "Latitude": 24.0615,
+    "Longitude": 120.700118,
+    "ReferenceName": "霧峰區公所",
+    "ReferenceSource": "https://www.openstreetmap.org/node/9453527947"
+  },
+  {
+    "Code": "66000270",
+    "County": "臺中市",
+    "District": "太平區",
+    "PostalCode": "411",
+    "Latitude": 24.126554,
+    "Longitude": 120.718446,
+    "ReferenceName": "太平區公所i郵箱",
+    "ReferenceSource": "https://www.openstreetmap.org/node/9625809847"
+  },
+  {
+    "Code": "66000280",
+    "County": "臺中市",
+    "District": "大里區",
+    "PostalCode": "412",
+    "Latitude": 24.100024,
+    "Longitude": 120.68599,
+    "ReferenceName": "大里區公所",
+    "ReferenceSource": "https://www.openstreetmap.org/node/8516925267"
+  },
+  {
+    "Code": "66000290",
+    "County": "臺中市",
+    "District": "和平區",
+    "PostalCode": "424",
+    "Latitude": 24.175211,
+    "Longitude": 120.883674,
+    "ReferenceName": "臺中市和平區公所",
+    "ReferenceSource": "https://www.openstreetmap.org/way/222417514"
+  },
+  {
+    "Code": "67000010",
+    "County": "臺南市",
+    "District": "新營區",
+    "PostalCode": "730",
+    "Latitude": 23.310246,
+    "Longitude": 120.316691,
+    "ReferenceName": "新營區公所",
+    "ReferenceSource": "https://www.openstreetmap.org/way/310751901"
+  },
+  {
+    "Code": "67000020",
+    "County": "臺南市",
+    "District": "鹽水區",
+    "PostalCode": "737",
+    "Latitude": 23.31994,
+    "Longitude": 120.266103,
+    "ReferenceName": "鹽水區公所",
+    "ReferenceSource": "https://www.openstreetmap.org/way/563369392"
+  },
+  {
+    "Code": "67000030",
+    "County": "臺南市",
+    "District": "白河區",
+    "PostalCode": "732",
+    "Latitude": 23.3512,
+    "Longitude": 120.41609,
+    "ReferenceName": "白河區公所",
+    "ReferenceSource": "https://www.openstreetmap.org/node/13427993026"
+  },
+  {
+    "Code": "67000040",
+    "County": "臺南市",
+    "District": "柳營區",
+    "PostalCode": "736",
+    "Latitude": 23.27843,
+    "Longitude": 120.31192,
+    "ReferenceName": "柳營區公所",
+    "ReferenceSource": "https://www.openstreetmap.org/node/11059311529"
+  },
+  {
+    "Code": "67000050",
+    "County": "臺南市",
+    "District": "後壁區",
+    "PostalCode": "731",
+    "Latitude": 23.36585,
+    "Longitude": 120.36221,
+    "ReferenceName": "後壁區公所",
+    "ReferenceSource": "https://www.openstreetmap.org/node/11259400084"
+  },
+  {
+    "Code": "67000060",
+    "County": "臺南市",
+    "District": "東山區",
+    "PostalCode": "733",
+    "Latitude": 23.32624,
+    "Longitude": 120.40506,
+    "ReferenceName": "東山區公所",
+    "ReferenceSource": "https://www.openstreetmap.org/node/11160257762"
+  },
+  {
+    "Code": "67000070",
+    "County": "臺南市",
+    "District": "麻豆區",
+    "PostalCode": "721",
+    "Latitude": 23.184884,
+    "Longitude": 120.258582,
+    "ReferenceName": "臺南市麻豆區公所3樓",
+    "ReferenceSource": "https://www.openstreetmap.org/node/4891384929"
+  },
+  {
+    "Code": "67000080",
+    "County": "臺南市",
+    "District": "下營區",
+    "PostalCode": "735",
+    "Latitude": 23.23557,
+    "Longitude": 120.26426,
+    "ReferenceName": "下營區公所",
+    "ReferenceSource": "https://www.openstreetmap.org/node/11310045561"
+  },
+  {
+    "Code": "67000090",
+    "County": "臺南市",
+    "District": "六甲區",
+    "PostalCode": "734",
+    "Latitude": 23.231883,
+    "Longitude": 120.347521,
+    "ReferenceName": "六甲區公所",
+    "ReferenceSource": "https://www.openstreetmap.org/way/180921289"
+  },
+  {
+    "Code": "67000100",
+    "County": "臺南市",
+    "District": "官田區",
+    "PostalCode": "720",
+    "Latitude": 23.193198,
+    "Longitude": 120.315453,
+    "ReferenceName": "官田區公所",
+    "ReferenceSource": "https://www.openstreetmap.org/way/401518548"
+  },
+  {
+    "Code": "67000110",
+    "County": "臺南市",
+    "District": "大內區",
+    "PostalCode": "742",
+    "Latitude": 23.11905,
+    "Longitude": 120.35662,
+    "ReferenceName": "大內區公所",
+    "ReferenceSource": "https://www.openstreetmap.org/node/13427975986"
+  },
+  {
+    "Code": "67000120",
+    "County": "臺南市",
+    "District": "佳里區",
+    "PostalCode": "722",
+    "Latitude": 23.16551,
+    "Longitude": 120.17647,
+    "ReferenceName": "佳里區公所",
+    "ReferenceSource": "https://www.openstreetmap.org/node/13428103772"
+  },
+  {
+    "Code": "67000130",
+    "County": "臺南市",
+    "District": "學甲區",
+    "PostalCode": "726",
+    "Latitude": 23.258223,
+    "Longitude": 120.158676,
+    "ReferenceName": "藍4(往學甲區公所_返程)",
+    "ReferenceSource": "https://www.openstreetmap.org/relation/13995903"
+  },
+  {
+    "Code": "67000140",
+    "County": "臺南市",
+    "District": "西港區",
+    "PostalCode": "723",
+    "Latitude": 23.122969,
+    "Longitude": 120.203371,
+    "ReferenceName": "西港區公所",
+    "ReferenceSource": "https://www.openstreetmap.org/relation/20042410"
+  },
+  {
+    "Code": "67000150",
+    "County": "臺南市",
+    "District": "七股區",
+    "PostalCode": "724",
+    "Latitude": 23.140342,
+    "Longitude": 120.138957,
+    "ReferenceName": "七股區公所",
+    "ReferenceSource": "https://www.openstreetmap.org/way/605971404"
+  },
+  {
+    "Code": "67000160",
+    "County": "臺南市",
+    "District": "將軍區",
+    "PostalCode": "725",
+    "Latitude": 23.199026,
+    "Longitude": 120.158838,
+    "ReferenceName": "將軍區公所",
+    "ReferenceSource": "https://www.openstreetmap.org/way/605971402"
+  },
+  {
+    "Code": "67000170",
+    "County": "臺南市",
+    "District": "北門區",
+    "PostalCode": "727",
+    "Latitude": 23.267726,
+    "Longitude": 120.125421,
+    "ReferenceName": "北門區公所",
+    "ReferenceSource": "https://www.openstreetmap.org/way/156623834"
+  },
+  {
+    "Code": "67000180",
+    "County": "臺南市",
+    "District": "新化區",
+    "PostalCode": "712",
+    "Latitude": 23.038452,
+    "Longitude": 120.310698,
+    "ReferenceName": "臺南市新化區公所3樓展演廳",
+    "ReferenceSource": "https://www.openstreetmap.org/node/4891402268"
+  },
+  {
+    "Code": "67000190",
+    "County": "臺南市",
+    "District": "善化區",
+    "PostalCode": "741",
+    "Latitude": 23.13305,
+    "Longitude": 120.29624,
+    "ReferenceName": "善化區公所(公園路)",
+    "ReferenceSource": "https://www.openstreetmap.org/node/11059602952"
+  },
+  {
+    "Code": "67000200",
+    "County": "臺南市",
+    "District": "新市區",
+    "PostalCode": "744",
+    "Latitude": 23.07883,
+    "Longitude": 120.29502,
+    "ReferenceName": "新市區公所",
+    "ReferenceSource": "https://www.openstreetmap.org/node/11059602958"
+  },
+  {
+    "Code": "67000210",
+    "County": "臺南市",
+    "District": "安定區",
+    "PostalCode": "745",
+    "Latitude": 23.09611,
+    "Longitude": 120.23107,
+    "ReferenceName": "安定區公所運動休閒公園",
+    "ReferenceSource": "https://www.openstreetmap.org/node/13762794686"
+  },
+  {
+    "Code": "67000220",
+    "County": "臺南市",
+    "District": "山上區",
+    "PostalCode": "743",
+    "Latitude": 23.10316,
+    "Longitude": 120.35278,
+    "ReferenceName": "山上區公所",
+    "ReferenceSource": "https://www.openstreetmap.org/node/11160257755"
+  },
+  {
+    "Code": "67000230",
+    "County": "臺南市",
+    "District": "玉井區",
+    "PostalCode": "714",
+    "Latitude": 23.123792,
+    "Longitude": 120.460115,
+    "ReferenceName": "玉井區公所",
+    "ReferenceSource": "https://www.openstreetmap.org/way/396359938"
+  },
+  {
+    "Code": "67000240",
+    "County": "臺南市",
+    "District": "楠西區",
+    "PostalCode": "715",
+    "Latitude": 23.174049,
+    "Longitude": 120.486215,
+    "ReferenceName": "楠西區公所",
+    "ReferenceSource": "https://www.openstreetmap.org/way/404329118"
+  },
+  {
+    "Code": "67000250",
+    "County": "臺南市",
+    "District": "南化區",
+    "PostalCode": "716",
+    "Latitude": 23.055985,
+    "Longitude": 120.445728,
+    "ReferenceName": "綠12-1(往南化區公所_往程)",
+    "ReferenceSource": "https://www.openstreetmap.org/relation/3969614"
+  },
+  {
+    "Code": "67000260",
+    "County": "臺南市",
+    "District": "左鎮區",
+    "PostalCode": "713",
+    "Latitude": 23.05675,
+    "Longitude": 120.408625,
+    "ReferenceName": "左鎮區公所",
+    "ReferenceSource": "https://www.openstreetmap.org/way/396359942"
+  },
+  {
+    "Code": "67000270",
+    "County": "臺南市",
+    "District": "仁德區",
+    "PostalCode": "717",
+    "Latitude": 22.972206,
+    "Longitude": 120.252022,
+    "ReferenceName": "仁德區公所",
+    "ReferenceSource": "https://www.openstreetmap.org/relation/20034109"
+  },
+  {
+    "Code": "67000280",
+    "County": "臺南市",
+    "District": "歸仁區",
+    "PostalCode": "711",
+    "Latitude": 22.967298,
+    "Longitude": 120.294634,
+    "ReferenceName": "歸仁區公所(中正北路)",
+    "ReferenceSource": "https://www.openstreetmap.org/node/7640091687"
+  },
+  {
+    "Code": "67000290",
+    "County": "臺南市",
+    "District": "關廟區",
+    "PostalCode": "718",
+    "Latitude": 22.96281,
+    "Longitude": 120.32772,
+    "ReferenceName": "關廟區公所",
+    "ReferenceSource": "https://www.openstreetmap.org/node/11058959676"
+  },
+  {
+    "Code": "67000300",
+    "County": "臺南市",
+    "District": "龍崎區",
+    "PostalCode": "719",
+    "Latitude": 22.96406,
+    "Longitude": 120.36442,
+    "ReferenceName": "龍崎區公所",
+    "ReferenceSource": "https://www.openstreetmap.org/node/13423421393"
+  },
+  {
+    "Code": "67000310",
+    "County": "臺南市",
+    "District": "永康區",
+    "PostalCode": "710",
+    "Latitude": 23.026394,
+    "Longitude": 120.25682,
+    "ReferenceName": "臺南市永康區公所3樓禮堂",
+    "ReferenceSource": "https://www.openstreetmap.org/node/4891402260"
+  },
+  {
+    "Code": "67000320",
+    "County": "臺南市",
+    "District": "東區",
+    "PostalCode": "701",
+    "Latitude": 22.981059,
+    "Longitude": 120.230174,
+    "ReferenceName": "富強教會-行政中心",
+    "ReferenceSource": "https://www.openstreetmap.org/node/4855939677"
+  },
+  {
+    "Code": "67000330",
+    "County": "臺南市",
+    "District": "南區",
+    "PostalCode": "702",
+    "Latitude": 22.96154,
+    "Longitude": 120.18743,
+    "ReferenceName": "南區區公所(公兒26公園)",
+    "ReferenceSource": "https://www.openstreetmap.org/node/4782902648"
+  },
+  {
+    "Code": "67000340",
+    "County": "臺南市",
+    "District": "北區",
+    "PostalCode": "704",
+    "Latitude": 23.013646,
+    "Longitude": 120.200002,
+    "ReferenceName": "北區區公所",
+    "ReferenceSource": "https://www.openstreetmap.org/node/3998531602"
+  },
+  {
+    "Code": "67000350",
+    "County": "臺南市",
+    "District": "安南區",
+    "PostalCode": "709",
+    "Latitude": 23.047225,
+    "Longitude": 120.184764,
+    "ReferenceName": "安南區公所",
+    "ReferenceSource": "https://www.openstreetmap.org/way/301207142"
+  },
+  {
+    "Code": "67000360",
+    "County": "臺南市",
+    "District": "安平區",
+    "PostalCode": "708",
+    "Latitude": 22.99437,
+    "Longitude": 120.16768,
+    "ReferenceName": "安平區公所",
+    "ReferenceSource": "https://www.openstreetmap.org/node/4931081485"
+  },
+  {
+    "Code": "67000370",
+    "County": "臺南市",
+    "District": "中西區",
+    "PostalCode": "700",
+    "Latitude": 22.992244,
+    "Longitude": 120.205761,
+    "ReferenceName": "台南市中西區區公所",
+    "ReferenceSource": "https://www.openstreetmap.org/way/160321089"
+  },
+  {
+    "Code": "68000010",
+    "County": "桃園市",
+    "District": "桃園區",
+    "PostalCode": "330",
+    "Latitude": 25.009938,
+    "Longitude": 121.304284,
+    "ReferenceName": "桃園市 220 桃園區公所-環狀紅線",
+    "ReferenceSource": "https://www.openstreetmap.org/relation/4185447"
+  },
+  {
+    "Code": "68000020",
+    "County": "桃園市",
+    "District": "中壢區",
+    "PostalCode": "320",
+    "Latitude": 24.965779,
+    "Longitude": 121.224683,
+    "ReferenceName": "中壢區公所",
+    "ReferenceSource": "https://www.openstreetmap.org/node/3975146301"
+  },
+  {
+    "Code": "68000030",
+    "County": "桃園市",
+    "District": "大溪區",
+    "PostalCode": "335",
+    "Latitude": 24.880598,
+    "Longitude": 121.287065,
+    "ReferenceName": "大溪區公所",
+    "ReferenceSource": "https://www.openstreetmap.org/way/406005647"
+  },
+  {
+    "Code": "68000040",
+    "County": "桃園市",
+    "District": "楊梅區",
+    "PostalCode": "326",
+    "Latitude": 24.907545,
+    "Longitude": 121.14611,
+    "ReferenceName": "楊梅區公所大禮堂",
+    "ReferenceSource": "https://www.openstreetmap.org/node/4891585138"
+  },
+  {
+    "Code": "68000050",
+    "County": "桃園市",
+    "District": "蘆竹區",
+    "PostalCode": "338",
+    "Latitude": 25.047325,
+    "Longitude": 121.294341,
+    "ReferenceName": "蘆竹區公所",
+    "ReferenceSource": "https://www.openstreetmap.org/node/4932640204"
+  },
+  {
+    "Code": "68000060",
+    "County": "桃園市",
+    "District": "大園區",
+    "PostalCode": "337",
+    "Latitude": 25.064038,
+    "Longitude": 121.195544,
+    "ReferenceName": "大園區公所i郵箱",
+    "ReferenceSource": "https://www.openstreetmap.org/node/9625810425"
+  },
+  {
+    "Code": "68000070",
+    "County": "桃園市",
+    "District": "龜山區",
+    "PostalCode": "333",
+    "Latitude": 24.992567,
+    "Longitude": 121.337593,
+    "ReferenceName": "龜山區公所",
+    "ReferenceSource": "https://www.openstreetmap.org/node/4932640544"
+  },
+  {
+    "Code": "68000080",
+    "County": "桃園市",
+    "District": "八德區",
+    "PostalCode": "334",
+    "Latitude": 24.929308,
+    "Longitude": 121.284555,
+    "ReferenceName": "八德區公所",
+    "ReferenceSource": "https://www.openstreetmap.org/node/7136768273"
+  },
+  {
+    "Code": "68000090",
+    "County": "桃園市",
+    "District": "龍潭區",
+    "PostalCode": "325",
+    "Latitude": 24.873407,
+    "Longitude": 121.201668,
+    "ReferenceName": "龍潭區公所",
+    "ReferenceSource": "https://www.openstreetmap.org/node/4513230796"
+  },
+  {
+    "Code": "68000100",
+    "County": "桃園市",
+    "District": "平鎮區",
+    "PostalCode": "324",
+    "Latitude": 24.942782,
+    "Longitude": 121.216596,
+    "ReferenceName": "平鎮區公所",
+    "ReferenceSource": "https://www.openstreetmap.org/relation/2809559"
+  },
+  {
+    "Code": "68000110",
+    "County": "桃園市",
+    "District": "新屋區",
+    "PostalCode": "327",
+    "Latitude": 24.972532,
+    "Longitude": 121.105284,
+    "ReferenceName": "新屋區公所",
+    "ReferenceSource": "https://www.openstreetmap.org/node/6024158051"
+  },
+  {
+    "Code": "68000120",
+    "County": "桃園市",
+    "District": "觀音區",
+    "PostalCode": "328",
+    "Latitude": 25.028051,
+    "Longitude": 121.083441,
+    "ReferenceName": "觀音區公所",
+    "ReferenceSource": "https://www.openstreetmap.org/way/700777969"
+  },
+  {
+    "Code": "68000130",
+    "County": "桃園市",
+    "District": "復興區",
+    "PostalCode": "336",
+    "Latitude": 24.8148,
+    "Longitude": 121.351176,
+    "ReferenceName": "復興區公所",
+    "ReferenceSource": "https://www.openstreetmap.org/way/299475827"
+  }
+]

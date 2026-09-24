@@ -1,0 +1,15 @@
+<Window x:Class="CloudAlarmOverlay.App.Views.TaskImportWindow" xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:adaptive="clr-namespace:CloudAlarmOverlay.App.Styles" Title="匯入本機任務 CSV" Width="940" Height="580" MinWidth="680" MinHeight="380" WindowStartupLocation="CenterOwner" Background="{adaptive:AdaptiveBrush #F7FAFE}" Foreground="{adaptive:AdaptiveBrush #16243E}" FontFamily="Segoe UI, Microsoft JhengHei UI" FontSize="14">
+<Window.Resources><ResourceDictionary><ResourceDictionary.MergedDictionaries><ResourceDictionary Source="../Styles/LightTheme.xaml"/></ResourceDictionary.MergedDictionaries></ResourceDictionary></Window.Resources>
+<Border Padding="20" Background="{adaptive:AdaptiveBrush #F7FAFE}"><DockPanel>
+<StackPanel DockPanel.Dock="Top"><TextBlock Text="匯入預覽" FontSize="22" FontWeight="SemiBold"/>
+<TextBlock Text="勾選要建立的本機任務；雲端通知對象將忽略，既有任務不會覆蓋。" Margin="0,8"/>
+<WrapPanel IsEnabled="{Binding CanImport}"><Button Content="勾選全部有效列" Command="{Binding SelectValidCommand}"/><CheckBox Content="重複編號改用新編號（未勾選則略過）" IsChecked="{Binding UseNewIds}" VerticalAlignment="Center"/></WrapPanel></StackPanel>
+<StackPanel DockPanel.Dock="Bottom" Margin="0,12,0,0"><TextBlock Text="{Binding Message}" TextWrapping="Wrap"/><Button Content="確認建立所選任務" Command="{Binding ImportCommand}" Style="{StaticResource Primary}" HorizontalAlignment="Right" Margin="0,8,0,0"/></StackPanel>
+<DataGrid ItemsSource="{Binding Rows}" AutoGenerateColumns="False" CanUserAddRows="False" IsEnabled="{Binding CanImport}" SelectionMode="Extended">
+<DataGrid.Columns><DataGridTemplateColumn Header="匯入" Width="50"><DataGridTemplateColumn.CellTemplate><DataTemplate><CheckBox IsChecked="{Binding Selected,UpdateSourceTrigger=PropertyChanged}" IsEnabled="{Binding Row.Valid}" HorizontalAlignment="Center"/></DataTemplate></DataGridTemplateColumn.CellTemplate></DataGridTemplateColumn>
+<DataGridTextColumn Header="列" Binding="{Binding Row.RowNumber}" Width="45" IsReadOnly="True"/>
+<DataGridTextColumn Header="編號" Binding="{Binding Row.Id}" Width="110" IsReadOnly="True"/>
+<DataGridTextColumn Header="名稱" Binding="{Binding Row.Title}" Width="*" MinWidth="130" IsReadOnly="True"/>
+<DataGridTextColumn Header="下一次提醒" Binding="{Binding Row.NextReminder,StringFormat=yyyy/MM/dd HH:mm}" Width="145" IsReadOnly="True"/>
+<DataGridTextColumn Header="狀態／錯誤原因" Binding="{Binding Row.Status}" Width="2*" MinWidth="230" IsReadOnly="True"><DataGridTextColumn.ElementStyle><Style TargetType="TextBlock"><Setter Property="ToolTip" Value="{Binding Row.Status}"/><Setter Property="TextTrimming" Value="CharacterEllipsis"/></Style></DataGridTextColumn.ElementStyle></DataGridTextColumn>
+</DataGrid.Columns></DataGrid></DockPanel></Border></Window>

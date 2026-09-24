@@ -13,6 +13,21 @@ public partial class AdminViewModel(AdminSession session,IAdminSettingsStore sto
     ISystemEventStore events,IExitProtectionService exitProtection,IAutoStartService autoStart,IAuthenticationService authentication):ObservableObject
 {
     public AdminSession Session=>session;
+    public async Task<bool> ImportSettingsJsonAsync()
+    {
+        session.RequireAdmin();
+        var text=await dialogs.OpenSettingsJsonAsync();
+        if(text is null)return false;
+        var imported=AdminSettingsJson.Parse(text);
+        session.RequireAdmin();
+        await store.SaveAsync(imported);
+        return true;
+    }
+    [RelayCommand] private void ExportSettingsTemplate()
+    {
+        try { session.RequireAdmin(); dialogs.ExportSettingsTemplate(); }
+        catch(Exception ex) { Message=ex.Message; }
+    }
     public PreferencesViewModel Preferences=>preferences;
     [ObservableProperty] private bool isAuthenticated;
     [ObservableProperty] private int selectedTab;
@@ -27,6 +42,7 @@ public partial class AdminViewModel(AdminSession session,IAdminSettingsStore sto
     [ObservableProperty] private string sheetBTestState="尚未測試";
     [ObservableProperty] private string sheetBTestedAt="—";
     [ObservableProperty] private string sheetBTasksStatus="等待測試";
+    [ObservableProperty] private bool allowUrgentSnooze=true;
     [ObservableProperty] private bool lockFlash;
     [ObservableProperty] private bool lockQuiet;
     [ObservableProperty] private bool linksLocked;
@@ -68,6 +84,7 @@ public partial class AdminViewModel(AdminSession session,IAdminSettingsStore sto
         {
             session.RequireAdmin();
             await preferences.LoadAsync();
+            AllowUrgentSnooze=(await settings.GetAsync("AllowUrgentSnooze"))?.Value!="false";
             LockFlash=preferences.FlashLocked;LockQuiet=preferences.QuietLocked;FlashMilliseconds=preferences.FlashMilliseconds;
             LinksLocked=(await settings.GetAsync("SyncLinksLocked"))?.Value=="true";
             await RefreshExitPasswordModeAsync();
@@ -128,6 +145,7 @@ public partial class AdminViewModel(AdminSession session,IAdminSettingsStore sto
         try
         {
             await store.SaveAsync([
+                new Setting{Key="AllowUrgentSnooze",Value=AllowUrgentSnooze?"true":"false",Locked=true},
                 new Setting{Key="FlashMilliseconds",Value=FlashMilliseconds.ToString(),Locked=LockFlash},
                 new Setting{Key="QuietPeriods",Value=(await settings.GetAsync("QuietPeriods"))?.Value??"[]",Locked=LockQuiet}]);
             await preferences.LoadAsync();await RefreshLogsAsync();Message="本機鎖定設定已儲存。";
@@ -139,7 +157,8 @@ public partial class AdminViewModel(AdminSession session,IAdminSettingsStore sto
         try
         {
             var next=!LinksLocked;
-            await store.SaveAsync([new Setting{Key="SyncLinksLocked",Value=next?"true":"false"}]);
+            await store.SaveAsync([
+                new Setting{Key="SyncLinksLocked",Value=next?"true":"false"}]);
             LinksLocked=next;OnPropertyChanged(nameof(LinksEditable));Message=next?"同步來源已鎖定。":"同步來源已解鎖。";
         }
         catch(Exception ex){Message=ex.Message;}

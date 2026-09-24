@@ -12,6 +12,7 @@ public sealed record AcknowledgementLog
     public string? DisplayName { get; init; }
     public required DateTime TriggeredAt { get; init; }
     public DateTime? AcknowledgedAt { get; init; }
+    public int SnoozeCount { get; init; }
     public int? DurationSeconds { get; init; }
     public required string Result { get; init; }
     // Reserved for a later milestone; no setter or write operation in this version.

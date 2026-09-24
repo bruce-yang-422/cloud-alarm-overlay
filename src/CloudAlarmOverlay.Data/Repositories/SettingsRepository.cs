@@ -9,7 +9,7 @@ internal sealed class SettingsRepository(Database db,AdminSession session):ISett
         (await db.QueryAsync<Setting>("SELECT * FROM Settings WHERE Key=@key;",new {key},cancellationToken)).SingleOrDefault();
     public async Task SaveAsync(Setting setting,CancellationToken cancellationToken=default)
     {
-        if(setting.Key is "SyncOptions" or "SyncLinksLocked" or "ExitPasswordMode" or "ExitPasswordHash" or "ExitPasswordRequired")throw new UnauthorizedAccessException("此項目只能透過管理者設定修改。");
+        if(setting.Key is "AllowUrgentSnooze" or "WeatherDefaultLocation" or "SyncOptions" or "SyncLinksLocked" or "ExitPasswordMode" or "ExitPasswordHash" or "ExitPasswordRequired")throw new UnauthorizedAccessException("此項目只能透過管理者設定修改。");
         if(setting.Key=="UpdateManifestUrl"){session.RequireAdmin();if(!string.IsNullOrWhiteSpace(setting.Value))UpdateCheckService.ValidateUrl(setting.Value);}
         if(setting.Locked)throw new UnauthorizedAccessException("一般設定寫入不能變更鎖定狀態。");
         NotificationPreferences.Validate(setting);

@@ -5,7 +5,7 @@ namespace CloudAlarmOverlay.Data;
 
 public sealed class DatabaseInitializer(ISqliteConnectionFactory connections) : IDatabaseInitializer
 {
-    public const int CurrentSchemaVersion = 9;
+    public const int CurrentSchemaVersion = 10;
 
     public async Task InitializeAsync(CancellationToken cancellationToken = default)
     {
@@ -102,6 +102,13 @@ public sealed class DatabaseInitializer(ISqliteConnectionFactory connections) : 
             await ExecuteNonQueryAsync(connection,transaction,await reader.ReadToEndAsync(cancellationToken),cancellationToken);
             await ExecuteNonQueryAsync(connection,transaction,"PRAGMA user_version = 9;",cancellationToken);
         }
+        if(version<10)
+        {
+            using var upgrade=typeof(DatabaseInitializer).Assembly.GetManifestResourceStream("CloudAlarmOverlay.Data.Migrations.V10.sql")!;
+            using var reader=new StreamReader(upgrade);
+            await ExecuteNonQueryAsync(connection,transaction,await reader.ReadToEndAsync(cancellationToken),cancellationToken);
+            await ExecuteNonQueryAsync(connection,transaction,"PRAGMA user_version = 10;",cancellationToken);
+        }
         // Fail before displaying the main window if an expected table/column is missing.
         using (var validation = connection.CreateCommand())
         {
@@ -140,8 +147,8 @@ public sealed class DatabaseInitializer(ISqliteConnectionFactory connections) : 
         SELECT Id, Date, Type, Note, Source FROM Holidays LIMIT 0;
         SELECT Id, Date, LunarDate, LunarDay, SolarTerm FROM LunarCalendar LIMIT 0;
         SELECT Id, TaskId, DeviceId, DisplayName, TriggeredAt, AcknowledgedAt,
-            DurationSeconds, Result, SyncedAt, SyncStatus, TaskName, ScheduledAt, Source, TaskSnapshotJson FROM AcknowledgementLogs LIMIT 0;
-        SELECT Id, TaskId, ScheduledAt, State, TriggeredAt FROM Occurrences LIMIT 0;
+            DurationSeconds, Result, SyncedAt, SyncStatus, TaskName, ScheduledAt, Source, TaskSnapshotJson, SnoozeCount FROM AcknowledgementLogs LIMIT 0;
+        SELECT Id, TaskId, ScheduledAt, State, TriggeredAt, SnoozedUntil FROM Occurrences LIMIT 0;
         SELECT Id, DeviceId, DisplayName, LastSeen, Version FROM Devices LIMIT 0;
         SELECT Id, Username, DisplayName, PasswordHash, Salt, Enabled FROM Users LIMIT 0;
         SELECT Id, DeviceId, Name, Department, MaxAllowedLevel, RequireAckOverride FROM Employees LIMIT 0;

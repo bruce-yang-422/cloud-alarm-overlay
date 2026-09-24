@@ -1,4 +1,4 @@
-<UserControl x:Class="CloudAlarmOverlay.App.Views.AdminView" xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:adaptive="clr-namespace:CloudAlarmOverlay.App.Styles"><UserControl.Resources><ResourceDictionary><ResourceDictionary.MergedDictionaries><ResourceDictionary Source="../Styles/LightTheme.xaml"/></ResourceDictionary.MergedDictionaries>
+<UserControl x:Class="CloudAlarmOverlay.App.Views.AdminView" xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:weatherViews="clr-namespace:CloudAlarmOverlay.App.Views" xmlns:adaptive="clr-namespace:CloudAlarmOverlay.App.Styles"><UserControl.Resources><ResourceDictionary><ResourceDictionary.MergedDictionaries><ResourceDictionary Source="../Styles/LightTheme.xaml"/></ResourceDictionary.MergedDictionaries>
  <Style x:Key="ConnectionStateText" TargetType="TextBlock">
   <Setter Property="FontWeight" Value="SemiBold"/><Setter Property="Foreground" Value="{adaptive:AdaptiveBrush #697C99}"/>
   <Style.Triggers>
@@ -24,6 +24,11 @@
  <TabItem Header="同步來源"><ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled"><Grid VerticalAlignment="Top">
  <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
  <StackPanel Margin="0,0,0,12">
+ <WrapPanel>
+  <Button Content="匯入 JSON 設定" Command="{Binding ImportAdminSettingsCommand}"/>
+  <Button Content="下載 JSON 範本" Command="{Binding Admin.ExportSettingsTemplateCommand}"/>
+ </WrapPanel>
+ <TextBlock Text="選檔後驗證並儲存設定；未提供的項目保留原值。範本不含目前設定或密碼，請妥善保管填妥的 JSON 檔。" Style="{StaticResource Muted}" TextWrapping="Wrap" Margin="0,4,0,12"/>
  <WrapPanel>
   <TextBlock Text="{Binding Admin.LinkState}" VerticalAlignment="Center" Margin="0,0,12,0"/>
   <Button Content="{Binding Admin.LinkToggleText}" Command="{Binding Admin.ToggleLinksCommand}"/>
@@ -126,7 +131,13 @@
  <TextBlock Text="閃爍間隔（200–5000 毫秒）" Margin="0,16,0,6"/>
  <ComboBox ItemsSource="{Binding Preferences.FlashChoices}" IsEditable="True" Text="{Binding FlashMilliseconds}" Width="180" HorizontalAlignment="Left"/>
  <CheckBox Content="禁止使用者修改靜音時段" IsChecked="{Binding LockQuiet}" Command="{Binding SavePolicyCommand}" Style="{StaticResource PillSwitch}" Margin="0,20"/>
- <Button Content="儲存本機政策" Command="{Binding SavePolicyCommand}" Style="{StaticResource Primary}" HorizontalAlignment="Left"/>
+ <CheckBox Content="允許緊急提醒稍後提醒（每次通知最多延後 3 次）" IsChecked="{Binding AllowUrgentSnooze}" Margin="0,12"/>
+ <StackPanel DataContext="{Binding Preferences.Weather}" Margin="0,12">
+ <TextBlock Text="公司預設天氣地點" FontWeight="SemiBold"/>
+<weatherViews:WeatherLocationPicker/>
+ <Button Content="設為公司預設地點" Command="{Binding SaveCompanyDefaultCommand}" HorizontalAlignment="Left"/>
+ <TextBlock Text="{Binding Message}" TextWrapping="Wrap"/>
+ </StackPanel><Button Content="儲存本機政策" Command="{Binding SavePolicyCommand}" Style="{StaticResource Primary}" HorizontalAlignment="Left"/>
  </StackPanel></Border>
  <Border Style="{StaticResource Card}"><StackPanel>
   <TextBlock Text="結束程式密碼保護" FontSize="20" FontWeight="SemiBold"/>

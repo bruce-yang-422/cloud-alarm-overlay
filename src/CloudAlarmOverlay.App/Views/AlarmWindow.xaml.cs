@@ -15,6 +15,7 @@ public partial class AlarmWindow:Window
     private bool red;
     private readonly TaskCompletionSource<bool> completion=new(TaskCreationOptions.RunContinuationsAsynchronously);
     public Task<bool> Completion=>completion.Task;
+    public int? SnoozeMinutes {get;private set;}
     public AlarmWindow(AlarmViewModel vm,string level,int stackIndex=0,int flashMilliseconds=500,string colorMode="亮色",string colorScheme="依提醒等級")
     {
         InitializeComponent();DataContext=vm;
@@ -51,6 +52,7 @@ public partial class AlarmWindow:Window
             }
         }
         vm.Confirmed+=()=>Finish(true);
+        vm.Snoozed+=minutes=>{SnoozeMinutes=minutes;Finish(false);};
         vm.Incorrect+=()=>{
             var movement=new TranslateTransform();CodeInput.RenderTransform=movement;
             movement.BeginAnimation(TranslateTransform.XProperty,new DoubleAnimation(-8,8,TimeSpan.FromMilliseconds(65)){AutoReverse=true,RepeatBehavior=new RepeatBehavior(3)});

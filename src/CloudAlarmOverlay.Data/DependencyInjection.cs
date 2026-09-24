@@ -14,6 +14,8 @@ public static class DependencyInjection
         services.AddSingleton<ISystemEventStore, SystemEventStore>();
         services.AddSingleton<IAdminSettingsStore, AdminSettingsStore>();
         services.AddSingleton<IRuntimeStore, RuntimeStore>();
+        services.AddSingleton<ISnoozeStore, SnoozeStore>();
+        services.AddSingleton<ILocalTaskImportStore, LocalTaskImportStore>();
         services.AddSingleton<ISqliteConnectionFactory, SqliteConnectionFactory>();
         services.AddSingleton<IDatabaseInitializer, DatabaseInitializer>();
         services.AddSingleton<ITaskRepository, TaskRepository>();

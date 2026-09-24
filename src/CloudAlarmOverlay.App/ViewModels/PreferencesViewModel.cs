@@ -7,8 +7,21 @@ using CloudAlarmOverlay.Core.Models;
 using CloudAlarmOverlay.Core.Repositories;
 using CloudAlarmOverlay.Core.Services;
 namespace CloudAlarmOverlay.App.ViewModels;
-public partial class PreferencesViewModel(ISettingsRepository settings,NotificationPreferences preferences,ISoundService sound,CloudAlarmOverlay.App.Services.EmojiLibrary emojis,MaintenanceViewModel maintenance,ChangeSignal changes):ObservableObject
+public partial class PreferencesViewModel(ISettingsRepository settings,NotificationPreferences preferences,ISoundService sound,CloudAlarmOverlay.App.Services.EmojiLibrary emojis,MaintenanceViewModel maintenance,ChangeSignal changes,WeatherViewModel? weather=null):ObservableObject
 {
+    [ObservableProperty] private int selectedSettingsTab;
+    public WeatherViewModel? Weather => weather;
+    [ObservableProperty] private bool countdownShareBranding=true;
+    [ObservableProperty] private string countdownShareMessage="";
+    [RelayCommand] private async Task SaveCountdownShareAsync()
+    {
+        try
+        {
+            await settings.SaveAsync(new Setting{Key=CountdownShareSnapshot.BrandingSettingKey,Value=CountdownShareBranding?"true":"false"});
+            CountdownShareMessage="已儲存，新開啟的分享圖片會使用此設定。";
+        }
+        catch(Exception ex){CountdownShareMessage=ex.Message;}
+    }
     public int[] HomePinLimitChoices {get;}=[2,3,4,5];
     [ObservableProperty] private int homePinLimit=HomePinOptions.DefaultLimit;
     [ObservableProperty] private string homePinMessage="";
@@ -80,6 +93,8 @@ public partial class PreferencesViewModel(ISettingsRepository settings,Notificat
     public ObservableCollection<SoundRow> Sounds {get;}=[];
     public async Task LoadAsync()
     {
+        CountdownShareBranding=(await settings.GetAsync(CountdownShareSnapshot.BrandingSettingKey))?.Value!="false";
+        if (Weather is not null) await Weather.LoadAsync();
         HomePinLimit=HomePinOptions.ReadLimit((await settings.GetAsync(HomePinOptions.SettingKey))?.Value);
         await emojis.LoadAsync(); SetEmojiItems(emojis.Items); EmojiMessage = "";
         FlashMilliseconds=await preferences.FlashMillisecondsAsync();

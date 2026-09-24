@@ -1,0 +1,21 @@
+{
+  "FormatVersion": 1,
+  "SyncOptions": {
+    "SheetAId": "REPLACE_WITH_SHEET_A_ID",
+    "TasksAGid": "0",
+    "HolidaysGid": "1",
+    "EmployeesGid": "2",
+    "LunarGid": "3",
+    "SheetBId": "",
+    "TasksBGid": "",
+    "IntervalSeconds": 45
+  },
+  "SyncLinksLocked": false,
+  "AllowUrgentSnooze": true,
+  "FlashMilliseconds": 500,
+  "LockFlash": false,
+  "QuietPeriods": [],
+  "LockQuiet": false,
+  "WeatherDefaultDistrictCode": "65000010",
+  "UpdateManifestUrl": "https://example.com/version.json"
+}

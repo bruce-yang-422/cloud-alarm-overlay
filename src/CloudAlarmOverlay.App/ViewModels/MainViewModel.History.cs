@@ -14,7 +14,7 @@ public partial class MainViewModel
     private bool resettingHistory;
     private IReadOnlyList<HistoryRow> filteredHistory=[];
     public string[] HistorySources {get;}=["全部",TaskSources.Local,TaskSources.SheetA,TaskSources.SheetB];
-    public string[] HistoryResults {get;}=["全部","準時簽收","逾期簽收","逾期未簽收","未開機"];
+    public string[] HistoryResults {get;}=["全部","準時簽收","逾期簽收","逾期未簽收","未開機","稍後提醒"];
     public int OnTimeHistoryCount=>filteredHistory.Count(x=>x.Entry.Result=="Acknowledged");
     public int LateHistoryCount=>filteredHistory.Count(x=>x.Entry.Result=="Overdue_Acknowledged");
     public int UnackedHistoryCount=>filteredHistory.Count(x=>x.Entry.Result=="Overdue_Unacked");
@@ -65,8 +65,8 @@ public partial class MainViewModel
             Status="正在匯出歷史紀錄…";
             var snapshot=filteredHistory.ToArray();
             var filename=$"AckLog_{HistoryFrom:yyyyMMdd}_{HistoryTo:yyyyMMdd}.csv";
-            var csv=await Task.Run(()=>CsvExport.Build(["TaskName","ScheduledAt","TriggeredAt","AcknowledgedAt","DurationSeconds","Result","Source"],
-                snapshot.Select(h=>new string?[]{h.Title,h.Entry.ScheduledAt is {} at?CsvExport.Date(at):"",h.Entry.Result=="NotLaunched"?"":CsvExport.Date(h.Entry.TriggeredAt),h.Entry.AcknowledgedAt is {} ack?CsvExport.Date(ack):"",h.Entry.DurationSeconds?.ToString(),h.Entry.Result,h.Entry.Source}).ToArray()));
+            var csv=await Task.Run(()=>CsvExport.Build(["TaskName","ScheduledAt","TriggeredAt","AcknowledgedAt","DurationSeconds","SnoozeCount","Result","Source"],
+                snapshot.Select(h=>new string?[]{h.Title,h.Entry.ScheduledAt is {} at?CsvExport.Date(at):"",h.Entry.Result=="NotLaunched"?"":CsvExport.Date(h.Entry.TriggeredAt),h.Entry.AcknowledgedAt is {} ack?CsvExport.Date(ack):"",h.Entry.DurationSeconds?.ToString(),h.Entry.SnoozeCount.ToString(),h.Entry.Result,h.Entry.Source}).ToArray()));
             dialogs.ExportNamed(csv,filename);Status="歷史紀錄匯出作業完成。";
         }
         catch(Exception ex){Status=ex.Message;}
@@ -80,10 +80,10 @@ public partial class MainViewModel
             var entries=await history.GetTriggerLogAsync(row.Task.Id,row.Task.CreatedAt,DateTime.Now.AddDays(1));
             var filename=$"TriggerLog_{row.Task.Id}_{DateTime.Now:yyyyMMdd}.csv";
             var csv=await Task.Run(()=>CsvExport.Build(
-                ["ScheduledAt","OccurrenceState","TriggeredAt","AcknowledgedAt","DurationSeconds","Result"],
+                ["ScheduledAt","OccurrenceState","TriggeredAt","AcknowledgedAt","DurationSeconds","SnoozeCount","Result"],
                 entries.Select(e=>new string?[]{CsvExport.Date(e.ScheduledAt),e.OccurrenceState,
                     e.TriggeredAt is {} t?CsvExport.Date(t):"",e.AcknowledgedAt is {} a?CsvExport.Date(a):"",
-                    e.DurationSeconds?.ToString(),e.Result??"（未產生簽收紀錄，可能為觸發失敗）"}).ToArray()));
+                    e.DurationSeconds?.ToString(),e.SnoozeCount.ToString(),e.Result??"（未產生簽收紀錄，可能為觸發失敗）"}).ToArray()));
             dialogs.ExportNamed(csv,filename);Status="任務完整觸發日誌匯出完成。";
         }
         catch(Exception ex){Status=ex.Message;}

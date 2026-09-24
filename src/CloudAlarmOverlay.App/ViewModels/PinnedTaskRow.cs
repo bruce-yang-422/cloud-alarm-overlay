@@ -11,6 +11,7 @@ public sealed class PinnedTaskRow(AlarmTask task, DateTime? nextAt, DateTime? ac
         CompletedAt=task.Recurrence=="None" ? acknowledgedAt : null
     })
 {
+    public override bool CanShare => false;
     public AlarmTask Task { get; } = task;
     public DateTime? NextAt { get; } = nextAt;
     public override string ModeIcon => "\uE8FD";

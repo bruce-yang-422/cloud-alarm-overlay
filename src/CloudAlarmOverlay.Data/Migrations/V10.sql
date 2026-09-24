@@ -1,0 +1,2 @@
+ALTER TABLE AcknowledgementLogs ADD COLUMN SnoozeCount INTEGER NOT NULL DEFAULT 0;
+ALTER TABLE Occurrences ADD COLUMN SnoozedUntil TEXT;

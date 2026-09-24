@@ -27,6 +27,17 @@ Cloud Alarm Overlay 是常駐 Windows 系統匣的桌面提醒程式，將個人
 - **管理者專區**：設定同步來源、通知政策、開機啟動與結束程式密碼保護，查看系統／稽核紀錄，執行備份與還原。
 - **系統匣常駐**：關閉主視窗後仍持續執行提醒；從系統匣選單可重新開啟或結束程式。
 
+### v1.3.0 功能（已本機封裝，尚未公開發布）
+
+> 2026-09-24 已重新封裝 v1.3.0：天氣地點改為「縣市 → 鄉鎮市區」選單，內建 22 縣市／368 區域，支援地名關鍵字與郵遞區號快選，並以公所或聚落位置取得區域預報。最新本機安裝檔已包含此調整，尚未公開發布。
+
+- **忙碌中，稍後提醒**：一般／重要／緊急／強制任務可延後 5、10、15、30 分鐘，每次通知最多 3 次；強制通知可直接延後，不需輸入確認碼；正式確認仍需驗證碼。管理者可關閉緊急延後。歷史紀錄與 CSV 保留次數；重複排程不變，重疊時以下一次為準，重開程式或休眠錯過時不補跳。
+- **首頁天氣**：到「設定 → 天氣」選擇縣市與鄉鎮市區，或輸入地名／郵遞區號從內建結果快選後儲存；顯示現在溫度、降雨量（mm）與明天溫度範圍／降雨機率。每 30 分鐘及喚醒後更新，失敗保留舊資料最多 6 小時。可關閉連線，管理者可設公司預設地點，個人地點優先。資料來源：[Open-Meteo](https://open-meteo.com/en/docs)（CC BY 4.0）；免費 API 限非商業用途，公司使用須確認授權。
+- **本機任務 CSV**：在「我的任務」下載範本、匯入或匯出。匯入先預覽再勾選建立，重複編號可略過或產生新編號，不覆蓋原任務。沿用 Sheet Tasks 的英文標題＋中文說明，支援 `Note`；Excel 請另存 UTF-8 CSV，任務產生器也可直接匯出 CSV。
+- **倒數卡片分享圖**：從倒數／正數卡片、資料表或首頁倒數釘選卡開啟「分享圖片」，選擇 **1:1 正方形（1080×1080）／2:3 直式（1080×1620）**、三種背景，再複製圖片或另存 PNG。沿用目前色彩風格與明暗主題，數字固定於開啟時，不含備註；「設定 → 分享圖片」可關閉程式名稱。
+
+資料庫以新增 V10 遷移保留既有資料；舊備份仍可還原。v1.3.0 安裝包已於本機產生，詳見 [封裝紀錄](docs/v1.3.0封裝紀錄.md)；公開下載仍為 v1.2.0。驗收進度見 [問題與優化追蹤](docs/問題與優化追蹤.md)。
+
 ### v1.2.0 特色：倒數／正數與共用首頁釘選
 
 **v1.2.0 已於 2026-09-18 發布。** 新增獨立的「倒數／正數」頁面，可新增、編輯、刪除項目，並與任務共用首頁釘選。
@@ -178,14 +189,11 @@ https://raw.githubusercontent.com/bruce-yang-422/cloud-alarm-overlay/main/versio
 
 ### 從原始碼執行
 
-`task_builder_tailwind.html` 僅保留於維護者本機，已排除 Git 追蹤。**公開儲存庫不包含此檔案，但目前 WPF 專案建置會複製它**；請先向維護者取得檔案，放在專案根目錄，否則建置會因缺少檔案失敗。正式 Release 安裝包已包含此工具。
-
 在 Windows PowerShell 執行：
 
 ```powershell
 git clone https://github.com/bruce-yang-422/cloud-alarm-overlay.git
 Set-Location cloud-alarm-overlay
-# 將取得的 task_builder_tailwind.html 放到此目錄後，再執行下列指令。
 dotnet restore CloudAlarmOverlay.sln --locked-mode
 dotnet run --project src/CloudAlarmOverlay.App
 ```
@@ -199,28 +207,33 @@ dotnet test CloudAlarmOverlay.sln --no-build
 
 ### 製作下一版安裝包
 
-目前已發布版本為 **1.2.0**；後續封裝必須使用更高版本，例如 **1.2.1**，並同步維護 [Directory.Build.props](Directory.Build.props) 的版本設定。以下為下一版封裝範例，不代表已發布 1.2.1：
+目前已發布版本為 **1.2.0**；本機已封裝 **1.3.0**，並同步更新 [Directory.Build.props](Directory.Build.props)。重建指令：
 
 ```powershell
-.\installer\build-installer.ps1 -Version 1.2.1
+.\installer\build-installer.ps1 -Version 1.3.0
 ```
 
 此指令會先執行 self-contained 發布，再以 Inno Setup 封裝。需要指定編譯器時可加上 `-Iscc '完整的 ISCC.exe 路徑'`。後續更新須增加版本號，請勿覆蓋已發布的安裝檔；完成上傳並核對 SHA-256 後，再更新 `version.json`。
 
 維護任務產生器的表單與樣式時，修改根目錄的 `task_builder_tailwind.html`；資料讀取與本機 API 位於 `TaskBuilderHostService.cs`。修改後需重新封裝，已安裝的程式不會自動讀取開發目錄內的 HTML。
 
-發布檔輸出至 `artifacts/publish/`，安裝包輸出至 `artifacts/installer/`。若建置時 DLL 被占用，先從系統匣結束正在執行的程式。更多指令見 [常用 CLI 指令](常用CLI指令.md)。
+發布檔輸出至 `artifacts/publish/`，安裝包輸出至 `artifacts/installer/`。若建置時 DLL 被占用，先從系統匣結束正在執行的程式。更多指令見 [常用 CLI 指令](docs/常用CLI指令.md)。
 
 | 路徑 | 用途 |
 | --- | --- |
-| `src/CloudAlarmOverlay.App` | WPF 介面、通知視窗與系統匣 |
-| `src/CloudAlarmOverlay.Core` | 任務模型、排程與 CSV 解析 |
-| `src/CloudAlarmOverlay.Data` | SQLite 資料與備份還原 |
+| `src/CloudAlarmOverlay.App` | WPF 介面、通知視窗與系統匣（程式進入點） |
+| `src/CloudAlarmOverlay.Core` | 任務模型、排程、重複規則與 CSV 解析 |
+| `src/CloudAlarmOverlay.Data` | SQLite 資料、資料庫遷移與備份還原 |
 | `src/CloudAlarmOverlay.BackgroundServices` | 同步與提醒背景工作 |
 | `src/CloudAlarmOverlay.Infrastructure` | HTTP、路徑與系統服務 |
-| `tests/` | 自動化測試 |
+| `tests/` | 自動化測試（資料層與 WPF） |
+| `installer/` | Inno Setup 安裝腳本與打包腳本 |
+| `scripts/` | 發布與維護用腳本 |
+| `docs/` | 安裝教學、CLI 指令、驗收清單與問題追蹤 |
 | `Sheet範例/` | Google Sheets CSV 範例 |
 
 ## 授權
 
 本專案採用 [MIT License](LICENSE)。內建 Emoji 素材的原始授權與著作權聲明見 [Emoji LICENSE](src/CloudAlarmOverlay.App/Assets/Emoji/LICENSE.txt)。
+
+管理員 JSON 設定匯入已加入原始碼（尚未重新封裝）：登入管理者專區後可下載範本並匯入，詳見 [操作說明](docs/管理員JSON設定匯入.md)。

@@ -101,3 +101,6 @@ Desktop.ini
 .DS_Store
 *.tmp
 *.bak
+
+# Local administrator import settings (contains company connection details)
+/cao-settings.local.json

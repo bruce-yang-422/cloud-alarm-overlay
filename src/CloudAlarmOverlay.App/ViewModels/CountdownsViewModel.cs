@@ -12,6 +12,12 @@ namespace CloudAlarmOverlay.App.ViewModels;
 
 public partial class CountdownsViewModel(ICountdownRepository repository, TimeProvider clock, IUserDialogs dialogs, ChangeSignal changes, ILunarCalendarRepository? lunar = null, IHolidayRepository? holidays = null) : ObservableObject
 {
+    private bool CanShareImage(CountdownRow? row)=>!IsBusy && row is not null && row.CanShare;
+    [RelayCommand(CanExecute=nameof(CanShareImage))] private async Task ShareImageAsync(CountdownRow row)
+    {
+        try { await dialogs.ShareCountdownAsync(row.Item.Id); }
+        catch(Exception ex){Message="分享圖片失敗："+ex.Message;}
+    }
     private readonly SemaphoreSlim gate = new(1, 1);
     private CountdownItem? editing;
     private IReadOnlyDictionary<DateOnly,int> lunarCache = new Dictionary<DateOnly,int>();
@@ -167,7 +173,7 @@ public partial class CountdownsViewModel(ICountdownRepository repository, TimePr
     [ObservableProperty] private bool pinOnHome;
     [ObservableProperty] private string message = "";
     [ObservableProperty]
-    [NotifyCanExecuteChangedFor(nameof(NewCommand), nameof(EditCommand), nameof(SaveCommand), nameof(TogglePinCommand), nameof(ToggleTopCommand), nameof(ToggleCompleteCommand), nameof(DeleteCommand))]
+    [NotifyCanExecuteChangedFor(nameof(NewCommand), nameof(EditCommand), nameof(SaveCommand), nameof(TogglePinCommand), nameof(ToggleTopCommand), nameof(ToggleCompleteCommand), nameof(DeleteCommand), nameof(ShareImageCommand))]
     private bool isBusy;
     private bool CanEdit => !IsBusy;
     public bool IsTimeMode => Mode == "倒數時間";
@@ -382,6 +388,7 @@ public partial class CountdownsViewModel(ICountdownRepository repository, TimePr
 public partial class CountdownRow(CountdownItem item) : ObservableObject
 {
     public CountdownItem Item { get; } = item;
+    public virtual bool CanShare => true;
     public string Title => Item.Title;
     public string CompleteLabel => Item.IsCompleted ? "恢復進行" : "標記完成";
     public string DetailsLabel => Item.Category + " · " + RecurrenceRule.Describe(Item.EffectiveRecurrence) +

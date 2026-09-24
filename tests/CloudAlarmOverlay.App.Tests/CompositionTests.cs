@@ -56,7 +56,7 @@ public sealed class CompositionTests
         foreach (var contract in contracts)
             Assert.IsAssignableFrom(contract, host.Services.GetRequiredService(contract));
         Assert.NotNull(host.Services.GetRequiredService<MainViewModel>());
-        Assert.Equal(4, host.Services.GetServices<IHostedService>().Count());
+        Assert.Equal(5, host.Services.GetServices<IHostedService>().Count());
     }
 
     [Fact]

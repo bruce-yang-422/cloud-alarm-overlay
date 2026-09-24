@@ -15,7 +15,7 @@ internal sealed class TaskRepository(Database db) : ITaskRepository
         using var tx = c.BeginTransaction();
         if (await c.ExecuteScalarAsync<long>("SELECT COUNT(*) FROM Tasks WHERE Id=@Id AND Source<>'本機';", task, tx) > 0)
             throw new InvalidOperationException("不可覆蓋雲端任務。");
-        if (await c.ExecuteScalarAsync<long>("SELECT COUNT(*) FROM Occurrences WHERE TaskId=@Id AND State IN ('Claimed','Displayed');", task, tx) > 0)
+        if (await c.ExecuteScalarAsync<long>("SELECT COUNT(*) FROM Occurrences WHERE TaskId=@Id AND State IN ('Claimed','Displayed','Snoozed');", task, tx) > 0)
             throw new InvalidOperationException("請先完成目前的通知再編輯任務。");
         await c.ExecuteAsync(new CommandDefinition(Upsert, Database.Parameters(task), tx, cancellationToken: cancellationToken));
         tx.Commit();
@@ -26,7 +26,7 @@ internal sealed class TaskRepository(Database db) : ITaskRepository
         using var tx = c.BeginTransaction();
         if (await c.ExecuteScalarAsync<long>("SELECT COUNT(*) FROM Tasks WHERE Id=@id AND Source<>'本機';", new { id }, tx) > 0)
             throw new InvalidOperationException("雲端任務為唯讀。");
-        if (await c.ExecuteScalarAsync<long>("SELECT COUNT(*) FROM Occurrences WHERE TaskId=@id AND State IN ('Claimed','Displayed');", new { id }, tx) > 0)
+        if (await c.ExecuteScalarAsync<long>("SELECT COUNT(*) FROM Occurrences WHERE TaskId=@id AND State IN ('Claimed','Displayed','Snoozed');", new { id }, tx) > 0)
             throw new InvalidOperationException("請先完成目前的通知再刪除任務。");
         await c.ExecuteAsync(new CommandDefinition("DELETE FROM Tasks WHERE Id=@id AND Source='本機';", new { id }, tx, cancellationToken: cancellationToken));
         tx.Commit();

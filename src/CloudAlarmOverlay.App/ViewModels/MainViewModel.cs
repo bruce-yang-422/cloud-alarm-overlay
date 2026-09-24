@@ -1,4 +1,4 @@
-﻿using System.Collections.ObjectModel;
+using System.Collections.ObjectModel;
 using System.Globalization;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -54,6 +54,7 @@ public partial class MainViewModel(ITaskRepository tasks,ITaskService taskServic
         catch(Exception ex){Status=ex.Message;}
     }
     [RelayCommand] private void OpenCountdowns()=>PageIndex=6;
+    [RelayCommand] private void OpenWeather() { Preferences.SelectedSettingsTab=6; PageIndex=4; }
     [RelayCommand] private void OpenPomodoro()=>PageIndex=3;
     [ObservableProperty] private int historyTabIndex;
     public AdminViewModel Admin=>admin;
@@ -94,6 +95,7 @@ public partial class MainViewModel(ITaskRepository tasks,ITaskService taskServic
     private DateOnly? calendarDate;
     public void UpdateClock(DateTime now)
     {
+        Preferences.Weather?.Tick();
         SolarDate=now.ToString("yyyy/MM/dd ddd",CultureInfo.GetCultureInfo("zh-TW"));
         CurrentClock=now.ToString("HH:mm:ss");
         LocalScheduleHealth=heartbeat.GetStatus(now);
@@ -408,6 +410,26 @@ public partial class MainViewModel(ITaskRepository tasks,ITaskService taskServic
     }
     private void SetSyncMessage(string message){Status=message;SyncMessage=message;Admin.Message=message;}
     private SyncOptions CurrentOptions()=>new(){SheetAId=SheetAId.Trim(),TasksAGid=TasksAGid.Trim(),HolidaysGid=HolidaysGid.Trim(),EmployeesGid=EmployeesGid.Trim(),LunarGid=LunarGid.Trim(),SheetBId=SheetBId.Trim(),TasksBGid=TasksBGid.Trim(),IntervalSeconds=IntervalSeconds};
+    [RelayCommand] private async Task ImportAdminSettingsAsync()
+    {
+        var saved=false;
+        try
+        {
+            if(!await Admin.ImportSettingsJsonAsync())return;
+            saved=true;
+            var options=await configuration.LoadAsync();
+            SheetAId=options.SheetAId;TasksAGid=options.TasksAGid;HolidaysGid=options.HolidaysGid;EmployeesGid=options.EmployeesGid;
+            LunarGid=options.LunarGid;SheetBId=options.SheetBId;TasksBGid=options.TasksBGid;IntervalSeconds=options.IntervalSeconds;
+            await Admin.LoadAsync();
+            await Preferences.Maintenance.AdminSessionChangedAsync();
+            changes.Notify();
+            Admin.Message="JSON 設定已匯入並儲存。可測試連線或按「立即同步」。";
+        }
+        catch(UnauthorizedAccessException) { Admin.Message="請先登入管理者；登入逾時請重新驗證。"; }
+        catch(ArgumentException ex) { Admin.Message="匯入失敗："+ex.Message; }
+        catch(InvalidOperationException ex) { Admin.Message="匯入失敗："+ex.Message; }
+        catch(Exception) { Admin.Message=saved?"設定已儲存，但畫面更新失敗，請重新開啟管理者專區。":"無法匯入設定，請確認檔案可讀取且為 UTF-8 JSON。"; }
+    }
     [RelayCommand] private Task TestSheetAAsync()=>Admin.TestConnectionAsync(CurrentOptions(),true);
     [RelayCommand] private Task TestSheetBAsync()=>Admin.TestConnectionAsync(CurrentOptions(),false);
     [RelayCommand] private async Task SaveSettingsAsync()
@@ -456,5 +478,5 @@ public sealed record HistoryRow(AcknowledgementLog Entry)
     public string Acknowledged=>Entry.AcknowledgedAt?.ToString("yyyy/MM/dd HH:mm:ss")??"—";
     public string Source=>Entry.Source??"—";
     public string Duration=>Entry.DurationSeconds is {} seconds?$"{seconds/60} 分 {seconds%60} 秒":"—";
-    public string Result=>Entry.Result switch{"Pending"=>"等待確認","Acknowledged"=>"準時簽收","Overdue_Acknowledged"=>"逾期簽收","Overdue_Unacked"=>"逾期未簽收","NotLaunched"=>"未開機",var r=>r};
+    public string Result=>Entry.Result switch{"Snoozed"=>"稍後提醒","Pending"=>"等待確認","Acknowledged"=>"準時簽收","Overdue_Acknowledged"=>"逾期簽收","Overdue_Unacked"=>"逾期未簽收","NotLaunched"=>"未開機",var r=>r};
 }
