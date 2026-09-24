@@ -1,6 +1,6 @@
 {
-  "latestVersion": "1.2.0",
-  "downloadUrl": "https://github.com/bruce-yang-422/cloud-alarm-overlay/releases/download/v1.2.0/CloudAlarmOverlay-v1.2.0-Setup-x64.exe",
-  "sha256": "4f21d0f46ce3717aa05732b055682477c64c123899a341c5a8b73894cead6f3a",
-  "releaseNote": "Cloud Alarm Overlay v1.2.0：新增倒數／正數事件、五種分類、自訂提醒時間、年度國曆／農曆提醒與統計圖表，支援卡片／資料表及鐘面選時。\n任務與倒數共用首頁釘選名額，預設 2 張、設定可選 2～5 張；任務沿用提醒時間，重複任務倒數下一次。超過兩張時在區塊內捲動，精簡圖釘保留變色與動畫，增加任務名稱顯示空間。\n新增薰衣草紫、夕陽橘、極簡銀白，含預設共六種色彩風格；改善首頁捷徑、設定資訊及視窗尺寸。管理者登入固定有效 10 分鐘，安裝時自動關閉舊程式，升級前請先儲存編輯內容；v1.0.0／v1.1.0 可直接覆蓋升級。\n完整改版說明：https://github.com/bruce-yang-422/cloud-alarm-overlay/releases/tag/v1.2.0"
+  "latestVersion": "1.3.0",
+  "downloadUrl": "https://github.com/bruce-yang-422/cloud-alarm-overlay/releases/download/v1.3.0/CloudAlarmOverlay-v1.3.0-Setup-x64.exe",
+  "sha256": "ab778847161d03a924b4bdb2def324fed2d581576cf1f91db95207ebe4ffd7b8",
+  "releaseNote": "Cloud Alarm Overlay v1.3.0：新增忙碌中稍後提醒，可延後 5／10／15／30 分鐘；強制通知延後免驗證碼，正式確認仍需驗證。\n新增首頁現在與明天天氣，支援縣市／鄉鎮市區、關鍵字及郵遞區號快選，點擊可開啟氣象署預報；新增本機任務 CSV 匯入／匯出，以及倒數／正數分享圖片（1:1／2:3）。\n新增管理員 JSON 設定匯入／匯出與日誌自動清理（預設 30 天，可調整）；每月農曆改用內建曆法，節氣仍使用 Sheet A。任務產生器資源本機化，斷網仍可手動輸入並匯出。\n改善任務、提醒紀錄與番茄鐘歷程介面，新增連線狀態卡。v1.2.0 可直接覆蓋升級，保留任務、設定與歷史；升級前請先備份並儲存編輯內容。\n完整改版說明：https://github.com/bruce-yang-422/cloud-alarm-overlay/releases/tag/v1.3.0"
 }
