@@ -76,8 +76,8 @@ public partial class MainWindow:Window
         {var item=new MenuItem{Header=CloudAlarmOverlay.App.Styles.AlarmLevelLabelConverter.Label(level),Command=vm.PreviewCommand,CommandParameter=level};previews.Items.Add(item);}
         menu.Items.Add(previews);
         Add("設定",()=>{vm.PageIndex=4;Open();});
-        Add("管理者登入",()=>{Open();if(vm.Admin.Session.IsAuthenticated)vm.OpenAdminCommand.Execute("0");else Login();});
-        Add("登出管理者",()=>vm.Admin.LogoutCommand.Execute(null));
+        Add(vm.Admin.Session.IsPersonal?"管理者專區":"管理者登入",()=>{Open();if(vm.Admin.Session.IsAuthenticated)vm.OpenAdminCommand.Execute("0");else Login();});
+        if(!vm.Admin.Session.IsPersonal)Add("登出管理者",()=>vm.Admin.LogoutCommand.Execute(null));
         Add("關於",()=>MessageBox.Show("Cloud Alarm Overlay\nMilestone 2 · 本機管理與公開 CSV 提醒\n關閉主視窗後仍會在系統匣執行。","關於"));
         menu.Items.Add(new Separator());
         var quit=new MenuItem{Header="結束程式"};
@@ -184,6 +184,7 @@ public partial class MainWindow:Window
     }
     private void Login()
     {
+        if(vm.Admin.Session.IsPersonal){Open();vm.Admin.SelectedTab=0;vm.PageIndex=5;return;}
         if(loginOpen)return;
         loginOpen=true;
         try
@@ -199,7 +200,7 @@ public partial class MainWindow:Window
             await vm.Preferences.Maintenance.AdminSessionChangedAsync();
             if(!vm.Admin.Session.IsAuthenticated&&vm.PageIndex==5)vm.PageIndex=0;
             await vm.Admin.SessionChangedAsync();
-            vm.Status=vm.Admin.Session.IsAuthenticated?"管理者已登入；登入滿 10 分鐘自動登出，操作不會延長有效時間。":"已登出管理者模式，管理操作需重新輸入密碼。";
+            vm.Status=vm.Admin.Session.IsPersonal?"個人使用：管理員功能直接開放。":vm.Admin.Session.IsAuthenticated?"管理者已登入；登入滿 10 分鐘自動登出，操作不會延長有效時間。":"已登出管理者模式，管理操作需重新輸入密碼。";
         });
     }
     private void OnDataChanged()

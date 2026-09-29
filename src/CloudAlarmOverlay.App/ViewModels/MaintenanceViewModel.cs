@@ -12,9 +12,11 @@ public partial class MaintenanceViewModel(IBackupRestoreService backups, IUpdate
     public void RequireAdministrator()=>session.RequireAdmin();
     public IBackupRestoreService Backups {get;}=backups;
     public bool CanEditUpdateUrl=>session.IsAuthenticated;
+    public bool IsCompanyMode=>!session.IsPersonal;
     public async Task AdminSessionChangedAsync()
     {
         OnPropertyChanged(nameof(CanEditUpdateUrl));
+        OnPropertyChanged(nameof(IsCompanyMode));
         SaveUpdateUrlCommand.NotifyCanExecuteChanged();
         UpdateUrl=(await settings.GetAsync("UpdateManifestUrl"))?.Value??"";
     }

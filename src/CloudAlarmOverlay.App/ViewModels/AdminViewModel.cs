@@ -10,9 +10,12 @@ namespace CloudAlarmOverlay.App.ViewModels;
 public partial class AdminViewModel(AdminSession session,IAdminSettingsStore store,ISettingsRepository settings,
     IAuditLogRepository audit,IAuditService auditService,ISyncLogRepository syncLogs,
     ISheetCsvClient client,ICsvSheetParser parser,IUserDialogs dialogs,PreferencesViewModel preferences,
-    ISystemEventStore events,IExitProtectionService exitProtection,IAutoStartService autoStart,IAuthenticationService authentication):ObservableObject
+    ISystemEventStore events,IExitProtectionService exitProtection,IAutoStartService autoStart,IAuthenticationService authentication,CalendarDataViewModel calendarData):ObservableObject
 {
+    public CalendarDataViewModel CalendarData=>calendarData;
     public AdminSession Session=>session;
+    public bool IsCompanyMode=>!session.IsPersonal;
+    public string AccessDescription=>session.IsPersonal?"個人使用 · 管理員功能直接開放，不需密碼。":"公司使用 · 管理員功能須登入，固定有效 10 分鐘。";
     [ObservableProperty] private string logRetentionDaysText="30";
     [RelayCommand] private async Task SaveLogRetentionAsync()
     {
@@ -97,6 +100,7 @@ public partial class AdminViewModel(AdminSession session,IAdminSettingsStore sto
         var actor=session.Username;
         var old=previousActor;previousActor=actor;
         IsAuthenticated=actor is not null;AdminUsername=actor??"";OnPropertyChanged(nameof(IsSignedOut));
+        OnPropertyChanged(nameof(IsCompanyMode));OnPropertyChanged(nameof(AccessDescription));
         if(!IsAuthenticated)
         {
             Audit.Clear();Logs.Clear();Events.Clear();Message="已登出管理者模式。";
@@ -128,7 +132,7 @@ public partial class AdminViewModel(AdminSession session,IAdminSettingsStore sto
     public Task ChangeCredentialsAsync(string currentPassword,string newPassword)
         =>authentication.ChangeCredentialsAsync(currentPassword,AdminUsername,newPassword);
     private async Task RefreshExitPasswordModeAsync()
-        =>ExitPasswordModeLabel=await exitProtection.GetModeAsync()=="Dedicated"?"目前方式：專用結束密碼":"目前方式：管理員帳號與密碼";
+        =>ExitPasswordModeLabel=await exitProtection.GetModeAsync()=="Dedicated"?"目前方式：專用結束密碼":session.IsPersonal?"尚未設定專用結束密碼":"目前方式：管理員帳號與密碼";
     public async Task SaveExitPasswordRequirementAsync()
     {
         try

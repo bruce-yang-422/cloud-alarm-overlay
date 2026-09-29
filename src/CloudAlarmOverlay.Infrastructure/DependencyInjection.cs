@@ -12,6 +12,7 @@ public static class DependencyInjection
         services.AddSingleton<OpenMeteoWeatherClient>();
         services.AddSingleton<IWeatherService, WeatherService>();
         services.AddSingleton<ISheetCsvClient, SheetCsvClient>();
+        services.AddSingleton<ICalendarDataSource, GitHubCalendarDataSource>();
         services.AddSingleton<ISoundService, SoundService>();
         services.AddSingleton<IThemeService, ThemeService>();
         return services;

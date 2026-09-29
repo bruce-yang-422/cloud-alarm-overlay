@@ -10,12 +10,29 @@ namespace CloudAlarmOverlay.App.Views;
 public partial class AlarmWindow:Window
 {
     private bool allowClose;
+    private bool healthDocked;
     private readonly DispatcherTimer timer=new();
     private int remaining=10;
     private bool red;
     private readonly TaskCompletionSource<bool> completion=new(TaskCreationOptions.RunContinuationsAsynchronously);
     public Task<bool> Completion=>completion.Task;
     public int? SnoozeMinutes {get;private set;}
+    public void DockHealth(string side)
+    {
+        if (side is not ("Left" or "Center" or "Right")) throw new ArgumentException("健康提醒位置無效。",nameof(side));
+        if (!healthDocked) CloudAlarmOverlay.App.Services.SmallNotificationStack.Remove(this);
+        healthDocked=true; timer.Stop(); ShowActivated=false; Topmost=true;
+        var work=SystemParameters.WorkArea;
+        Width=work.Width*.30; Height=work.Height; Top=work.Top;
+        Left=side switch { "Left"=>work.Left, "Center"=>work.Left+(work.Width-Width)/2, _=>work.Right-Width };
+        var padding=Math.Min(24,Width*.06);
+        Frame.Padding=new Thickness(padding);
+        var available=Math.Max(0,Width-2*padding-8);
+        ConfirmButton.MinWidth=Math.Min(240,available); ConfirmButton.MaxWidth=Math.Min(340,available);
+        ConfirmButton.FontSize=Math.Clamp(Width*.035,18,24);
+        NoticeTitle.FontSize=Math.Clamp(Width*.055,28,42);
+        DescriptionText.FontSize=Math.Clamp(Width*.038,20,28);
+    }
     public AlarmWindow(AlarmViewModel vm,string level,int stackIndex=0,int flashMilliseconds=500,string colorMode="亮色",string colorScheme="依提醒等級")
     {
         InitializeComponent();DataContext=vm;
@@ -57,7 +74,7 @@ public partial class AlarmWindow:Window
             var movement=new TranslateTransform();CodeInput.RenderTransform=movement;
             movement.BeginAnimation(TranslateTransform.XProperty,new DoubleAnimation(-8,8,TimeSpan.FromMilliseconds(65)){AutoReverse=true,RepeatBehavior=new RepeatBehavior(3)});
         };
-        Loaded+=(_,_)=>{if(level is AlarmLevels.Low or AlarmLevels.Mid)CloudAlarmOverlay.App.Services.SmallNotificationStack.Add(this);if(level is AlarmLevels.Max or AlarmLevels.Low)timer.Start();if(vm.RequiresCode)CodeInput.Focus();};
+        Loaded+=(_,_)=>{if(!healthDocked && level is AlarmLevels.Low or AlarmLevels.Mid)CloudAlarmOverlay.App.Services.SmallNotificationStack.Add(this);if(!healthDocked && level is AlarmLevels.Max or AlarmLevels.Low)timer.Start();if(vm.RequiresCode)CodeInput.Focus();};
         Closing+=OnClosing;
         Closed+=(_,_)=>{CloudAlarmOverlay.App.Services.SmallNotificationStack.Remove(this);timer.Stop();completion.TrySetResult(false);};
         PreviewKeyDown+=(_,e)=>{if(e.Key is Key.Escape || (e.Key==Key.System && e.SystemKey==Key.F4))e.Handled=true;};

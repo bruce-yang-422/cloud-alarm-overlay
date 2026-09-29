@@ -32,6 +32,7 @@ public partial class App:Application
             var identity=host.Services.GetRequiredService<IDeviceIdentityService>();
             if(await identity.GetLocalAsync() is null && new IdentityWindow(identity,host.Services.GetRequiredService<IBackupRestoreService>()).ShowDialog()!=true)
             {await StopAsync();return;}
+            await identity.InitializeAccessAsync();
             var window=host.Services.GetRequiredService<MainWindow>();MainWindow=window;
             await host.Services.GetRequiredService<MainViewModel>().InitializeAsync();
             window.StartTray(host.Services.GetRequiredService<ChangeSignal>(),RequestExitAsync);

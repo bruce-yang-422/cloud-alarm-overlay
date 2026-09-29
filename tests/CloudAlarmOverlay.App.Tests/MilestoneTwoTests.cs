@@ -41,9 +41,9 @@ public sealed class MilestoneTwoTests
                 window=host.Services.GetRequiredService<MainWindow>();window.Show();window.UpdateLayout();
                 vm.PageIndex=5;Assert.Equal(0,vm.PageIndex);Assert.True(vm.Admin.IsSignedOut);
                 var navigation=(ItemsControl)window.FindName("PrimaryNavigation");
-                Assert.Equal(new[]{"首頁","我的任務","歷史紀錄","番茄鐘","倒數／正數","設定","管理者專區"},navigation.Items.Cast<NavigationItem>().Select(item=>item.Title));
+                Assert.Equal(new[]{"首頁","我的任務","倒數／正數","健康工具","番茄鐘","歷史紀錄","設定","管理者專區"},navigation.Items.Cast<NavigationItem>().Select(item=>item.Title));
                 var navButtons=Descendants<Button>(navigation).ToArray();
-                Assert.Equal(7,navButtons.Length);
+                Assert.Equal(8,navButtons.Length);
                 var builderNavigation=(ContentControl)window.FindName("TaskBuilderNavigation");
                 var builderButton=Assert.Single(Descendants<Button>(builderNavigation));
                 Assert.Equal(FontWeights.Normal,builderButton.FontWeight);

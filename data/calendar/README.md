@@ -1,0 +1,43 @@
+# 內建與 GitHub 日曆資料
+
+`SheetA_Holidays.json` 與 `SheetA_LunarCalendar.json` 複製自根目錄 `Sheet範例` 中對應的 CSV。CSV 的第一列是欄位名、第二列是中文說明，轉換時略過說明列。目前包含 2026–2027 年、730 筆農曆與 46 筆假日；未另外校訂 CSV 原始內容。
+
+重新產生：
+
+```powershell
+./scripts/convert-calendar-data.ps1 -Version '2026-2027.1'
+```
+
+兩份 JSON 都使用下列外層結構（欄位內容保持與 CSV 相同）：
+
+```json
+{
+  "schemaVersion": 1,
+  "kind": "Holidays",
+  "version": "2026-2027.1",
+  "from": "2026-01-01",
+  "to": "2027-12-31",
+  "entries": [
+    { "date": "2026-01-01", "type": "國定假日", "note": "元旦放假" }
+  ]
+}
+```
+
+農曆的 `kind` 為 `LunarCalendar`，每筆包含 `date`、`lunarDate`、整數 `lunarDay`、`solarTerm`。農曆必須涵蓋 `from` 至 `to` 的每一天；兩份檔案的版本與期間必須相同，日期不可重複。更新資料時增加版本，並將兩份檔案放在同一個 commit，避免使用者讀到不同版本。程式仍會驗證版本配對，失配時不套用。
+
+安裝包將 JSON 放在 `Data/Calendar/`，並在程式內嵌同一份 JSON；安裝後第一次啟動會自動存入本機 SQLite 的基礎日曆快取。再次啟動不清除資料；安裝包版本更新可替換舊的內建資料，已從 GitHub 更新的資料則保留。原 CSV 保留不變。
+
+在「管理者專區 → 日曆資料」設定更新：
+
+- 網路更新預設關閉，關閉時不會發送任何日曆更新請求。
+- 預填來源：`https://raw.githubusercontent.com/bruce-yang-422/cloud-alarm-overlay/main/data/calendar/SheetA_Holidays.json` 與同路徑的 `SheetA_LunarCalendar.json`。
+- 也接受 `https://github.com/.../blob/.../*.json`，儲存時轉成原始檔網址。只支援公開 HTTPS JSON，不帶 token、查詢參數或登入資訊。
+- 每天：本地日期每天第一次檢查；每週：以週一為起點；每月：以每月 1 日為起點。程式啟動後或持續執行時每分鐘檢查是否到期；關機期間不會執行，只在下次啟動補一次。
+- 手動更新：允許網路更新開啟後，只在按「立即更新」時下載。其他頻率也可手動重試。
+- 每個週期記錄一次自動嘗試，失敗不會每分鐘重試；保留舊資料，下一週期或手動重試。上次嘗試和成功時間會保存，重啟不重複下載。
+- 兩份檔案下載與驗證全部成功才原子替換，404、斷線、無效 JSON 或版本失配均不覆蓋原資料。
+- Sheet A 同日期資料優先於內建／GitHub 基礎資料。同步 Sheet A 不會刪除基礎資料，GitHub 更新也不會改寫公司假日／節氣資料。
+- 公司模式需管理員驗證才能修改來源、啟停更新及手動更新；個人模式直接開放。背景更新使用先前儲存的設定。
+- 此資料與更新設定屬本機管理設定，不透過一般備份或設定 JSON 匯入覆寫。
+
+這兩份檔案必須推送到 GitHub `main` 分支上的相同路徑後，預填網址才可下載；本機產生安裝包不等同於發布到 GitHub。

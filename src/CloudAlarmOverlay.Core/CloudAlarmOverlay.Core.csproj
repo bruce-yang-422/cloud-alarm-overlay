@@ -8,6 +8,7 @@
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Data/TaiwanWeatherLocations.json" />
+    <EmbeddedResource Include="../../data/calendar/*.json" LogicalName="CloudAlarmOverlay.Core.Data.Calendar.%(Filename)%(Extension)" />
   </ItemGroup>
 </Project>
 

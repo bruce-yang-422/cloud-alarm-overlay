@@ -7,5 +7,8 @@ public interface IDeviceIdentityService
 {
     Task<Device?> GetLocalAsync(CancellationToken cancellationToken = default);
     Task SetInitialIdentityAsync(string deviceId, string displayName, CancellationToken cancellationToken = default);
+    Task SetInitialIdentityAsync(string deviceId, string displayName, string usageMode, CancellationToken cancellationToken = default);
+    Task<string> GetUsageModeAsync(CancellationToken cancellationToken = default);
+    Task InitializeAccessAsync(CancellationToken cancellationToken = default);
 }
 

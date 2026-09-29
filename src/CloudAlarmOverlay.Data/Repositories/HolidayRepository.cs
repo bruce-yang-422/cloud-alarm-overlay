@@ -1,11 +1,16 @@
 using CloudAlarmOverlay.Core.Models;
 using CloudAlarmOverlay.Core.Repositories;
 using Dapper;
+using CloudAlarmOverlay.Core.Services;
 namespace CloudAlarmOverlay.Data.Repositories;
-internal sealed class HolidayRepository(Database db) : IHolidayRepository
+internal sealed class HolidayRepository(Database db,ICalendarDataStore calendar) : IHolidayRepository
 {
-    public Task<IReadOnlyList<Holiday>> GetAllAsync(CancellationToken cancellationToken = default)
-        => db.QueryAsync<Holiday>("SELECT * FROM Holidays;",ct:cancellationToken);
+    public async Task<IReadOnlyList<Holiday>> GetAllAsync(CancellationToken cancellationToken = default)
+    {
+        var sheet=await db.QueryAsync<Holiday>("SELECT * FROM Holidays;",ct:cancellationToken);
+        var baseline=await calendar.ReadAsync(cancellationToken);
+        return sheet.Concat((baseline.Holidays?.Entries??[]).Select(h=>h with{Source=baseline.Source})).GroupBy(h=>h.Date).Select(g=>g.First()).OrderBy(h=>h.Date).ToArray();
+    }
     public async Task ReplaceCacheAsync(IReadOnlyList<Holiday> holidays, CancellationToken cancellationToken = default)
     {
         await using var c = await db.OpenAsync(cancellationToken);

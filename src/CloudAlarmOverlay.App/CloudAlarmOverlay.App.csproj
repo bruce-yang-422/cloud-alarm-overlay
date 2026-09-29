@@ -12,6 +12,7 @@
       <_Parameter2>$(AppLastUpdated)</_Parameter2>
     </AssemblyAttribute>
     <Content Include="../CloudAlarmOverlay.Core/Data/TaiwanWeatherLocations.json" Link="Data/TaiwanWeatherLocations.json" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="../../data/calendar/*.json" Link="Data/Calendar/%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
     <Content Include="../CloudAlarmOverlay.Core/Data/README.md" Link="Data/WeatherLocations-README.md" CopyToOutputDirectory="PreserveNewest" />
     <Resource Include="Assets/Emoji/*.png" />
     <Content Include="Assets/Emoji/LICENSE.txt" CopyToOutputDirectory="PreserveNewest" />

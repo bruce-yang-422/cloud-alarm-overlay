@@ -19,6 +19,7 @@ public sealed class BackupRestoreService(Database db, IAuthenticationService aut
     public async Task RestoreAsync(string path, CancellationToken cancellationToken = default) => await RestoreAsync(path, false, null, cancellationToken);
     private async Task VerifyAsync(BackupCredentials? credentials, CancellationToken ct)
     {
+        if(session.IsPersonal){session.RequireAdmin();return;}
         if (credentials is null || !await authentication.AuthenticateAsync(credentials.Username, credentials.Password, ct))
             throw new UnauthorizedAccessException("請輸入正確的目前管理者帳號與密碼。");
     }

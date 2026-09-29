@@ -3,6 +3,7 @@
     <TargetFramework>net10.0-windows</TargetFramework>
   </PropertyGroup>
   <ItemGroup>
+    <InternalsVisibleTo Include="CloudAlarmOverlay.App.Tests" />
     <ProjectReference Include="../CloudAlarmOverlay.Core/CloudAlarmOverlay.Core.csproj" />
   </ItemGroup>
   <ItemGroup>

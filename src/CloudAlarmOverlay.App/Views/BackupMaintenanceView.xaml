@@ -2,8 +2,8 @@
 <UserControl.Resources><ResourceDictionary><ResourceDictionary.MergedDictionaries><ResourceDictionary Source="../Styles/LightTheme.xaml"/></ResourceDictionary.MergedDictionaries></ResourceDictionary></UserControl.Resources>
 <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled"><StackPanel>  <TextBlock Text="本機備份與還原" FontSize="18" FontWeight="SemiBold"/>
   <TextBlock Text="備份任務、個人設定、裝置身分及歷史。還原時重複任務保留本機版本。" TextWrapping="Wrap" Margin="0,8,0,8"/>
-  <CheckBox x:Name="IncludeAdmin" Content="備份包含管理者帳密" Style="{StaticResource PillSwitch}"/>
-  <WrapPanel><StackPanel Margin="0,0,10,0"><TextBlock Text="目前管理者帳號"/><TextBox Height="34" VerticalContentAlignment="Center" x:Name="AdminName" Width="160" ToolTip="目前管理者帳號（包含／還原帳密時必填）" AutomationProperties.Name="驗證管理者帳號"/>
+  <CheckBox x:Name="IncludeAdmin" Content="備份包含管理者帳密" Style="{StaticResource PillSwitch}" Visibility="{Binding IsCompanyMode,Converter={StaticResource BoolVisibility}}"/>
+  <WrapPanel Visibility="{Binding IsCompanyMode,Converter={StaticResource BoolVisibility}}"><StackPanel Margin="0,0,10,0"><TextBlock Text="目前管理者帳號"/><TextBox Height="34" VerticalContentAlignment="Center" x:Name="AdminName" Width="160" ToolTip="目前管理者帳號（包含／還原帳密時必填）" AutomationProperties.Name="驗證管理者帳號"/>
    </StackPanel><StackPanel><TextBlock Text="目前管理者密碼"/><PasswordBox x:Name="AdminPassword" Width="160" Margin="0,4,0,8" ToolTip="目前管理者密碼" AutomationProperties.Name="驗證管理者密碼"/>
   </StackPanel></WrapPanel>
   <WrapPanel><Button Content="建立備份" Click="ExportBackup"/><Button Content="匯入備份" Click="ImportBackup"/></WrapPanel>

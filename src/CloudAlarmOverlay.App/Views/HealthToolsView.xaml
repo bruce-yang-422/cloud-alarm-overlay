@@ -1,0 +1,100 @@
+<UserControl x:Class="CloudAlarmOverlay.App.Views.HealthToolsView"
+ xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+ xmlns:adaptive="clr-namespace:CloudAlarmOverlay.App.Styles" xmlns:local="clr-namespace:CloudAlarmOverlay.App.Views" xmlns:controls="clr-namespace:CloudAlarmOverlay.App.Controls">
+ <UserControl.Resources>
+  <ResourceDictionary>
+   <ResourceDictionary.MergedDictionaries><ResourceDictionary Source="../Styles/LightTheme.xaml"/><ResourceDictionary Source="../Styles/HealthToolsTabs.xaml"/></ResourceDictionary.MergedDictionaries>
+   <local:HealthColumnsConverter x:Key="HealthColumns"/>
+   <local:HealthEmptyVisibilityConverter x:Key="WhenFalse"/>
+   <Style x:Key="MetricValue" TargetType="TextBlock"><Setter Property="FontSize" Value="28"/><Setter Property="FontWeight" Value="SemiBold"/><Setter Property="Margin" Value="0,7,0,0"/><Setter Property="Foreground" Value="{adaptive:AdaptiveBrush #16243E}"/></Style>
+   <Style x:Key="SectionTitle" TargetType="TextBlock"><Setter Property="FontSize" Value="16"/><Setter Property="FontWeight" Value="SemiBold"/><Setter Property="Margin" Value="0,0,0,12"/><Setter Property="Foreground" Value="{adaptive:AdaptiveBrush #16243E}"/></Style>
+  </ResourceDictionary>
+ </UserControl.Resources>
+ <Grid>
+  <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
+  <DockPanel Margin="0,0,0,16">
+   <WrapPanel DockPanel.Dock="Right" VerticalAlignment="Top"><Button Content="{Binding PauseLabel}" Command="{Binding TogglePauseCommand}"/><Button Content="共同設定" Command="{Binding OpenSettingsCommand}"/></WrapPanel>
+   <StackPanel><TextBlock Text="健康工具" Style="{StaticResource Heading}"/><TextBlock Text="讓工作與休息保持規律" Style="{StaticResource Muted}"/></StackPanel>
+  </DockPanel>
+  <TabControl x:Name="HealthTabs" Grid.Row="1" SelectedIndex="{Binding SelectedTabIndex}" Style="{StaticResource HealthSegmentedTabs}">
+   <TabItem Header="首頁">
+    <ScrollViewer x:Name="PageScroll" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+     <StackPanel Margin="16,18,16,16">
+    <Border Background="{adaptive:AdaptiveBrush #E6F0FF}" CornerRadius="14" Padding="18,15" Margin="0,0,0,16">
+     <Grid><Grid.ColumnDefinitions><ColumnDefinition Width="42"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+      <TextBlock Text="&#xE916;" FontFamily="Segoe MDL2 Assets" FontSize="26" Foreground="{adaptive:AdaptiveBrush #0766FF}"/>
+      <StackPanel Grid.Column="1"><TextBlock Foreground="{adaptive:AdaptiveBrush #16243E}" Text="{Binding BannerTitle}" FontSize="16" FontWeight="SemiBold" TextWrapping="Wrap"/><TextBlock Text="{Binding BannerDetail}" Style="{StaticResource Muted}" Margin="0,5,0,0"/></StackPanel>
+     </Grid>
+    </Border>
+    <UniformGrid Columns="4" Margin="0,0,-8,10">
+     <Border Style="{StaticResource Card}" Margin="0,0,8,0"><StackPanel><TextBlock Text="啟用工具" Style="{StaticResource Muted}"/><TextBlock Text="{Binding EnabledCount,StringFormat={}{0} / 4}" Style="{StaticResource MetricValue}"/></StackPanel></Border>
+     <Border Style="{StaticResource Card}" Margin="0,0,8,0" ToolTip="一次合併通知算一次；各工具分別計算提醒項目。"><StackPanel><TextBlock Text="今日通知" Style="{StaticResource Muted}"/><TextBlock Text="{Binding TodayNotifications,StringFormat={}{0} 次}" Style="{StaticResource MetricValue}"/><TextBlock Text="{Binding TodayItems,StringFormat=共 {0} 個提醒項目}" Style="{StaticResource Muted}" FontSize="11"/></StackPanel></Border>
+     <Border Style="{StaticResource Card}" Margin="0,0,8,0"><StackPanel><TextBlock Text="等待提醒" Style="{StaticResource Muted}"/><TextBlock Text="{Binding PendingCount,StringFormat={}{0} 項}" Style="{StaticResource MetricValue}"/></StackPanel></Border>
+     <Border Style="{StaticResource Card}" Margin="0,0,8,0" ToolTip="預計時間；勿擾、鎖定與時段限制優先。"><StackPanel><TextBlock Text="下次預計提醒" Style="{StaticResource Muted}"/><TextBlock Foreground="{adaptive:AdaptiveBrush #16243E}" Text="{Binding NextReminder}" FontSize="23" FontWeight="SemiBold" Margin="0,9,0,0" TextWrapping="Wrap"/></StackPanel></Border>
+    </UniformGrid>
+    <ItemsControl x:Name="ToolCards" ItemsSource="{Binding Cards}" Margin="-4,0,-4,12">
+     <ItemsControl.ItemsPanel><ItemsPanelTemplate><UniformGrid Columns="{Binding ActualWidth,RelativeSource={RelativeSource AncestorType=ItemsControl},Converter={StaticResource HealthColumns}}"/></ItemsPanelTemplate></ItemsControl.ItemsPanel>
+     <ItemsControl.ItemTemplate><DataTemplate>
+      <Button Command="{Binding EditCommand}" HorizontalContentAlignment="Stretch" Padding="16" Margin="4" AutomationProperties.Name="{Binding Name,StringFormat=開啟{0}分頁}">
+       <Grid><Grid.ColumnDefinitions><ColumnDefinition Width="40"/><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+        <TextBlock Text="{Binding Icon}" FontFamily="Segoe UI Emoji" FontSize="24" Foreground="{Binding Accent}"/>
+        <StackPanel Grid.Column="1"><TextBlock Text="{Binding Name}" FontSize="16" FontWeight="SemiBold" Foreground="{adaptive:AdaptiveBrush #16243E}"/><TextBlock Text="{Binding Status}" Style="{StaticResource Muted}" FontSize="12"/><TextBlock Text="{Binding Today}" Style="{StaticResource Muted}" FontSize="11"/></StackPanel>
+        <TextBlock Grid.Column="2" Text="開啟 ›" Foreground="{adaptive:AdaptiveBrush #0766FF}" Margin="12,0,0,0"/>
+       </Grid>
+      </Button>
+     </DataTemplate></ItemsControl.ItemTemplate>
+    </ItemsControl>
+    <Grid>
+     <Grid.ColumnDefinitions><ColumnDefinition Width="3*"/><ColumnDefinition Width="2*"/></Grid.ColumnDefinitions>
+     <Border Style="{StaticResource Card}" Margin="0,0,10,0" Padding="18">
+      <StackPanel><DockPanel><Button DockPanel.Dock="Right" Content="展開／收合" Command="{Binding ToggleHistoryCommand}" FontSize="12" Margin="0"/><TextBlock Text="今日提醒時間軸" Style="{StaticResource SectionTitle}"/></DockPanel>
+       <TextBlock Text="尚無提醒紀錄，啟用工具後開始累積。" Style="{StaticResource Muted}" Margin="0,18"><TextBlock.Visibility><Binding Path="HasHistory"><Binding.Converter><local:HealthEmptyVisibilityConverter/></Binding.Converter></Binding></TextBlock.Visibility></TextBlock>
+       <ItemsControl ItemsSource="{Binding Timeline}"><ItemsControl.ItemTemplate><DataTemplate>
+        <Border BorderBrush="{adaptive:AdaptiveBrush #E8EDF4}" BorderThickness="0,0,0,1" Padding="0,10">
+         <StackPanel><DockPanel><TextBlock DockPanel.Dock="Right" Text="{Binding Status}" FontSize="12" Foreground="{adaptive:AdaptiveBrush #697C99}"/><TextBlock Foreground="{adaptive:AdaptiveBrush #16243E}" Text="{Binding Name}" FontWeight="SemiBold"/></DockPanel><TextBlock Text="{Binding Time}" Style="{StaticResource Muted}" FontSize="11" Margin="0,3,0,0"/></StackPanel>
+        </Border>
+       </DataTemplate></ItemsControl.ItemTemplate></ItemsControl>
+      </StackPanel>
+     </Border>
+     <Border Grid.Column="1" Style="{StaticResource Card}" Margin="0" Padding="18">
+      <StackPanel><TextBlock Text="最近 7 天提醒趨勢" Style="{StaticResource SectionTitle}"/><TextBlock Text="按提醒項目計算，非活動完成次數" Style="{StaticResource Muted}" FontSize="11"/>
+       <ItemsControl ItemsSource="{Binding Week}" Margin="0,18,0,8"><ItemsControl.ItemsPanel><ItemsPanelTemplate><UniformGrid Columns="7"/></ItemsPanelTemplate></ItemsControl.ItemsPanel><ItemsControl.ItemTemplate><DataTemplate>
+        <StackPanel ToolTip="{Binding Detail}"><TextBlock Foreground="{adaptive:AdaptiveBrush #16243E}" Text="{Binding Total}" FontSize="11" HorizontalAlignment="Center" Margin="0,0,0,5"/><Grid Height="112"><StackPanel VerticalAlignment="Bottom" Margin="5,0"><Border Height="{Binding StretchHeight}" Background="#D89231"/><Border Height="{Binding ScreenHeight}" Background="#8C70D4"/><Border Height="{Binding SittingHeight}" Background="#39A67F"/><Border Height="{Binding WaterHeight}" Background="#309EDE"/></StackPanel></Grid><TextBlock Foreground="{adaptive:AdaptiveBrush #16243E}" Text="{Binding Label}" FontSize="10" HorizontalAlignment="Center" Margin="0,7,0,0"/></StackPanel>
+       </DataTemplate></ItemsControl.ItemTemplate></ItemsControl>
+       <TextBlock Text="啟用後開始累積趨勢" Style="{StaticResource Muted}" FontSize="12" HorizontalAlignment="Center"><TextBlock.Visibility><Binding Path="HasWeeklyHistory"><Binding.Converter><local:HealthEmptyVisibilityConverter/></Binding.Converter></Binding></TextBlock.Visibility></TextBlock>
+       <WrapPanel Margin="0,16,0,0"><TextBlock Text="● 喝水" Foreground="#309EDE" Margin="0,0,12,8" FontSize="12"/><TextBlock Text="● 久坐" Foreground="#39A67F" Margin="0,0,12,8" FontSize="12"/><TextBlock Text="● 螢幕休息" Foreground="#8C70D4" Margin="0,0,12,8" FontSize="12"/><TextBlock Text="● 伸展" Foreground="#D89231" FontSize="12"/></WrapPanel>
+      </StackPanel>
+     </Border>
+    </Grid>
+
+     </StackPanel>
+    </ScrollViewer>
+   </TabItem>
+   <TabItem Header="喝水"><local:HealthToolView DataContext="{Binding Cards[0]}"/></TabItem>
+   <TabItem Header="久坐"><local:HealthToolView DataContext="{Binding Cards[1]}"/></TabItem>
+   <TabItem Header="螢幕休息"><local:HealthToolView DataContext="{Binding Cards[2]}"/></TabItem>
+   <TabItem Header="伸展"><local:HealthToolView DataContext="{Binding Cards[3]}"/></TabItem>
+  </TabControl>
+  <TextBlock Grid.Row="2" Text="{Binding Message}" Style="{StaticResource Muted}" Margin="0,6,0,0"/>
+  <Grid Grid.RowSpan="3" Visibility="{Binding SettingsOpen,Converter={StaticResource BoolVisibility}}" Background="#50000000">
+   <Border Width="360" MaxWidth="{Binding ActualWidth,RelativeSource={RelativeSource AncestorType=UserControl}}" HorizontalAlignment="Right" Background="{adaptive:AdaptiveBrush #FFFFFF}" Padding="22" BorderBrush="{adaptive:AdaptiveBrush #DEE6F1}" BorderThickness="1,0,0,0">
+    <DockPanel>
+     <DockPanel DockPanel.Dock="Top" Margin="0,0,0,20"><Button DockPanel.Dock="Right" Content="關閉" Command="{Binding CloseSettingsCommand}"/><TextBlock Text="共同設定" Style="{StaticResource Heading}"/></DockPanel>
+     <StackPanel DockPanel.Dock="Bottom"><TextBlock Text="{Binding Message}" TextWrapping="Wrap" Foreground="{adaptive:AdaptiveBrush #BA3D45}" Margin="0,10"/><StackPanel Orientation="Horizontal" HorizontalAlignment="Right"><Button Content="取消" Command="{Binding CloseSettingsCommand}"/><Button Content="儲存" Command="{Binding SaveSettingsCommand}" Style="{StaticResource Primary}"/></StackPanel></StackPanel>
+     <ScrollViewer VerticalScrollBarVisibility="Auto"><StackPanel>
+        <TextBlock Text="提醒顯示位置" Style="{StaticResource SectionTitle}"/>
+        <controls:SlidingSegmentedControl x:Name="HealthNotificationSide" ItemsSource="{Binding NotificationPositions}" SelectedItem="{Binding NotificationPosition}" Style="{StaticResource PillSlidingSegmentedControl}" Height="42" AutomationProperties.Name="健康提醒顯示位置"/>
+        <TextBlock Text="預設右邊，可選左邊、置中或右邊。置頂顯示，寬度為工作區的 30%、高度填滿工作區。按「確定」才關閉，不會自動消失。" Style="{StaticResource Muted}" Margin="0,12,0,0"/>
+        <Separator Margin="0,20"/>
+        <TextBlock Text="番茄鐘協調模式" Style="{StaticResource SectionTitle}"/>
+        <controls:SlidingSegmentedControl x:Name="PomodoroCoordinationMode" ItemsSource="{Binding CoordinationModes}" SelectedItem="{Binding CoordinationMode}" Style="{StaticResource PillSlidingSegmentedControl}" Height="42" AutomationProperties.Name="番茄鐘協調模式"/>
+        <TextBlock Text="自動對齊：首次番茄鐘要求休息時，一次提醒已啟用且在有效時段內的健康工具；該次休息結束後重新起算各自週期。每次番茄鐘工作階段只對齊一次，重設番茄鐘後可再次對齊。&#10;&#10;覆蓋：番茄鐘專注中仍依各工具排程提醒，不改變番茄鐘計時。&#10;&#10;延後（預設）：到期項目延至休息時提醒，保留原始排程；因專注最多延後 30 分鐘。" Style="{StaticResource Muted}" Margin="0,12,0,0"/>
+        <Separator Margin="0,20"/><TextBlock Text="通知規則" Style="{StaticResource SectionTitle}"/>
+        <TextBlock Text="多項提醒自動合併；同類提醒顯示後 5 分鐘內不重複彈出。&#10;&#10;沿用全域勿擾時段。健康通知不播放音效，亦不改變番茄鐘計時。&#10;&#10;「確定」只表示閱讀確認，不代表完成健康活動。" Style="{StaticResource Muted}"/>
+
+     </StackPanel></ScrollViewer>
+    </DockPanel>
+   </Border>
+  </Grid>
+ </Grid>
+</UserControl>

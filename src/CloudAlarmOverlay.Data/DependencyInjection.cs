@@ -10,6 +10,7 @@ public static class DependencyInjection
     public static IServiceCollection AddData(this IServiceCollection services)
     {
         services.AddSingleton<Database>();
+        services.AddSingleton<ICalendarDataStore, CalendarDataStore>();
         services.AddSingleton<IBackupRestoreService, BackupRestoreService>();
         services.AddSingleton<ISystemEventStore, SystemEventStore>();
         services.AddSingleton<IAdminSettingsStore, AdminSettingsStore>();

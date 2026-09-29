@@ -6,7 +6,7 @@ using CloudAlarmOverlay.Core.Services;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 namespace CloudAlarmOverlay.App.Services;
-public sealed class PomodoroWorker(IPomodoroService timer,ISoundService sound,ILogger<PomodoroWorker> logger,NotificationPreferences preferences):BackgroundService
+public sealed class PomodoroWorker(IPomodoroService timer,ISoundService sound,ILogger<PomodoroWorker> logger,NotificationPreferences preferences,HealthToolsService health,HealthNotificationCoordinator healthNotices):BackgroundService
 {
     private AlarmWindow? notification;
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
@@ -20,9 +20,19 @@ public sealed class PomodoroWorker(IPomodoroService timer,ISoundService sound,IL
                 await timer.TickAsync(stoppingToken);
                 if(Application.Current is {} app)
                 {
-                    var mode=timer.State.Status=="AwaitingConfirmation"?await preferences.ColorModeAsync(stoppingToken):"亮色";
-                    var scheme=timer.State.Status=="AwaitingConfirmation"?await preferences.ColorSchemeAsync(stoppingToken):"依提醒等級";
+                    var mode=await preferences.ColorModeAsync(stoppingToken);
+                    var scheme=await preferences.ColorSchemeAsync(stoppingToken);
                     await app.Dispatcher.InvokeAsync(()=>UpdateNotification(stoppingToken,mode,scheme));
+                    try
+                    {
+                        var unavailable=DesktopAvailability.IsUnavailable();
+                        await health.ObservePomodoroAsync(timer.State,stoppingToken);
+                        await health.TickAsync(unavailable,stoppingToken);
+                        var quiet=await preferences.IsQuietAsync(AlarmLevels.Low,health.Now,stoppingToken);
+                        await (await app.Dispatcher.InvokeAsync(()=>healthNotices.UpdateAsync(timer.State,notification,quiet,unavailable,mode,scheme,stoppingToken)));
+                    }
+                    catch(OperationCanceledException) when(stoppingToken.IsCancellationRequested){throw;}
+                    catch(Exception ex){logger.LogError(ex,"健康提醒更新失敗");}
                 }
             }
             catch(OperationCanceledException) when(stoppingToken.IsCancellationRequested){break;}
@@ -56,7 +66,7 @@ public sealed class PomodoroWorker(IPomodoroService timer,ISoundService sound,IL
     public override async Task StopAsync(CancellationToken cancellationToken)
     {
         await base.StopAsync(cancellationToken);
-        if(Application.Current is {} app)await app.Dispatcher.InvokeAsync(()=>{notification?.Finish(false);notification=null;});
+        if(Application.Current is {} app)await app.Dispatcher.InvokeAsync(()=>{healthNotices.Close();notification?.Finish(false);notification=null;});
         await timer.ResetAsync(cancellationToken);
     }
 }

@@ -576,6 +576,9 @@
         <TabItem Header="倒數日／時間" xmlns:views="clr-namespace:CloudAlarmOverlay.App.Views">
           <views:CountdownsView DataContext="{Binding Countdowns}"/>
         </TabItem>
+        <TabItem Header="健康工具" xmlns:views="clr-namespace:CloudAlarmOverlay.App.Views">
+          <views:HealthToolsView DataContext="{Binding HealthTools}"/>
+        </TabItem>
       </TabControl>
     </DockPanel>
   </Grid>

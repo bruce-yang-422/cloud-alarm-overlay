@@ -10,6 +10,8 @@ public static class DependencyInjection
         services.AddSingleton(TimeProvider.System);
         services.AddSingleton<AdminSession>();
         services.AddSingleton<NotificationPreferences>();
+        services.AddSingleton<HealthToolsService>();
+        services.AddSingleton<CalendarDataService>();
         services.AddSingleton<ChangeSignal>();
         services.AddSingleton<SyncConfiguration>();
         services.AddSingleton<RuntimeState>();

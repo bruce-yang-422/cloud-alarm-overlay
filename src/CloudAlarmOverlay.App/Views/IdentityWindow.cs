@@ -24,6 +24,8 @@ public partial class IdentityWindow : Window
                 var preview=await backups.InspectAsync(picker.FileName);
                 if(new BackupImportWindow(backups,picker.FileName,preview){Owner=this}.ShowDialog()!=true)return;
                 viewModel.DeviceId=preview.DeviceId;viewModel.DisplayName=preview.DisplayName??"";
+                viewModel.UsageSelection=await identity.GetUsageModeAsync()==CloudAlarmOverlay.Core.Models.UsageModes.Personal?"個人使用":"公司使用";
+                UsageModeSelector.IsEnabled=false;
                 viewModel.Error="備份已還原，請確認身分後按開始使用。";
                 DeviceCode.IsEnabled=false;DisplayNameInput.IsEnabled=false;
                 StartButton.Command=null;StartButton.Click+=(_,_)=>DialogResult=true;

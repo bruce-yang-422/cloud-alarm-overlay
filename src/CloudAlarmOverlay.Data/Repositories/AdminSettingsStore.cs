@@ -39,6 +39,8 @@ internal sealed class AdminSettingsStore(Database db,AdminSession session):IAdmi
                 new {actor,action=setting.Key,oldValue=setting.Key is "ExitPasswordHash" or "SyncOptions" or "UpdateManifestUrl"?(old?.Value is null?null:"已設定"):old is null?null:JsonSerializer.Serialize(old),newValue=setting.Key is "ExitPasswordHash" or "SyncOptions" or "UpdateManifestUrl"?(setting.Value is null?"已清除":"已設定"):JsonSerializer.Serialize(setting),at=DateTime.Now.ToString("O")},tx,cancellationToken:ct));
         }
         var exitMode=await c.ExecuteScalarAsync<string?>(new CommandDefinition("SELECT Value FROM Settings WHERE Key='ExitPasswordMode';",transaction:tx,cancellationToken:ct));
+        if(session.IsPersonal && exitMode!="Dedicated" && await c.ExecuteScalarAsync<string?>(new CommandDefinition("SELECT Value FROM Settings WHERE Key='ExitPasswordRequired';",transaction:tx,cancellationToken:ct))!="false")
+            throw new InvalidOperationException("個人使用請先設定專用結束密碼，再開啟密碼保護。");
         if(exitMode=="Dedicated" && string.IsNullOrWhiteSpace(await c.ExecuteScalarAsync<string?>(new CommandDefinition("SELECT Value FROM Settings WHERE Key='ExitPasswordHash';",transaction:tx,cancellationToken:ct))))
             throw new InvalidOperationException("使用專用結束密碼前必須先設定密碼。");
         session.RequireAdmin();

@@ -16,6 +16,8 @@ internal sealed class ExitProtectionService(AdminSession session,ISettingsReposi
     public async Task SetRequiredAsync(bool required,CancellationToken ct=default)
     {
         session.RequireAdmin();
+        if(required && session.IsPersonal && await GetModeAsync(ct)!=Dedicated)
+            throw new InvalidOperationException("個人使用請先設定專用結束密碼，再開啟密碼保護。");
         await store.SaveAsync([new Setting{Key="ExitPasswordRequired",Value=required?"true":"false"}],ct);
     }
 
@@ -39,6 +41,7 @@ internal sealed class ExitProtectionService(AdminSession session,ISettingsReposi
     public async Task UseAdministratorPasswordAsync(CancellationToken ct=default)
     {
         session.RequireAdmin();
+        if(session.IsPersonal)throw new InvalidOperationException("個人使用免管理員密碼，請使用專用結束密碼。");
         await store.SaveAsync([
             new Setting{Key="ExitPasswordMode",Value=Administrator},
             new Setting{Key="ExitPasswordHash",Value=null}

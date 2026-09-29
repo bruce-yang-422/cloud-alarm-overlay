@@ -9,8 +9,9 @@ using CloudAlarmOverlay.Core.Services;
 namespace CloudAlarmOverlay.App.ViewModels;
 public partial class MainViewModel(ITaskRepository tasks,ITaskService taskService,ITaskSchedulingService scheduling,
     IAckLogRepository history,ISyncLogRepository syncLogs,ISyncService sync,SyncConfiguration configuration,
-    IDeviceIdentityService identity,IAlarmPresenter presenter,IUserDialogs dialogs,ILunarCalendarRepository lunar,AdminViewModel admin,PreferencesViewModel preferences,PomodoroViewModel pomodoro,IAlarmHeartbeat heartbeat,CountdownsViewModel countdowns,ITaskHomePinRepository taskHomePins,ChangeSignal changes,IBrowserLauncher browser):ObservableObject
+    IDeviceIdentityService identity,IAlarmPresenter presenter,IUserDialogs dialogs,ILunarCalendarRepository lunar,AdminViewModel admin,PreferencesViewModel preferences,PomodoroViewModel pomodoro,IAlarmHeartbeat heartbeat,CountdownsViewModel countdowns,ITaskHomePinRepository taskHomePins,ChangeSignal changes,IBrowserLauncher browser,HealthToolsViewModel healthTools):ObservableObject
 {
+    public HealthToolsViewModel HealthTools=>healthTools;
     public PomodoroViewModel Pomodoro=>pomodoro;
     public CountdownsViewModel Countdowns=>countdowns;
     public ObservableCollection<CountdownRow> HomePins {get;}=[];
@@ -65,6 +66,7 @@ public partial class MainViewModel(ITaskRepository tasks,ITaskService taskServic
     public PreferencesViewModel Preferences=>preferences;
     partial void OnPageIndexChanged(int value)
     {
+        if(value==7)HealthTools.SelectedTabIndex=0;
         if(value==5&&!Admin.Session.IsAuthenticated){PageIndex=0;return;}
         NavigationIndex=value;
         foreach(var item in NavigationItems)item.IsSelected=item.PageIndex==value;
@@ -82,13 +84,13 @@ public partial class MainViewModel(ITaskRepository tasks,ITaskService taskServic
         PageIndex=value;
     }
     public string Title=>"Cloud Alarm Overlay";
-    public string[] Pages {get;}=["首頁","我的任務","歷史紀錄","番茄鐘","設定","管理者專區","倒數／正數"];
+    public string[] Pages {get;}=["首頁","我的任務","歷史紀錄","番茄鐘","設定","管理者專區","倒數／正數","健康工具"];
     public NavigationItem TaskBuilderNavigationItem {get;} = new("任務產生器", "\uE943", -1);
     public NavigationItem[] NavigationItems {get;} =
     [
         new("首頁", "\uE80F", 0), new("我的任務", "\uE8FD", 1),
-        new("歷史紀錄", "\uE81C", 2), new("番茄鐘", "\uE916", 3),
-        new("倒數／正數", "\uE823", 6),
+        new("倒數／正數", "\uE823", 6), new("健康工具", "\uE95E", 7),
+        new("番茄鐘", "\uE916", 3), new("歷史紀錄", "\uE81C", 2),
         new("設定", "\uE713", 4),
         new("管理者專區", "\uE72E", 5)
     ];
@@ -247,6 +249,7 @@ public partial class MainViewModel(ITaskRepository tasks,ITaskService taskServic
     partial void OnHistorySearchChanged(string value)=>FilterHistory();
     public async Task InitializeAsync()
     {
+        await Admin.SessionChangedAsync();
         await Preferences.LoadAsync();
         await Pomodoro.LoadAsync();
         var options=await configuration.LoadAsync();

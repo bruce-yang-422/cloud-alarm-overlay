@@ -10,8 +10,8 @@
  </Style>
 </ResourceDictionary></UserControl.Resources>
  <Grid IsEnabled="{Binding Admin.IsAuthenticated}"><Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="*"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
- <DockPanel><Button DockPanel.Dock="Right" Content="登出管理者" Command="{Binding Admin.LogoutCommand}" HorizontalAlignment="Right" VerticalAlignment="Top" Margin="12,0,0,0"/>
-  <StackPanel><TextBlock Text="管理者專區" Style="{StaticResource Heading}"/><TextBlock Text="管理這台電腦的同步來源、通知設定、紀錄及備份還原。" Style="{StaticResource Muted}" Margin="0,0,0,12"/></StackPanel>
+ <DockPanel><Button DockPanel.Dock="Right" Content="登出管理者" Command="{Binding Admin.LogoutCommand}" Visibility="{Binding Admin.IsCompanyMode,Converter={StaticResource BoolVisibility}}" HorizontalAlignment="Right" VerticalAlignment="Top" Margin="12,0,0,0"/>
+  <StackPanel><TextBlock Text="管理者專區" Style="{StaticResource Heading}"/><TextBlock Text="{Binding Admin.AccessDescription}" Style="{StaticResource Muted}" Margin="0,0,0,12"/></StackPanel>
  </DockPanel>
  <WrapPanel Grid.Row="1" Margin="0,0,0,16" Visibility="{Binding Admin.ShowsLogFilter,Converter={StaticResource BoolVisibility}}">
  <TextBlock Text="查詢日期" VerticalAlignment="Center" Margin="0,0,8,0"/>
@@ -115,7 +115,7 @@
    <Button Content="儲存保留天數" Command="{Binding SaveLogRetentionCommand}" Margin="10,0,0,0"/>
   </WrapPanel>
  </StackPanel></Border>
- <Border Style="{StaticResource Card}"><StackPanel>
+ <Border Style="{StaticResource Card}" Visibility="{Binding IsCompanyMode,Converter={StaticResource BoolVisibility}}"><StackPanel>
   <TextBlock Text="管理者帳號與密碼" FontSize="20" FontWeight="SemiBold"/>
   <TextBlock Text="輸入目前密碼驗證。新密碼留空可只修改帳號；儲存後需重新登入。" Style="{StaticResource Muted}" TextWrapping="Wrap" Margin="0,6,0,12"/>
   <WrapPanel>
@@ -151,12 +151,12 @@
  <Border Style="{StaticResource Card}"><StackPanel>
   <TextBlock Text="結束程式密碼保護" FontSize="20" FontWeight="SemiBold"/>
   <CheckBox Content="結束程式時要求密碼" IsChecked="{Binding ExitPasswordRequired}" Click="ToggleExitPasswordRequirement" Style="{StaticResource PillSwitch}" Margin="0,10,0,4"/>
-  <TextBlock Text="開啟時，從系統匣結束程式須驗證；可使用管理員帳密或獨立的結束密碼。" Style="{StaticResource Muted}" Margin="0,0,0,10"/>
+  <TextBlock Text="開啟時，從系統匣結束程式須驗證。個人使用請先設定專用結束密碼；公司使用亦可使用管理員帳密。" Style="{StaticResource Muted}" Margin="0,0,0,10"/>
   <TextBlock Text="{Binding ExitPasswordModeLabel}" FontWeight="SemiBold" Margin="0,0,0,10"/>
   <WrapPanel><StackPanel Margin="0,0,12,0"><TextBlock Text="新結束密碼（8–128 字）"/><PasswordBox x:Name="ExitPassword" Width="220" MaxLength="128" AutomationProperties.Name="新結束程式密碼"/></StackPanel>
    <StackPanel><TextBlock Text="再次輸入新密碼"/><PasswordBox x:Name="ExitPasswordConfirm" Width="220" MaxLength="128" AutomationProperties.Name="確認結束程式密碼"/></StackPanel></WrapPanel>
   <TextBlock Text="忘記專用密碼時，登入管理員後直接在此重設，不需要輸入舊的結束密碼。" Style="{StaticResource Muted}" Margin="0,8,0,10"/>
-  <WrapPanel><Button Content="設定／重設專用密碼" Click="SetExitPassword" Style="{StaticResource Primary}"/><Button Content="改用管理員帳密" Click="UseAdminExitPassword"/></WrapPanel>
+  <WrapPanel><Button Content="設定／重設專用密碼" Click="SetExitPassword" Style="{StaticResource Primary}"/><Button Content="改用管理員帳密" Click="UseAdminExitPassword" Visibility="{Binding IsCompanyMode,Converter={StaticResource BoolVisibility}}"/></WrapPanel>
  </StackPanel></Border>
  </StackPanel></ScrollViewer></TabItem>
  <TabItem Header="系統紀錄"><Grid><Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/></Grid.RowDefinitions>
@@ -186,6 +186,7 @@
  <DataGridTextColumn Header="舊值" Binding="{Binding OldValue}" Width="*"/><DataGridTextColumn Header="新值" Binding="{Binding NewValue}" Width="*"/>
  </DataGrid.Columns></DataGrid></DockPanel></TabItem>
 <TabItem Header="備份與還原" xmlns:views="clr-namespace:CloudAlarmOverlay.App.Views"><views:BackupMaintenanceView DataContext="{Binding Preferences.Maintenance}"/></TabItem>
+<TabItem Header="日曆資料" xmlns:views="clr-namespace:CloudAlarmOverlay.App.Views"><views:CalendarDataView DataContext="{Binding Admin.CalendarData}"/></TabItem>
  </TabControl>
  <ScrollViewer Grid.Row="3" VerticalScrollBarVisibility="Auto" MaxHeight="100"><TextBlock Text="{Binding Admin.Message}" TextWrapping="Wrap" Foreground="{adaptive:AdaptiveBrush #3664A0}" Margin="0,12"/></ScrollViewer>
  </Grid>
