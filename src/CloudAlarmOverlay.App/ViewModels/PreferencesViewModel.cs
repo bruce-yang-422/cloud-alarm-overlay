@@ -7,9 +7,12 @@ using CloudAlarmOverlay.Core.Models;
 using CloudAlarmOverlay.Core.Repositories;
 using CloudAlarmOverlay.Core.Services;
 namespace CloudAlarmOverlay.App.ViewModels;
-public partial class PreferencesViewModel(ISettingsRepository settings,NotificationPreferences preferences,ISoundService sound,CloudAlarmOverlay.App.Services.EmojiLibrary emojis,MaintenanceViewModel maintenance,ChangeSignal changes,WeatherViewModel? weather=null):ObservableObject
+public partial class PreferencesViewModel(ISettingsRepository settings,NotificationPreferences preferences,ISoundService sound,CloudAlarmOverlay.App.Services.EmojiLibrary emojis,MaintenanceViewModel maintenance,ChangeSignal changes,WeatherViewModel? weather=null,GoogleWorkspaceViewModel? google=null):ObservableObject
 {
-    [ObservableProperty] private int selectedSettingsTab;
+    public const int GoogleSettingsTabIndex=8;
+    [ObservableProperty] [NotifyPropertyChangedFor(nameof(IsGoogleSettings))] private int selectedSettingsTab;
+    public bool IsGoogleSettings=>SelectedSettingsTab==GoogleSettingsTabIndex;
+    public GoogleWorkspaceViewModel? Google=>google;
     public WeatherViewModel? Weather => weather;
     [ObservableProperty] private bool countdownShareBranding=true;
     [ObservableProperty] private string countdownShareMessage="";

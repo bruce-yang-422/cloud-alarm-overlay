@@ -7,10 +7,12 @@ using CloudAlarmOverlay.Core.Services;
 
 namespace CloudAlarmOverlay.Infrastructure.Google;
 
-internal sealed partial class GoogleWorkspace(IGoogleVault vault,GoogleApi api,AdminSession session,ITaskRepository tasks,
+internal sealed partial class GoogleWorkspace(IGoogleVault vault,GoogleApi api,ITaskRepository tasks,
     ICsvSheetParser parser,IDeviceIdentityService identity,IAudienceFilterService audience,IEmployeeRepository employees,
     ChangeSignal changes,TimeProvider clock,IPrivateSourceStore privateSources,IAuditService audit,GoogleBuiltInClient builtIn):IGoogleWorkspace,IDisposable
 {
+    // Personal Google connections belong to the current Windows user's vault.
+    // Google consent and source permissions govern access, independently of company administrator sessions.
     private readonly SemaphoreSlim gate=new(1,1);
     public event Action? Changed;
     private void Notify(){changes.Notify();Changed?.Invoke();}
@@ -23,10 +25,10 @@ internal sealed partial class GoogleWorkspace(IGoogleVault vault,GoogleApi api,A
     }
     public async Task UseBuiltInClientAsync(CancellationToken ct=default)
     {
-        session.RequireAdmin();await gate.WaitAsync(ct);
+        await gate.WaitAsync(ct);
         try
         {
-            var state=await vault.ReadAsync(ct);session.RequireAdmin();
+            var state=await vault.ReadAsync(ct);
             var client=builtIn.Client??throw new InvalidOperationException("此版本尚未內建 Google 登入設定。");
             if(state.Accounts.Count>0)throw new InvalidOperationException("切換登入設定前，請先登出所有 Google 帳號。");
             await vault.WriteAsync(state with{Client=client,UsesBuiltInClient=true},ct);
@@ -45,11 +47,11 @@ internal sealed partial class GoogleWorkspace(IGoogleVault vault,GoogleApi api,A
     }
     public async Task ImportClientAsync(string json,CancellationToken ct=default)
     {
-        session.RequireAdmin();var client=GoogleApi.ParseClient(json);
+        var client=GoogleApi.ParseClient(json);
         await gate.WaitAsync(ct);
         try
         {
-            var state=await ReadStateAsync(ct);session.RequireAdmin();
+            var state=await ReadStateAsync(ct);
             if(state.Accounts.Count>0&&state.Client?.Id!=client.Id)throw new InvalidOperationException("更換 OAuth 專案前，請先登出所有 Google 帳號。");
             await vault.WriteAsync(state with{Client=client,UsesBuiltInClient=false},ct);
         }
@@ -57,7 +59,6 @@ internal sealed partial class GoogleWorkspace(IGoogleVault vault,GoogleApi api,A
     }
     public async Task SignInAsync(string label,bool sheets,bool calendar,Action<string> openBrowser,CancellationToken ct=default,bool writeSheets=false)
     {
-        session.RequireAdmin();
         if(!sheets&&!calendar)throw new ArgumentException("請選擇 Sheets 或 Google 日曆。");
         GoogleClient client;
         await gate.WaitAsync(ct);
@@ -74,7 +75,7 @@ internal sealed partial class GoogleWorkspace(IGoogleVault vault,GoogleApi api,A
         await gate.WaitAsync(ct);
         try
         {
-            var state=await ReadStateAsync(ct);session.RequireAdmin();
+            var state=await ReadStateAsync(ct);
             if(state.Client?.Id!=client.Id)throw new InvalidOperationException("OAuth 設定已變更，請重新登入。");
             state.Accounts.RemoveAll(a=>a.Id==id);
             state.Accounts.Add(new(){Id=id,Email=email,Label=string.IsNullOrWhiteSpace(label)?email:label.Trim()[..Math.Min(label.Trim().Length,40)],
@@ -86,12 +87,12 @@ internal sealed partial class GoogleWorkspace(IGoogleVault vault,GoogleApi api,A
     private DateTimeOffset Expiry(JsonElement token)=>clock.GetUtcNow().AddSeconds(token.GetProperty("expires_in").GetInt32());
     public async Task SignOutAsync(string accountId,bool revoke,CancellationToken ct=default)
     {
-        session.RequireAdmin();await gate.WaitAsync(ct);
+        await gate.WaitAsync(ct);
         try
         {
             var state=await ReadStateAsync(ct);var account=state.Accounts.Single(a=>a.Id==accountId);
             if(revoke&&!string.IsNullOrEmpty(account.RefreshToken))await api.RevokeAsync(account.RefreshToken,ct);
-            session.RequireAdmin();
+
             foreach(var source in state.Sources.Where(s=>s.AccountId==accountId))await privateSources.ClearAsync(source.CacheSource,ct);
             drafts.Clear();
             state.Sources.RemoveAll(s=>s.AccountId==accountId);state.Accounts.RemoveAll(a=>a.Id==accountId);
@@ -140,7 +141,7 @@ internal sealed partial class GoogleWorkspace(IGoogleVault vault,GoogleApi api,A
     }
     public async Task<IReadOnlyList<GoogleResource>> ListTabsAsync(string accountId,string spreadsheet,CancellationToken ct=default)
     {
-        session.RequireAdmin();await gate.WaitAsync(ct);
+        await gate.WaitAsync(ct);
         try{return await TabsAsync(await ReadStateAsync(ct),accountId,SpreadsheetId(spreadsheet),ct);}
         finally{gate.Release();}
     }
@@ -153,7 +154,7 @@ internal sealed partial class GoogleWorkspace(IGoogleVault vault,GoogleApi api,A
     }
     public async Task<IReadOnlyList<GoogleResource>> ListCalendarsAsync(string accountId,CancellationToken ct=default)
     {
-        session.RequireAdmin();await gate.WaitAsync(ct);
+        await gate.WaitAsync(ct);
         try
         {
             var state=await ReadStateAsync(ct);var resources=new List<GoogleResource>();var page="";
@@ -170,7 +171,6 @@ internal sealed partial class GoogleWorkspace(IGoogleVault vault,GoogleApi api,A
     }
     public async Task SaveSourceAsync(GoogleSource source,CancellationToken ct=default)
     {
-        session.RequireAdmin();
         if(!Guid.TryParseExact(source.Id,"N",out _)||source.Kind is not ("Sheet" or "Calendar")||string.IsNullOrWhiteSpace(source.Name)||source.Name.Length>60||source.IntervalMinutes is <1 or >1440||source.ReminderMinutes is <0 or >10080||source.AllDayHour is <0 or >23||string.IsNullOrWhiteSpace(source.ResourceId))
             throw new ArgumentException("請填寫來源名稱與資源；同步間隔 1–1440 分鐘、提前提醒 0–10080 分鐘、全天提醒 0–23 時。");
         source=source with{Name=source.Name.Trim(),ResourceId=source.Kind=="Sheet"?SpreadsheetId(source.ResourceId):source.ResourceId.Trim()};
@@ -178,7 +178,7 @@ internal sealed partial class GoogleWorkspace(IGoogleVault vault,GoogleApi api,A
         await gate.WaitAsync(ct);
         try
         {
-            var state=await ReadStateAsync(ct);session.RequireAdmin();
+            var state=await ReadStateAsync(ct);
             if(!state.Accounts.Any(a=>a.Id==source.AccountId))throw new ArgumentException("請選擇已登入帳號。");
             if(state.Sources.Any(s=>s.Id!=source.Id&&s.AccountId==source.AccountId&&s.Kind==source.Kind&&s.ResourceId==source.ResourceId&&s.TabId==source.TabId))throw new ArgumentException("此帳號已加入相同來源，請編輯既有來源。");
             var previous=state.Sources.SingleOrDefault(s=>s.Id==source.Id);
@@ -191,17 +191,17 @@ internal sealed partial class GoogleWorkspace(IGoogleVault vault,GoogleApi api,A
     }
     public async Task RemoveSourceAsync(string id,CancellationToken ct=default)
     {
-        session.RequireAdmin();await gate.WaitAsync(ct);
+        await gate.WaitAsync(ct);
         try
         {
-            var state=await ReadStateAsync(ct);var source=state.Sources.Single(s=>s.Id==id);session.RequireAdmin();
+            var state=await ReadStateAsync(ct);var source=state.Sources.Single(s=>s.Id==id);
             await privateSources.ClearAsync(source.CacheSource,ct);state.Sources.Remove(source);drafts.Clear();await vault.WriteAsync(state,ct);
         }
         finally{gate.Release();}Notify();
     }
     public async Task SyncAsync(string? sourceId=null,bool automatic=false,CancellationToken ct=default)
     {
-        if(!automatic)session.RequireAdmin();await gate.WaitAsync(ct);
+        await gate.WaitAsync(ct);
         try
         {
             var state=await ReadStateAsync(ct);

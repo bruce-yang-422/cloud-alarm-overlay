@@ -15,6 +15,12 @@ public partial class GoogleWorkspaceView:UserControl
         Unloaded+=(_,_)=>refreshTimer.Stop();
         refreshTimer.Tick+=async(_,_)=>{if(IsVisible&&DataContext is GoogleWorkspaceViewModel vm&&!vm.Busy)await vm.RefreshStatusCommand.ExecuteAsync(null);};
     }
+    private void SourceChanged(object sender,SelectionChangedEventArgs e)
+    {
+        if(!ReferenceEquals(sender,e.OriginalSource))return;
+        SettingsScroll?.ScrollToTop();
+        if(TaskEditorExpander is not null)TaskEditorExpander.IsExpanded=false;
+    }
     private async void ImportClient(object sender,RoutedEventArgs e)
     {
         if(DataContext is not GoogleWorkspaceViewModel vm)return;

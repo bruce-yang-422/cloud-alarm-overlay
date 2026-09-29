@@ -27,7 +27,7 @@ internal sealed partial class GoogleWorkspace
     }
     public async Task<GoogleTaskDraft> ReadTaskAsync(string sourceId,string externalId,CancellationToken ct=default)
     {
-        session.RequireAdmin();await gate.WaitAsync(ct);
+        await gate.WaitAsync(ct);
         try
         {
             var state=await ReadStateAsync(ct);var source=state.Sources.Single(s=>s.Id==sourceId);
@@ -49,7 +49,7 @@ internal sealed partial class GoogleWorkspace
     }
     public async Task WriteTaskAsync(string draftToken,IReadOnlyDictionary<string,string> fields,bool delete,CancellationToken ct=default)
     {
-        session.RequireAdmin();await gate.WaitAsync(ct);
+        await gate.WaitAsync(ct);
         try
         {
             if(!drafts.TryGetValue(draftToken,out var draft)||clock.GetUtcNow()-draft.At>TimeSpan.FromMinutes(15))throw new InvalidOperationException("編輯預覽已過期，請重新讀取任務。");
@@ -57,7 +57,7 @@ internal sealed partial class GoogleWorkspace
             if(source is null||source.Kind!="Sheet"||!source.AllowWrite||!source.Enabled||source.AccountId!=draft.Source.AccountId||source.ResourceId!=draft.Source.ResourceId||source.TabId!=draft.Source.TabId)
                 throw new InvalidOperationException("來源設定已變更或未開啟寫回，請儲存設定後重新讀取。");
             var account=state.Accounts.Single(a=>a.Id==source.AccountId);
-            if(!account.Scope.Split(' ').Contains(GoogleApi.SheetsWrite))throw new InvalidOperationException("此帳號只有讀取授權，請勾選「允許 Sheets 編輯」後重新登入。");
+            if(!account.Scope.Split(' ').Contains(GoogleApi.SheetsWrite))throw new InvalidOperationException("此帳號只有讀取授權，請勾選「同時申請 Sheets 編輯權限」後重新登入。");
             var fresh=await ReadRowsAsync(state,source,ct);
             if(JsonSerializer.Serialize(fresh)!=JsonSerializer.Serialize(draft.Rows))throw new InvalidOperationException("雲端資料已變更（可能有他人編輯或排序），請重新讀取再合併修改。");
             if(!fields.TryGetValue("Id",out var externalId)||externalId!=draft.ExternalId)throw new ArgumentException("任務 ID 不可變更。");
@@ -89,7 +89,7 @@ internal sealed partial class GoogleWorkspace
                 }
             }
             if(requests.Count==0)return;
-            var token=await TokenAsync(state,source.AccountId,false,ct);session.RequireAdmin();
+            var token=await TokenAsync(state,source.AccountId,false,ct);
             // Consume before POST. A timeout is an unknown outcome; never blindly resend a mutation.
             drafts.Remove(draftToken);
             try{await api.PostAsync($"https://sheets.googleapis.com/v4/spreadsheets/{GoogleApi.Encode(source.ResourceId)}:batchUpdate",token,new{requests},ct);}
@@ -101,7 +101,7 @@ internal sealed partial class GoogleWorkspace
                 throw new InvalidOperationException("寫入後內容與預期不同，請至 Google Sheets 確認是否有同時編輯。");
             var updated=source with{LastAttempt=null,Status="寫入已回讀確認，等待同步"};
             state.Sources[state.Sources.IndexOf(source)]=updated;await vault.WriteAsync(state,ct);
-            await audit.RecordAsync(new(){UserId=session.Username??"Google 使用者",Action=delete?"Google Tasks 刪除":"Google Tasks 寫入",NewValue=$"來源 {source.Id}；已回讀確認",CreatedAt=clock.GetLocalNow().DateTime},ct);
+            await audit.RecordAsync(new(){UserId=$"Google:{account.Id}",Action=delete?"Google Tasks 刪除":"Google Tasks 寫入",NewValue=$"來源 {source.Id}；已回讀確認",CreatedAt=clock.GetLocalNow().DateTime},ct);
         }
         finally{gate.Release();Notify();}
     }

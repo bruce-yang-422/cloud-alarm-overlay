@@ -3,7 +3,7 @@
   #define PublishDir "..\artifacts\publish"
 #endif
 #ifndef AppVersion
-  #define AppVersion "1.3.0"
+  #define AppVersion "1.4.0"
 #endif
 #define AppName "Cloud Alarm Overlay"
 #define AppExeName "CloudAlarmOverlay.App.exe"
@@ -91,9 +91,9 @@ begin
   Description.WordWrap := True;
   Description.Width := AboutPage.SurfaceWidth - ScaleX(16);
   Description.Caption :=
-    '這是一套 Windows 提醒工具，可同步公司 Google Sheets 的任務，也能建立本機提醒。' + #13#10#13#10 +
-    '提供一般提醒、重要提醒、緊急提醒與強制通知，並可查看歷史紀錄及使用番茄鐘。' + #13#10#13#10 +
-    '首次開啟時，請依公司提供的名單填入裝置代碼與顯示名稱；同步來源由管理者設定。' + #13#10#13#10 +
+    '這是一套 Windows 提醒工具，可同步 Google Sheets 任務與自己擁有的 Google 日曆，也能建立本機提醒。' + #13#10#13#10 +
+    '提供多種提醒、歷史紀錄、番茄鐘，以及喝水、久坐、螢幕休息與伸展等健康工具。' + #13#10#13#10 +
+    '首次開啟時，可選擇個人或公司使用模式。個人 Google 帳號與同步來源可在「設定 → Google 帳號」自行管理；公司共用來源由管理者設定。' + #13#10#13#10 +
     '關閉主視窗後，程式仍會留在右下角系統匣持續提醒。' + #13#10#13#10 +
     '按下「安裝」後，安裝程式會直接強制關閉執行中的舊版，不需輸入結束密碼。請先儲存正在編輯的內容。安裝完成後可勾選啟動程式，既有任務與設定會保留。';
   Description.AdjustHeight;

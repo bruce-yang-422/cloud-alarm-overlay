@@ -10,7 +10,7 @@ namespace CloudAlarmOverlay.App.ViewModels;
 public partial class GoogleWorkspaceViewModel(IGoogleWorkspace workspace,IBrowserLauncher browser):ObservableObject
 {
     public ObservableCollection<GoogleAccount> Accounts {get;}=[];
-    public ObservableCollection<GoogleSourceDraft> Tabs {get;}=[new(new(){Id="",Name="總覽"})];
+    public ObservableCollection<GoogleSourceDraft> Tabs {get;}=[new(new(){Id="",Name="帳號管理"})];
     public IEnumerable<GoogleSourceDraft> SourceCards=>Tabs.Where(t=>t.Id!="");
     [ObservableProperty] [NotifyPropertyChangedFor(nameof(IsOverview))] [NotifyPropertyChangedFor(nameof(IsSource))] private GoogleSourceDraft? selected;
     [ObservableProperty] private GoogleAccount? selectedAccount;

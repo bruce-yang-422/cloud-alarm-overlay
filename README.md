@@ -242,7 +242,7 @@ dotnet test CloudAlarmOverlay.sln --no-build
 
 ### v1.4.0 本機開發版：Google 帳號與同步
 
-v1.4.0 本機開發版新增 Google 多帳號登入、有效憑證自動續用、私人 Sheets Tasks 來源、自有 Google 日曆同步與本機提醒，以及獨立授權開關的 Tasks 線上編輯。同步來源採滑動 Pill Tabs，原公開 Sheet A／B 設定保留。開發者可在封裝時內建 Google 桌面 OAuth 設定，一般使用者直接按「使用 Google 登入」；組織自訂 JSON 匯入移至進階設定。目前仍待提供開發者 OAuth 設定，真實 Google 授權與企業政策仍待實機驗收。[Google 帳號與同步設定教學](docs/Google帳號與同步設定.md)。
+v1.4.0 本機開發版新增 Google 多帳號登入、有效憑證自動續用、私人 Sheets Tasks 來源、自有 Google 日曆同步與本機提醒，以及獨立授權開關的 Tasks 線上編輯。使用者可在「設定 → Google 帳號」自行管理帳號與來源，不需登入本機管理員；左側選來源、右側分組編輯，儲存與同步固定於底部。公司共用的公開 Sheet A／B 保留在管理者專區。本機安裝檔已內建 Google 桌面 OAuth 設定，可在「帳號管理 → 新增 Google 帳號」登入；組織自訂 JSON 匯入位於進階設定。Google 帳號整合尚未對大眾開放，實際同步與企業政策仍待驗收。[Google 帳號與同步設定教學](docs/Google帳號與同步設定.md)。
 
 ### v1.4.0 本機開發版：健康工具
 

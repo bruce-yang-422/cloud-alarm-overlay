@@ -5,11 +5,13 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
 using System.Windows;
+using System.Windows.Controls;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Threading;
 using CloudAlarmOverlay.App.ViewModels;
 using CloudAlarmOverlay.App.Views;
+using CloudAlarmOverlay.App.Styles;
 using CloudAlarmOverlay.Core.Models;
 using CloudAlarmOverlay.Core.Repositories;
 using CloudAlarmOverlay.Core.Services;
@@ -24,7 +26,7 @@ public sealed class GoogleWorkspaceTests
 {
     [Fact] public async Task Built_in_login_needs_no_import_and_pins_client_for_refresh()
     {
-        using var f=new Fixture(new("builtin.apps.googleusercontent.com","desktop-value"));await f.Initialize();
+        using var f=new Fixture(new("builtin.apps.googleusercontent.com","desktop-value"));await f.Initialize(UsageModes.Company);
         await f.Vault.WriteAsync(new(),default);
         var snapshot=await f.Workspace.GetAsync();Assert.True(snapshot.Configured);Assert.True(snapshot.UsesBuiltInClient);
         Task? callback=null;
@@ -40,7 +42,7 @@ public sealed class GoogleWorkspaceTests
     }
     [Fact] public async Task Custom_client_survives_upgrade_and_can_restore_default_after_signout()
     {
-        using var f=new Fixture(new("builtin.apps.googleusercontent.com","desktop-value"));await f.Initialize();
+        using var f=new Fixture(new("builtin.apps.googleusercontent.com","desktop-value"));await f.Initialize(UsageModes.Company);
         Assert.False((await f.Workspace.GetAsync()).UsesBuiltInClient);
         Assert.Equal("test.apps.googleusercontent.com",(await f.Vault.ReadAsync(default)).Client!.Id);
         await Assert.ThrowsAsync<InvalidOperationException>(()=>f.Workspace.UseBuiltInClientAsync());
@@ -126,7 +128,7 @@ public sealed class GoogleWorkspaceTests
         await f.Workspace.WriteTaskAsync(draft.Token,fields,false);
         Assert.Equal(1,f.Handler.Writes);Assert.Equal("更新標題",f.Handler.Rows[2][2]);Assert.Equal("保留未知欄",f.Handler.Rows[2][4]);
         Assert.Single(f.Handler.LastWrite.GetProperty("requests").EnumerateArray());
-        Assert.NotEmpty(await f.Get<IAuditLogRepository>().GetRangeAsync(DateTime.Today.AddDays(-1),DateTime.Today.AddDays(1)));
+        Assert.Contains(await f.Get<IAuditLogRepository>().GetRangeAsync(DateTime.Today.AddDays(-1),DateTime.Today.AddDays(1)),a=>a.UserId=="Google:a");
     }
     [Fact] public async Task Create_delete_and_unknown_write_outcome_require_fresh_read()
     {
@@ -156,7 +158,7 @@ public sealed class GoogleWorkspaceTests
         using var f=new Fixture();var vault=new GoogleVault(f);var state=await f.Vault.ReadAsync(default);await vault.WriteAsync(state,default);
         var bytes=await File.ReadAllBytesAsync(Path.Combine(f.DataDirectory,"google-workspace.dat"));
         Assert.DoesNotContain("refresh-a",Encoding.UTF8.GetString(bytes));Assert.Equal("a",(await vault.ReadAsync(default)).Accounts[0].Id);
-        await Assert.ThrowsAsync<UnauthorizedAccessException>(()=>f.Workspace.ImportClientAsync("{}"));
+        await Assert.ThrowsAsync<ArgumentException>(()=>f.Workspace.ImportClientAsync("{}"));
         await f.Initialize();await Assert.ThrowsAsync<ArgumentException>(()=>f.Workspace.ImportClientAsync("{\"type\":\"service_account\"}"));
         Assert.Equal("abc",GoogleWorkspace.SpreadsheetId("https://docs.google.com/spreadsheets/d/abc/edit#gid=0"));
         Assert.Throws<ArgumentException>(()=>GoogleWorkspace.SpreadsheetId("https://example.com/abc"));
@@ -177,25 +179,77 @@ public sealed class GoogleWorkspaceTests
         });
         await callback!;Assert.Equal(3,(await f.Workspace.GetAsync()).Accounts.Count);
     }
-    [Fact] public async Task Google_source_ui_keeps_drafts_and_public_sheet_page_still_switches()
+    [Fact] public async Task Company_user_manages_personal_google_connections_without_admin()
+    {
+        using var f=new Fixture();await f.Initialize(UsageModes.Company);
+        var admin=f.Get<AdminSession>();Assert.False(admin.IsAuthenticated);
+        await f.Workspace.ImportClientAsync("{\"installed\":{\"client_id\":\"test.apps.googleusercontent.com\",\"client_secret\":\"test-secret\"}}");
+        Assert.Single(await f.Workspace.ListTabsAsync("a","company"));
+        Assert.Single(await f.Workspace.ListCalendarsAsync("b"));
+        await f.Workspace.SaveSourceAsync(f.Company with{AllowWrite=true});
+        await f.Workspace.SyncAsync(f.Company.Id);
+        var draft=await f.Workspace.ReadTaskAsync(f.Company.Id,"task1");
+        var fields=draft.Fields.ToDictionary();fields["Title"]="使用者自行編輯";
+        await f.Workspace.WriteTaskAsync(draft.Token,fields,false);
+        Assert.Equal("使用者自行編輯",f.Handler.Rows[2][2]);
+        await Assert.ThrowsAsync<UnauthorizedAccessException>(()=>f.Get<IAuditLogRepository>().GetRangeAsync(DateTime.Today.AddDays(-1),DateTime.Today.AddDays(1)));
+        var readOnly=await f.Workspace.ReadTaskAsync(f.Personal.Id,"task1");
+        await f.Workspace.SaveSourceAsync(f.Personal with{AllowWrite=true});
+        await Assert.ThrowsAsync<InvalidOperationException>(()=>f.Workspace.WriteTaskAsync(readOnly.Token,readOnly.Fields,false));
+        Assert.Equal(1,f.Handler.Writes);
+        await f.Workspace.RemoveSourceAsync(f.Company.Id);
+        await f.Workspace.SignOutAsync("a",false);await f.Workspace.SignOutAsync("b",true);
+        Assert.Empty((await f.Workspace.GetAsync()).Accounts);
+        Assert.False(admin.IsAuthenticated);Assert.Throws<UnauthorizedAccessException>(()=>admin.RequireAdmin());
+    }
+    [Fact] public async Task Google_settings_ui_is_available_without_admin_and_keeps_source_drafts()
     {
         await MilestoneOneTests.RunSta(async()=>
         {
-            using var f=new Fixture();await f.Initialize();
+            using var f=new Fixture();await f.Initialize(UsageModes.Company);
             var main=f.Get<MainViewModel>();var window=f.Get<MainWindow>();
             try
             {
                 await main.InitializeAsync();window.ShowActivated=false;window.ShowInTaskbar=false;window.Width=1200;window.Height=920;window.Show();
-                main.PageIndex=5;main.Admin.SelectedTab=0;window.UpdateLayout();await Dispatcher.Yield(DispatcherPriority.ApplicationIdle);
-                var vm=main.Admin.Google;await vm.LoadAsync();Assert.Equal(2,vm.Accounts.Count);Assert.Equal(3,vm.Tabs.Count);
+                Assert.False(main.Admin.IsAuthenticated);main.PageIndex=5;Assert.Equal(0,main.PageIndex);
+                main.PageIndex=4;main.Preferences.SelectedSettingsTab=PreferencesViewModel.GoogleSettingsTabIndex;window.UpdateLayout();await Dispatcher.Yield(DispatcherPriority.ApplicationIdle);
+                var vm=main.Preferences.Google!;await vm.LoadAsync();Assert.Equal(2,vm.Accounts.Count);Assert.Equal(3,vm.Tabs.Count);
                 var view=Find<GoogleWorkspaceView>(window)!;Assert.True(view.IsVisible);
-                main.Admin.SyncPage=1;await Dispatcher.Yield(DispatcherPriority.ApplicationIdle);Assert.False(view.IsVisible);
-                main.Admin.SyncPage=0;await Dispatcher.Yield(DispatcherPriority.ApplicationIdle);Assert.True(view.IsVisible);
+                Assert.True(view.IsEnabled);
+                main.Preferences.SelectedSettingsTab=0;await Dispatcher.Yield(DispatcherPriority.ApplicationIdle);Assert.False(view.IsVisible);
+                main.Preferences.SelectedSettingsTab=PreferencesViewModel.GoogleSettingsTabIndex;await Dispatcher.Yield(DispatcherPriority.ApplicationIdle);Assert.True(view.IsVisible);
                 vm.Selected=vm.Tabs[1];vm.Selected.Name="未儲存草稿";vm.Selected=vm.Tabs[2];vm.Selected=vm.Tabs[1];Assert.Equal("未儲存草稿",vm.Selected.Name);Assert.True(vm.Selected.Locked);
                 vm.Selected=vm.Tabs[0];window.UpdateLayout();await Task.Delay(180);Capture(window,"google-overview");
                 vm.Selected=vm.Tabs[1];window.UpdateLayout();await Task.Delay(180);Capture(window,"google-source");
+                vm.Selected.Locked=false;
+                var scroll=(ScrollViewer)view.FindName("SettingsScroll");
+                var editor=(Expander)view.FindName("TaskEditorExpander");
+                var save=(Button)view.FindName("SaveSourceButton");
+                var sync=(Button)view.FindName("SyncSourceButton");
+                window.UpdateLayout();Assert.True(save.IsEnabled);Assert.True(sync.IsEnabled);
+                foreach(var size in new[]{new Size(1050,680),new Size(1050,780),new Size(1440,1000)})
+                {
+                    window.Width=size.Width;window.Height=size.Height;window.UpdateLayout();await Dispatcher.Yield(DispatcherPriority.ApplicationIdle);
+                    Assert.True(scroll.ActualHeight>=180,$"Settings viewport too small: {scroll.ActualHeight}");
+                    var viewport=new Rect(0,0,view.ActualWidth,view.ActualHeight);
+                    foreach(var button in new[]{save,sync})
+                    {
+                        Assert.True(button.IsVisible);
+                        Assert.True(viewport.Contains(button.TransformToAncestor(view).TransformBounds(new Rect(button.RenderSize))));
+                    }
+                    editor.IsExpanded=true;window.UpdateLayout();scroll.ScrollToEnd();await Dispatcher.Yield(DispatcherPriority.ApplicationIdle);
+                    var before=save.TransformToAncestor(view).Transform(new Point());
+                    scroll.ScrollToTop();await Dispatcher.Yield(DispatcherPriority.ApplicationIdle);
+                    Assert.Equal(before,save.TransformToAncestor(view).Transform(new Point()));
+                    editor.IsExpanded=false;window.UpdateLayout();
+                    Capture(window,$"google-management-{size.Width}x{size.Height}");
+                }
+                AdaptiveBrushExtension.Apply(true);window.UpdateLayout();await Dispatcher.Yield(DispatcherPriority.ApplicationIdle);Capture(window,"google-management-dark");
+                scroll.ScrollToEnd();vm.Selected=vm.Tabs[0];await Dispatcher.Yield(DispatcherPriority.ApplicationIdle);Assert.Equal(0,scroll.VerticalOffset);
+                vm.Accounts.Clear();window.UpdateLayout();await Dispatcher.Yield(DispatcherPriority.ApplicationIdle);
+                Assert.True(((Expander)view.FindName("AddAccountExpander")).IsExpanded);
             }
-            finally{window.ForceClose();}
+            finally{AdaptiveBrushExtension.Apply(false);window.ForceClose();}
         });
     }
     private static T? Find<T>(DependencyObject parent) where T:DependencyObject
@@ -240,6 +294,7 @@ public sealed class GoogleWorkspaceTests
                 }
             }
             else if(path=="/v1/userinfo")result=new{sub="c",email="c@example.test",email_verified=true};
+            else if(path=="/revoke")result=new{};
             else if(path.EndsWith(":batchUpdate"))
             {
                 Writes++;using var doc=JsonDocument.Parse(await request.Content!.ReadAsStringAsync(ct));LastWrite=doc.RootElement.Clone();
@@ -285,7 +340,7 @@ public sealed class GoogleWorkspaceTests
         }
         public IGoogleWorkspace Workspace=>Get<IGoogleWorkspace>();
         public T Get<T>() where T:notnull=>host.Services.GetRequiredService<T>();
-        public async Task Initialize(){await Get<IDatabaseInitializer>().InitializeAsync();await Get<IDeviceIdentityService>().SetInitialIdentityAsync("GOOGLE-TEST","測試",UsageModes.Personal);}
+        public async Task Initialize(string usageMode=UsageModes.Personal){await Get<IDatabaseInitializer>().InitializeAsync();await Get<IDeviceIdentityService>().SetInitialIdentityAsync("GOOGLE-TEST","測試",usageMode);}
         public void Dispose(){host.Dispose();Microsoft.Data.Sqlite.SqliteConnection.ClearAllPools();if(Directory.Exists(DataDirectory))Directory.Delete(DataDirectory,true);}
     }
 }
