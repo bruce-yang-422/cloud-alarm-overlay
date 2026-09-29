@@ -6,7 +6,7 @@ using CloudAlarmOverlay.Core.Services;
 using Microsoft.Extensions.Hosting;
 namespace CloudAlarmOverlay.App.Services;
 public sealed class AlarmPresenter(IRuntimeStore runtime,IDeviceIdentityService identity,IAckCodeGenerator codes,ChangeSignal changes,
-    IHostApplicationLifetime lifetime,NotificationPreferences preferences,ISoundService sound,CloudAlarmOverlay.Core.Repositories.ISystemEventStore events,ISnoozeStore snoozes,SnoozeService snoozeService):IAlarmPresenter,IDisposable
+    IHostApplicationLifetime lifetime,NotificationPreferences preferences,ISoundService sound,CloudAlarmOverlay.Core.Repositories.ISystemEventStore events,ISnoozeStore snoozes,SnoozeService snoozeService,CloudAlarmOverlay.Core.Repositories.ITaskRepository tasks):IAlarmPresenter,IDisposable
 {
     private readonly SemaphoreSlim largeGate=new(1,1);
     private int smallCount;
@@ -37,6 +37,7 @@ public sealed class AlarmPresenter(IRuntimeStore runtime,IDeviceIdentityService 
         try
         {
             if(large){await largeGate.WaitAsync(ct).ConfigureAwait(false);entered=true;}
+            if(!preview&&task.Source.StartsWith("Google:",StringComparison.Ordinal)&&!await GoogleTaskAvailableAsync(task,ct))return null;
             if(ticket is not null && !await snoozeService.ValidateAsync(ticket,ct))return null;
             var dispatcher=Application.Current.Dispatcher;
             if(!preview && device is null)throw new InvalidOperationException("尚未設定装置識別。");
@@ -55,6 +56,11 @@ public sealed class AlarmPresenter(IRuntimeStore runtime,IDeviceIdentityService 
             });
             changes.Notify();
             using var registration=ct.Register(()=>dispatcher.BeginInvoke(()=>window?.Finish(false)));
+            while(!preview&&task.Source.StartsWith("Google:",StringComparison.Ordinal)&&!window!.Completion.IsCompleted)
+            {
+                if(await Task.WhenAny(window.Completion,Task.Delay(TimeSpan.FromSeconds(1),ct)).ConfigureAwait(false)==window.Completion)break;
+                if(!await GoogleTaskAvailableAsync(task,ct))await dispatcher.InvokeAsync(()=>window.Finish(false));
+            }
             if(await window!.Completion.ConfigureAwait(false) && !preview)
                 await runtime.CompleteAsync(occurrenceId,CancellationToken.None).ConfigureAwait(false);
             changes.Notify();
@@ -66,6 +72,11 @@ public sealed class AlarmPresenter(IRuntimeStore runtime,IDeviceIdentityService 
             if(entered)largeGate.Release();
             if(large)Interlocked.Decrement(ref blockingCount);
         }
+    }
+    private async Task<bool> GoogleTaskAvailableAsync(AlarmTask original,CancellationToken ct)
+    {
+        var current=await tasks.GetByIdAsync(original.Id,ct);
+        return current is {Enabled:true}&&(current.Recurrence!="None"||current.ScheduledAt==original.ScheduledAt);
     }
     private async Task PlaySafelyAsync(string name)
     {

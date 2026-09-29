@@ -1,14 +1,17 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetFramework>net10.0-windows</TargetFramework>
+    <GoogleDesktopOAuthPath Condition="'$(GoogleDesktopOAuthPath)' == ''">$(MSBuildThisFileDirectory)../../google-desktop-oauth.local.json</GoogleDesktopOAuthPath>
   </PropertyGroup>
   <ItemGroup>
+    <EmbeddedResource Include="$(GoogleDesktopOAuthPath)" LogicalName="GoogleDesktopOAuth.json" Condition="Exists('$(GoogleDesktopOAuthPath)')" />
     <InternalsVisibleTo Include="CloudAlarmOverlay.App.Tests" />
     <ProjectReference Include="../CloudAlarmOverlay.Core/CloudAlarmOverlay.Core.csproj" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="10.0.12" />
     <PackageReference Include="Microsoft.Win32.SystemEvents" Version="10.0.12" />
+    <PackageReference Include="System.Security.Cryptography.ProtectedData" Version="10.0.0" />
   </ItemGroup>
 </Project>
 

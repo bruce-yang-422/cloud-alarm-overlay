@@ -3,6 +3,7 @@ using System.Net;
 using System.Net.Http;
 using System.Text.Json;
 using System.Windows;
+using System.Windows.Controls;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Threading;
@@ -40,9 +41,30 @@ public sealed class CalendarDataUiTests
                 var vm=main.Admin.CalendarData;await vm.LoadAsync();Assert.False(vm.Enabled);
                 Assert.Contains("bruce-yang-422/cloud-alarm-overlay/main/data/calendar",vm.HolidaysUrl);
                 var view=Find<CalendarDataView>(window)!;var frequencies=(SlidingSegmentedControl)view.FindName("UpdateFrequency");
+                var urlLock=(CheckBox)view.FindName("SourceUrlsLock");
+                var holidays=(TextBox)view.FindName("HolidaysSource");var lunar=(TextBox)view.FindName("LunarSource");
+                var restore=(Button)view.FindName("RestoreSourceUrls");
+                Assert.True(urlLock.IsChecked);Assert.True(holidays.IsReadOnly);Assert.True(lunar.IsReadOnly);
                 Assert.Equal(new[]{"每天","每週","每月","手動更新"},frequencies.Items.Cast<string>());
                 await vm.UpdateCommand.ExecuteAsync(null);Assert.Contains("允許網路更新",vm.Message);Assert.Equal(0,fixture.Source.Calls);
-                vm.Enabled=true;frequencies.SelectedItem="手動更新";await vm.SaveCommand.ExecuteAsync(null);
+                urlLock.IsChecked=false;
+                Assert.False(holidays.IsReadOnly);Assert.False(lunar.IsReadOnly);
+                holidays.Text="https://raw.githubusercontent.com/example/calendar/main/holidays.json";
+                lunar.Text="https://raw.githubusercontent.com/example/calendar/main/lunar.json";
+                await vm.SaveCommand.ExecuteAsync(null);
+                Assert.True(holidays.IsReadOnly);Assert.True(lunar.IsReadOnly);
+                var customOptions=(await calendar.GetAsync()).Options;
+                Assert.Equal(holidays.Text,customOptions.HolidaysUrl);Assert.Equal(lunar.Text,customOptions.LunarUrl);
+                urlLock.IsChecked=false;await vm.LoadAsync();Assert.True(urlLock.IsChecked);
+                urlLock.IsChecked=false;holidays.Text="";lunar.Text="";
+                vm.Enabled=true;frequencies.SelectedItem="手動更新";
+                restore.Command.Execute(restore.CommandParameter);
+                Assert.Equal(new CalendarUpdateOptions().HolidaysUrl,holidays.Text);
+                Assert.Equal(new CalendarUpdateOptions().LunarUrl,lunar.Text);
+                Assert.True(urlLock.IsChecked);Assert.True(holidays.IsReadOnly);Assert.True(lunar.IsReadOnly);
+                Assert.True(vm.Enabled);Assert.Equal("手動更新",vm.Frequency);
+                Assert.Equal(customOptions,(await calendar.GetAsync()).Options);Assert.Equal(0,fixture.Source.Calls);
+                await vm.SaveCommand.ExecuteAsync(null);
                 Assert.True((await calendar.GetAsync()).Options.Enabled);Assert.Equal("Manual",(await calendar.GetAsync()).Options.Frequency);
                 fixture.Source.Holidays=JsonSerializer.Serialize(state.Holidays! with{Version="ui-test"},CalendarJson.Options);
                 fixture.Source.Lunar=JsonSerializer.Serialize(state.Lunar with{Version="ui-test"},CalendarJson.Options);
@@ -50,7 +72,7 @@ public sealed class CalendarDataUiTests
                 await vm.UpdateCommand.ExecuteAsync(null);Assert.Equal(2,fixture.Source.Calls);Assert.Contains("更新成功",vm.Message);Assert.Contains("ui-test",vm.Summary);
                 foreach(var mode in new[]{false,true})
                 {
-                    AdaptiveBrushExtension.Apply(mode);window.UpdateLayout();await Dispatcher.Yield(DispatcherPriority.ApplicationIdle);Capture(window,mode?"calendar-data-dark":"calendar-data-light");
+                    AdaptiveBrushExtension.Apply(mode);window.UpdateLayout();Find<ScrollViewer>(view)!.ScrollToBottom();await Task.Delay(180);await Dispatcher.Yield(DispatcherPriority.ApplicationIdle);Capture(window,mode?"calendar-data-dark":"calendar-data-light");
                 }
                 window.Width=1050;window.Height=700;window.UpdateLayout();Capture(window,"calendar-data-small");
             }

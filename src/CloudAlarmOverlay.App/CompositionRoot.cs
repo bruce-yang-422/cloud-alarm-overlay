@@ -32,6 +32,7 @@ public static class CompositionRoot
         services.AddHostedService<DatabaseInitializationService>();
         services.AddHostedService<CalendarDataWorker>();
         services.AddHostedService<SyncWorker>();
+        services.AddHostedService<GoogleWorkspaceWorker>();
         services.AddHostedService<AlarmWorker>();
         services.AddHostedService<PomodoroWorker>();
         services.AddHostedService<WeatherWorker>();
@@ -51,6 +52,7 @@ public static class CompositionRoot
         services.AddSingleton<MaintenanceViewModel>();
         services.AddSingleton<EmojiLibrary>();
         services.AddSingleton<AdminViewModel>();
+        services.AddSingleton<GoogleWorkspaceViewModel>();
         services.AddSingleton<CalendarDataViewModel>();
         services.AddSingleton<PomodoroViewModel>();
         services.AddSingleton<HealthToolsViewModel>();

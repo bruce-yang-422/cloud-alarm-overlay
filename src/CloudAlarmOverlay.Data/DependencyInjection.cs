@@ -20,6 +20,7 @@ public static class DependencyInjection
         services.AddSingleton<ISqliteConnectionFactory, SqliteConnectionFactory>();
         services.AddSingleton<IDatabaseInitializer, DatabaseInitializer>();
         services.AddSingleton<ITaskRepository, TaskRepository>();
+        services.AddSingleton<IPrivateSourceStore,PrivateSourceStore>();
         services.AddSingleton<ICountdownRepository, CountdownRepository>();
         services.AddSingleton<ITaskHomePinRepository, TaskHomePinRepository>();
         services.AddSingleton<IHolidayRepository, HolidayRepository>();

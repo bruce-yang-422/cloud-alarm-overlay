@@ -193,7 +193,7 @@ public partial class MainViewModel(ITaskRepository tasks,ITaskService taskServic
     [ObservableProperty] private string search="";
     [ObservableProperty] private string historySearch="";
     [ObservableProperty] private string sourceFilter="全部來源";
-    public string[] Sources {get;}=["全部來源",TaskSources.Local,TaskSources.SheetA,TaskSources.SheetB];
+    public string[] Sources {get;}=["全部來源",TaskSources.Local,TaskSources.SheetA,TaskSources.SheetB,"Google"];
     [ObservableProperty] private string status="準備就緒";
     [ObservableProperty] private string syncMessage="";
     [ObservableProperty] private string deviceLabel="尚未設定裝置";
@@ -344,7 +344,7 @@ public partial class MainViewModel(ITaskRepository tasks,ITaskService taskServic
         try {
         var existing=Tasks.ToDictionary(r=>r.Task.Id);
         var index=0;
-        foreach(var task in allTasks.Where(t=>(SourceFilter=="全部來源"||t.Source==SourceFilter)&&(t.Title.Contains(Search,StringComparison.OrdinalIgnoreCase)||t.Description?.Contains(Search,StringComparison.OrdinalIgnoreCase)==true)))
+        foreach(var task in allTasks.Where(t=>(SourceFilter=="全部來源"||t.Source==SourceFilter||(SourceFilter=="Google"&&t.Source.StartsWith("Google:",StringComparison.Ordinal)))&&(t.Title.Contains(Search,StringComparison.OrdinalIgnoreCase)||t.Description?.Contains(Search,StringComparison.OrdinalIgnoreCase)==true||t.Note?.Contains(Search,StringComparison.OrdinalIgnoreCase)==true)))
         {
             var row=existing.TryGetValue(task.Id,out var old) && old.Task==task ? old : new TaskRow(task);
             row.IsPinned=taskPinIds.Contains(task.Id);
@@ -476,7 +476,7 @@ public sealed partial class TaskRow(AlarmTask task,DateTime? nextAt=null):Observ
     public string PinLabel=>IsPinned?"取消釘選":"釘選首頁";
     public string UpcomingState=>"等待觸發";
     public string Title=>Task.Title;
-    public string Source=>Task.Source;
+    public string Source=>Task.Source.StartsWith("Google:",StringComparison.Ordinal)?"Google · "+Task.Note?.Split('\n')[0]:Task.Source;
     public string Access=>IsLocal?"本機":"🔒 "+Source;
     public string Level=>Task.Level;
     public string Time=>Task.ScheduledAt.ToString("MM/dd HH:mm:ss");

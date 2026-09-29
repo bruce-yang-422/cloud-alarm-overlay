@@ -146,6 +146,7 @@ public sealed class MilestoneTwoTests
                     Assert.Equal(i is 2 or 3,vm.Admin.ShowsLogFilter);
                     if(i==0)
                     {
+                        vm.Admin.SyncPage=1;window.UpdateLayout();await Dispatcher.Yield(DispatcherPriority.ApplicationIdle);
                         Assert.Contains(Descendants<TextBlock>(window),t=>Equals(t.Text,"同步間隔（Sheet A／B 共用）")&&t.IsVisible);
                         var intervalSlider=Assert.Single(Descendants<Slider>(window),s=>System.Windows.Automation.AutomationProperties.GetName(s)=="共用同步間隔秒數"&&s.IsVisible);
                         Assert.Equal(5,intervalSlider.TickFrequency);

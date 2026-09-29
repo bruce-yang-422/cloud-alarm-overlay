@@ -11,7 +11,7 @@
 
 Cloud Alarm Overlay 是常駐 Windows 系統匣的桌面提醒程式，將個人任務、團隊通知、專注計時與歷史紀錄放在同一個地方。你可以安排本機任務，也可以從公開的 Google Sheets CSV 同步公司或團隊任務；提醒、確認與操作紀錄儲存在這台電腦。
 
-**[下載 v1.2.0 Windows 版](https://github.com/bruce-yang-422/cloud-alarm-overlay/releases/download/v1.2.0/CloudAlarmOverlay-v1.2.0-Setup-x64.exe)** · [程式介紹](https://bruce-yang-422.github.io/cloud-alarm-overlay/) · [v1.2.0 改版說明](https://github.com/bruce-yang-422/cloud-alarm-overlay/releases/tag/v1.2.0)
+**[下載 v1.2.0 Windows 版](https://github.com/bruce-yang-422/cloud-alarm-overlay/releases/download/v1.2.0/CloudAlarmOverlay-v1.2.0-Setup-x64.exe)** · [程式介紹](https://remind.stack-base.com/) · [v1.2.0 改版說明](https://github.com/bruce-yang-422/cloud-alarm-overlay/releases/tag/v1.2.0)
 
 ## 主要功能
 
@@ -240,7 +240,13 @@ dotnet test CloudAlarmOverlay.sln --no-build
 
 執行日誌自動清理已實作（已納入本機 v1.3.0 安裝檔）：預設保留最近 30 天，管理者專區的本機設定可調整為 1–365 天；啟動後及每小時清理過期 runtime 日誌，不影響任務歷史、資料庫紀錄或備份。
 
+### v1.4.0 本機開發版：Google 帳號與同步
+
+v1.4.0 本機開發版新增 Google 多帳號登入、有效憑證自動續用、私人 Sheets Tasks 來源、自有 Google 日曆同步與本機提醒，以及獨立授權開關的 Tasks 線上編輯。同步來源採滑動 Pill Tabs，原公開 Sheet A／B 設定保留。開發者可在封裝時內建 Google 桌面 OAuth 設定，一般使用者直接按「使用 Google 登入」；組織自訂 JSON 匯入移至進階設定。目前仍待提供開發者 OAuth 設定，真實 Google 授權與企業政策仍待實機驗收。[Google 帳號與同步設定教學](docs/Google帳號與同步設定.md)。
+
 ### v1.4.0 本機開發版：健康工具
+
+v1.4.0 本機更新：日曆來源網址預設鎖定，需主動解鎖才能編輯；新增「還原預設網址」，一次恢復兩份日曆來源並重新鎖定，按儲存後套用。
 
 新增內建農曆與假日 JSON：由 `Sheet範例` 兩份 CSV 複製轉換，包含 2026–2027 年的 730 筆農曆與 46 筆假日，隨安裝包封裝，首次啟動自動載入。「管理者專區 → 日曆資料」提供預設關閉的 GitHub 網路更新，可選每天／每週／每月／手動更新，預填本儲存庫 `main/data/calendar/` 的原始檔網址。下載與驗證全部成功才套用，失敗保留舊資料；既有 Sheet A 同日期資料優先。檔案格式、轉換與更新規則見 [日曆 JSON 說明](data/calendar/README.md)。
 

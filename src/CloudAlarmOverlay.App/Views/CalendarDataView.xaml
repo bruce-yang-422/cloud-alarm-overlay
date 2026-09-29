@@ -9,8 +9,13 @@
    <CheckBox x:Name="NetworkUpdates" Content="允許網路更新（預設關閉）" IsChecked="{Binding Enabled}" Style="{StaticResource PillSwitch}" Margin="0,14"/>
    <controls:SlidingSegmentedControl x:Name="UpdateFrequency" ItemsSource="{Binding Frequencies}" SelectedItem="{Binding Frequency}" Style="{StaticResource PillSlidingSegmentedControl}" Height="44" MaxWidth="620"/>
    <TextBlock Text="每天：每日首次執行時；每週：週一後首次執行時；每月：每月 1 日後首次執行時。程式持續開啟時也會檢查。手動更新只在按下「立即更新」時連線。" Style="{StaticResource Muted}" Margin="0,12,0,18"/>
-   <TextBlock Text="假日 JSON 網址" FontWeight="SemiBold"/><TextBox x:Name="HolidaysSource" Text="{Binding HolidaysUrl,UpdateSourceTrigger=PropertyChanged}" AutomationProperties.Name="假日 JSON 網址"/>
-   <TextBlock Text="農曆 JSON 網址" FontWeight="SemiBold" Margin="0,12,0,0"/><TextBox x:Name="LunarSource" Text="{Binding LunarUrl,UpdateSourceTrigger=PropertyChanged}" AutomationProperties.Name="農曆 JSON 網址"/>
+   <WrapPanel Margin="0,0,0,8">
+    <CheckBox x:Name="SourceUrlsLock" Content="鎖定網址" IsChecked="{Binding UrlsLocked}" IsEnabled="{Binding CanEditSourceSettings}" Style="{StaticResource PillSwitch}" VerticalAlignment="Center" Margin="0,0,18,0" AutomationProperties.Name="鎖定日曆來源網址"/>
+    <Button x:Name="RestoreSourceUrls" Content="還原預設網址" Command="{Binding RestoreDefaultUrlsCommand}" AutomationProperties.Name="還原兩個日曆預設網址"/>
+   </WrapPanel>
+   <TextBlock Text="{Binding UrlLockDescription}" Style="{StaticResource Muted}" Margin="0,0,0,14"/>
+   <TextBlock Text="假日 JSON 網址" FontWeight="SemiBold"/><TextBox x:Name="HolidaysSource" Text="{Binding HolidaysUrl,UpdateSourceTrigger=PropertyChanged}" IsReadOnly="{Binding UrlsReadOnly}" AutomationProperties.Name="假日 JSON 網址"/>
+   <TextBlock Text="農曆 JSON 網址" FontWeight="SemiBold" Margin="0,12,0,0"/><TextBox x:Name="LunarSource" Text="{Binding LunarUrl,UpdateSourceTrigger=PropertyChanged}" IsReadOnly="{Binding UrlsReadOnly}" AutomationProperties.Name="農曆 JSON 網址"/>
    <TextBlock Text="支援公開 GitHub JSON 的原始檔網址或 blob 檔案網址。兩份檔案需有相同版本與涵蓋期間；下載或驗證失敗時保留原資料，下個週期再試，也可手動重試。" Style="{StaticResource Muted}" Margin="0,12,0,18"/>
    <WrapPanel><Button Content="儲存設定" Command="{Binding SaveCommand}" Style="{StaticResource Primary}"/><Button Content="立即更新" Command="{Binding UpdateCommand}"/></WrapPanel>
   </StackPanel></Border>

@@ -51,6 +51,8 @@ google_key_*.json
 service-account*.json
 credentials*.json
 client_secret*.json
+google-workspace.dat
+google-workspace.dat.tmp
 secrets.json
 appsettings.Local.json
 appsettings.*.Local.json
@@ -105,3 +107,4 @@ Desktop.ini
 
 # Local administrator import settings (contains company connection details)
 /cao-settings.local.json
+/google-desktop-oauth.local.json

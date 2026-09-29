@@ -33,7 +33,7 @@ internal sealed class TaskRepository(Database db) : ITaskRepository
     }
     public async Task ReplaceCloudCacheAsync(string source, IReadOnlyList<AlarmTask> tasks, CancellationToken cancellationToken = default)
     {
-        if (source is not (TaskSources.SheetA or TaskSources.SheetB) || tasks.Any(t => t.Source != source || string.IsNullOrWhiteSpace(t.ExternalId)))
+        if (!TaskSources.IsCloud(source) || tasks.Any(t => t.Source != source || string.IsNullOrWhiteSpace(t.ExternalId)))
             throw new ArgumentException("Invalid cloud source.");
         if (tasks.Select(t => t.Id).Distinct().Count() != tasks.Count) throw new ArgumentException("任務 Id 重複。");
         await using var c = await db.OpenAsync(cancellationToken);

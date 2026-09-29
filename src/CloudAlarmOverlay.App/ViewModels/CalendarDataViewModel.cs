@@ -11,10 +11,21 @@ public partial class CalendarDataViewModel(CalendarDataService calendar):Observa
     [ObservableProperty] private string frequency="每天";
     [ObservableProperty] private string holidaysUrl="";
     [ObservableProperty] private string lunarUrl="";
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(UrlsReadOnly))]
+    [NotifyPropertyChangedFor(nameof(UrlLockDescription))]
+    private bool urlsLocked=true;
     [ObservableProperty] private string summary="正在載入內建資料…";
     [ObservableProperty] private string updateStatus="";
     [ObservableProperty] private string message="";
-    [ObservableProperty] private bool busy;
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(UrlsReadOnly))]
+    [NotifyPropertyChangedFor(nameof(CanEditSourceSettings))]
+    [NotifyCanExecuteChangedFor(nameof(RestoreDefaultUrlsCommand))]
+    private bool busy;
+    public bool UrlsReadOnly=>UrlsLocked||Busy;
+    public bool CanEditSourceSettings=>!Busy;
+    public string UrlLockDescription=>UrlsLocked?"網址已鎖定，仍可選取與複製；先關閉鎖定才能編輯。":"網址可編輯；儲存設定或重新開啟此頁後會自動鎖定。";
     public string[] Frequencies { get; }=["每天","每週","每月","手動更新"];
     public async Task LoadAsync()
     {
@@ -22,11 +33,17 @@ public partial class CalendarDataViewModel(CalendarDataService calendar):Observa
         {
             await calendar.InitializeAsync();var state=await calendar.GetAsync();
             Enabled=state.Options.Enabled;Frequency=state.Options.Frequency switch{"Weekly"=>"每週","Monthly"=>"每月","Manual"=>"手動更新",_=>"每天"};
-            HolidaysUrl=state.Options.HolidaysUrl;LunarUrl=state.Options.LunarUrl;Render(state);
+            HolidaysUrl=state.Options.HolidaysUrl;LunarUrl=state.Options.LunarUrl;UrlsLocked=true;Render(state);
         }
         catch(Exception ex){Message="載入失敗："+ex.Message;}
     }
     private CalendarUpdateOptions Draft()=>new(){Enabled=Enabled,Frequency=Frequency switch{"每天"=>"Daily","每週"=>"Weekly","每月"=>"Monthly","手動更新"=>"Manual",_=>throw new ArgumentException("請選擇更新頻率。")},HolidaysUrl=CalendarUpdateOptions.NormalizeUrl(HolidaysUrl),LunarUrl=CalendarUpdateOptions.NormalizeUrl(LunarUrl)};
+    [RelayCommand(CanExecute=nameof(CanEditSourceSettings))] private void RestoreDefaultUrls()
+    {
+        var defaults=new CalendarUpdateOptions();
+        HolidaysUrl=defaults.HolidaysUrl;LunarUrl=defaults.LunarUrl;UrlsLocked=true;
+        Message="已還原預設網址並重新鎖定；請按「儲存設定」套用。";
+    }
     private void Render(CalendarDataState state)
     {
         Summary=$"{(state.Source=="GitHub"?"GitHub 資料":"安裝包內建資料")} · 版本 {state.Lunar?.Version}\n農曆 {state.Lunar?.Entries.Length??0} 筆 · 假日 {state.Holidays?.Entries.Length??0} 筆\n涵蓋 {state.Lunar?.From:yyyy-MM-dd} ～ {state.Lunar?.To:yyyy-MM-dd}";

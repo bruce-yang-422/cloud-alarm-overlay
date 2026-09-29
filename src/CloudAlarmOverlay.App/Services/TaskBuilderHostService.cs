@@ -136,7 +136,7 @@ public sealed class TaskBuilderHostService(ILogger<TaskBuilderHostService> logge
             try
             {
                 var all = await tasks.GetAllAsync();
-                var ids = all.SelectMany(t => new[] { t.Id, t.ExternalId }).Where(id => !string.IsNullOrEmpty(id)).Distinct();
+                var ids = all.Where(t=>!t.Source.StartsWith("Google:",StringComparison.Ordinal)).SelectMany(t => new[] { t.Id, t.ExternalId }).Where(id => !string.IsNullOrEmpty(id)).Distinct();
                 context.Response.ContentType="application/json; charset=utf-8";
                 await WriteTextAsync(context.Response, JsonSerializer.Serialize(ids));
             }

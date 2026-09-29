@@ -1,0 +1,56 @@
+<UserControl x:Class="CloudAlarmOverlay.App.Views.GoogleWorkspaceView" xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:controls="clr-namespace:CloudAlarmOverlay.App.Controls">
+ <UserControl.Resources><ResourceDictionary><ResourceDictionary.MergedDictionaries><ResourceDictionary Source="../Styles/LightTheme.xaml"/><ResourceDictionary Source="../Styles/SlidingSegmentedControl.xaml"/></ResourceDictionary.MergedDictionaries></ResourceDictionary></UserControl.Resources>
+ <DockPanel>
+  <StackPanel DockPanel.Dock="Top">
+   <WrapPanel><TextBlock Text="Google 帳號與來源" FontSize="20" FontWeight="SemiBold" Margin="0,0,16,8"/><Button Content="＋新增來源" Command="{Binding AddSourceCommand}" IsEnabled="{Binding CanAct}"/><Button Content="更新狀態" Command="{Binding RefreshStatusCommand}"/></WrapPanel>
+   <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled"><controls:SlidingSegmentedControl x:Name="SourceTabs" Style="{StaticResource PillSlidingSegmentedControl}" ItemsSource="{Binding Tabs}" SelectedItem="{Binding Selected}" MinWidth="600" Margin="0,6,0,12"><controls:SlidingSegmentedControl.ItemTemplate><DataTemplate><TextBlock Text="{Binding Name}" MinWidth="90" TextAlignment="Center"/></DataTemplate></controls:SlidingSegmentedControl.ItemTemplate></controls:SlidingSegmentedControl></ScrollViewer>
+  </StackPanel>
+  <StackPanel DockPanel.Dock="Bottom"><TextBlock Text="{Binding Message}" TextWrapping="Wrap" Margin="0,10"/><Button Content="取消進行中的操作" Command="{Binding CancelCommand}" Visibility="{Binding Busy,Converter={StaticResource BoolVisibility}}" HorizontalAlignment="Left"/></StackPanel>
+  <ScrollViewer VerticalScrollBarVisibility="Auto"><StackPanel IsEnabled="{Binding CanAct}">
+   <StackPanel Visibility="{Binding IsOverview,Converter={StaticResource BoolVisibility}}">
+    <Border Style="{StaticResource Card}"><StackPanel>
+     <TextBlock Text="{Binding ConfigurationStatus}" FontWeight="SemiBold" Margin="0,0,0,10"/>
+     <TextBlock Text="公司與個人帳號可同時登入。有效憑證自動續用；Google 授權失效時才需重新登入。" Style="{StaticResource Muted}"/>
+     <CheckBox Content="允許 Sheets 編輯（需重新授權，來源仍須另開寫回）" IsChecked="{Binding WriteSheets}" Margin="0,8"/>
+     <WrapPanel Margin="0,10"><StackPanel Width="180"><TextBlock Text="帳號標籤（公司／個人）"/><TextBox Text="{Binding AccountLabel,UpdateSourceTrigger=PropertyChanged}"/></StackPanel><CheckBox Content="讀取 Sheets" IsChecked="{Binding UseSheets}" Margin="16,0" VerticalAlignment="Center"/><CheckBox Content="讀取自己的日曆" IsChecked="{Binding UseCalendar}" VerticalAlignment="Center"/><Button Content="使用 Google 登入" Command="{Binding SignInCommand}" Margin="16,0"/></WrapPanel>
+     <ComboBox x:Name="AccountPicker" ItemsSource="{Binding Accounts}" SelectedItem="{Binding SelectedAccount}" Margin="0,8"><ComboBox.ItemTemplate><DataTemplate><TextBlock><Run Text="{Binding Label}"/><Run Text=" · "/><Run Text="{Binding Email}"/><Run Text=" · "/><Run Text="{Binding Status}"/></TextBlock></DataTemplate></ComboBox.ItemTemplate></ComboBox>
+     <WrapPanel><Button Content="登出選取帳號" Click="SignOut"/><Button Content="解除 Google 授權" Click="Revoke"/></WrapPanel>
+     <Expander Header="進階設定：組織自訂 OAuth" Margin="0,16,0,0" IsExpanded="False"><StackPanel>
+      <TextBlock Text="一般使用者直接按「使用 Google 登入」即可。僅在組織要求使用自己的 Google Cloud 專案時匯入設定；切換前請先登出所有 Google 帳號。" Style="{StaticResource Muted}" TextWrapping="Wrap"/>
+      <WrapPanel Margin="0,10"><Button Content="匯入桌面 OAuth 設定" Click="ImportClient"/><Button Content="恢復程式預設" Command="{Binding UseBuiltInClientCommand}"/><Button Content="自訂 OAuth 設定教學" Click="OpenGuide"/></WrapPanel>
+     </StackPanel></Expander>
+    </StackPanel></Border>
+    <Button Content="同步全部 Google 來源" Command="{Binding SyncSelectedCommand}" HorizontalAlignment="Left"/>
+    <ItemsControl ItemsSource="{Binding SourceCards}"><ItemsControl.ItemTemplate><DataTemplate><Border Style="{StaticResource Card}"><StackPanel><TextBlock Text="{Binding Name}" FontWeight="SemiBold"/><TextBlock Text="{Binding Status}" TextWrapping="Wrap"/><TextBlock Text="{Binding LastSync,StringFormat=最後成功：{0}}" Style="{StaticResource Muted}"/></StackPanel></Border></DataTemplate></ItemsControl.ItemTemplate></ItemsControl>
+   </StackPanel>
+   <StackPanel Visibility="{Binding IsSource,Converter={StaticResource BoolVisibility}}">
+    <Border Style="{StaticResource Card}"><StackPanel>
+     <CheckBox Content="鎖定來源設定" IsChecked="{Binding Selected.Locked}" Style="{StaticResource PillSwitch}" Margin="0,0,0,12"/>
+     <StackPanel IsEnabled="{Binding Selected.Editable}">
+      <TextBlock Text="來源名稱"/><TextBox Text="{Binding Selected.Name,UpdateSourceTrigger=PropertyChanged}" MaxLength="60"/>
+      <TextBlock Text="使用帳號"/><ComboBox ItemsSource="{Binding Accounts}" SelectedValuePath="Id" SelectedValue="{Binding Selected.AccountId}"><ComboBox.ItemTemplate><DataTemplate><TextBlock><Run Text="{Binding Label}"/><Run Text=" · "/><Run Text="{Binding Email}"/></TextBlock></DataTemplate></ComboBox.ItemTemplate></ComboBox>
+      <TextBlock Text="來源類型" Margin="0,8,0,0"/><ComboBox ItemsSource="{Binding Kinds}" SelectedItem="{Binding Selected.Kind}"/>
+      <StackPanel Visibility="{Binding Selected.IsSheet,Converter={StaticResource BoolVisibility}}"><TextBlock Text="試算表網址或 Spreadsheet ID" Margin="0,8,0,0"/><TextBox Text="{Binding Selected.ResourceId,UpdateSourceTrigger=PropertyChanged}"/><TextBlock Text="Tasks 工作表 GID"/><TextBox Text="{Binding Selected.TabId,UpdateSourceTrigger=PropertyChanged}"/></StackPanel>
+      <WrapPanel Margin="0,10"><Button Content="讀取工作表／自有日曆" Command="{Binding LoadResourcesCommand}"/><ComboBox Width="340" ItemsSource="{Binding Selected.Resources}" SelectedItem="{Binding Selected.SelectedResource}" DisplayMemberPath="Name"/></WrapPanel>
+      <TextBlock Text="{Binding Selected.ResourceId}" TextWrapping="Wrap" Style="{StaticResource Muted}" Visibility="{Binding Selected.IsCalendar,Converter={StaticResource BoolVisibility}}"/>
+      <WrapPanel><CheckBox Content="啟用同步" IsChecked="{Binding Selected.Enabled}" Style="{StaticResource PillSwitch}" Margin="0,0,20,0"/><TextBlock Text="每幾分鐘同步" VerticalAlignment="Center"/><TextBox Text="{Binding Selected.IntervalMinutes}" Width="75"/></WrapPanel>
+      <CheckBox Content="允許此 Tasks 來源寫回（限無同時編輯的工作表）" IsChecked="{Binding Selected.AllowWrite}" Visibility="{Binding Selected.IsSheet,Converter={StaticResource BoolVisibility}}" Margin="0,10"/>
+      <StackPanel Visibility="{Binding Selected.IsCalendar,Converter={StaticResource BoolVisibility}}"><WrapPanel><TextBlock Text="提前幾分鐘提醒" VerticalAlignment="Center"/><TextBox Text="{Binding Selected.ReminderMinutes}" Width="75"/><CheckBox Content="包含全天行程" IsChecked="{Binding Selected.IncludeAllDay}" Margin="20,0" VerticalAlignment="Center"/><TextBlock Text="全天提醒時間（來源日曆時區，0–23 時）" VerticalAlignment="Center"/><TextBox Text="{Binding Selected.AllDayHour}" Width="60"/></WrapPanel></StackPanel>
+     </StackPanel>
+     <TextBlock Text="{Binding Selected.Status}" TextWrapping="Wrap" Margin="0,12"/>
+     <TextBlock Text="{Binding Selected.LastSync,StringFormat=最後成功：{0}}" Style="{StaticResource Muted}"/>
+     <TextBlock Text="Google 日曆維持唯讀，確認提醒不會修改行程或回覆邀請。Sheet 任務沿用標題列及第二列中文說明的格式。" Style="{StaticResource Muted}"/>
+     <WrapPanel Margin="0,12"><Button Content="儲存來源" Command="{Binding SaveSourceCommand}" IsEnabled="{Binding Selected.Editable}" Style="{StaticResource Primary}"/><Button Content="立即同步" Command="{Binding SyncSelectedCommand}"/><Button Content="移除來源" Click="RemoveSource"/></WrapPanel>
+    </StackPanel></Border>
+    <Border Style="{StaticResource Card}" Visibility="{Binding Selected.IsSheet,Converter={StaticResource BoolVisibility}}"><StackPanel>
+     <TextBlock Text="線上任務編輯" FontSize="18" FontWeight="SemiBold"/>
+     <TextBlock Text="請先儲存來源設定。輸入原始任務 ID 讀取，或新增任務；Enabled 設為 FALSE 可停用。寫入前會檢查雲端差異，仍請避免他人同時編輯此表。" Style="{StaticResource Muted}" Margin="0,8"/>
+     <WrapPanel><TextBox Text="{Binding EditTaskId,UpdateSourceTrigger=PropertyChanged}" Width="240" AutomationProperties.Name="線上任務 ID"/><Button Content="讀取任務" Command="{Binding ReadTaskCommand}"/><Button Content="新增任務" Command="{Binding NewTaskCommand}"/></WrapPanel>
+     <TextBlock Text="{Binding EditSummary}" TextWrapping="Wrap"/>
+     <ItemsControl ItemsSource="{Binding TaskFields}"><ItemsControl.ItemTemplate><DataTemplate><Grid><Grid.ColumnDefinitions><ColumnDefinition Width="180"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions><TextBlock Text="{Binding Name}" VerticalAlignment="Center"/><TextBox Grid.Column="1" Text="{Binding Value,UpdateSourceTrigger=PropertyChanged}" IsReadOnly="{Binding ReadOnly}"/></Grid></DataTemplate></ItemsControl.ItemTemplate></ItemsControl>
+     <WrapPanel Visibility="{Binding HasTaskDraft,Converter={StaticResource BoolVisibility}}"><Button Content="預覽差異並寫入" Click="WriteTask"/><Button Content="刪除雲端任務" Click="DeleteTask"/></WrapPanel>
+    </StackPanel></Border>
+   </StackPanel>
+  </StackPanel></ScrollViewer>
+ </DockPanel>
+</UserControl>

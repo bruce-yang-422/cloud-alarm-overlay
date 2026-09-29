@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Cloud Alarm Overlay 隱私權政策：Google 帳號、Sheets 與日曆資料的存取、用途、本機保存及刪除方式。">
+  <title>隱私權政策｜Cloud Alarm Overlay</title>
+  <link rel="canonical" href="https://remind.stack-base.com/privacy.html">
+  <link rel="icon" href="src/CloudAlarmOverlay.App/Assets/Brand/cloud_alarm_app.ico">
+  <link rel="stylesheet" href="site-assets/legal.css">
+</head>
+<body>
+  <a class="skip-link" href="#main">跳至主要內容</a>
+  <header><div class="wrap">
+    <a class="brand" href="./"><img src="src/CloudAlarmOverlay.App/Assets/Brand/cloud_alarm_square_logo.png" alt="" width="44" height="44">Cloud Alarm Overlay</a>
+    <nav aria-label="網站導覽"><a href="./">首頁</a><a href="privacy.html" aria-current="page">隱私權政策</a><a href="terms.html">服務條款</a></nav>
+  </div></header>
+  <main id="main" class="wrap">
+    <h1>隱私權政策</h1>
+    <p class="meta">最後更新：2026 年 9 月 29 日 · 開發與維護：Bruce Yang</p>
+    <p>Cloud Alarm Overlay 是 Windows 桌面提醒程式。本政策說明本專案發布的程式與介紹網站如何處理資料，包含提供 Google 整合功能之版本的資料處理方式。第三方自行修改或部署的版本，應另由其提供者說明資料處理方式。</p>
+    <p class="notice">Google 登入是選用功能。你可使用本機任務、倒數與番茄鐘而不登入 Google。v1.4.0 的 Google 整合目前仍在發布準備中；請以實際安裝版本提供的功能為準。</p>
+
+    <h2>1. 我們存取哪些資料，以及為什麼</h2>
+    <ul>
+      <li><strong>本機資料：</strong>你設定的裝置代碼、顯示名稱、任務、倒數、番茄鐘與健康提醒設定，以及提醒確認和操作紀錄，用於排程、顯示與查詢。這些資料主要保存在你的電腦。</li>
+      <li><strong>Google 帳號：</strong>授權後讀取帳號識別碼、電子郵件及其驗證狀態，用於區分公司與個人帳號。Google 密碼由 Google 登入頁面處理，程式不接收或保存你的 Google 密碼。</li>
+      <li><strong>Google 授權憑證：</strong>存取憑證與更新憑證用於連線及在授權有效時自動續用，避免每次同步都要求登入。</li>
+      <li><strong>Google Sheets：</strong>讀取你指定試算表的工作表名稱、識別碼及所選 Tasks 工作表的內容，包括任務標題、描述、時間、啟用狀態與提醒設定，用於桌面排程及顯示。只有你另行授予寫入權限、開啟來源寫回並確認操作時，程式才會新增、修改或刪除線上任務。</li>
+      <li><strong>Google 日曆：</strong>讀取日曆清單及所選日曆的活動，例如活動識別碼、標題、描述、時間、時區、連結、取消狀態及與目前帳號相關的邀請回覆，用於同步與安排本機提醒。日曆功能維持唯讀，不會變更行程或代你回覆邀請。目前開發版僅支援自有日曆。</li>
+    </ul>
+    <p>Google 授權畫面可能涵蓋你有權限存取的多份試算表或日曆；程式依你選定的來源同步，來源選擇本身不會把 Google 的授權範圍縮小為單一檔案。程式不會因此取得超過該 Google 帳號原有的檔案權限。</p>
+
+    <h2>2. 資料用途與分享</h2>
+    <p>Google 資料僅用於你看得到的帳號管理、同步、任務編輯及提醒功能。程式直接與 Google API 連線，目前沒有接收私人任務、日曆或 Google 憑證的開發者後端服務。執行你確認的 Sheet 編輯時，修改內容會送回 Google，並依該試算表既有的分享設定供有權限的人查看。</p>
+    <p>我們不出售 Google 使用者資料，不將其用於廣告、信用評估或訓練通用人工智慧模型，也不主動提供給資料仲介。開發者不會透過程式自動取得或閱讀你的私人任務和日曆。若你主動寄送問題報告、截圖或檔案，我們僅將提供的內容用於回覆及處理該問題；請先移除不必要的私人資訊與憑證。</p>
+    <p>Cloud Alarm Overlay 對 Google API 所取得資訊的使用及向其他應用程式的傳輸，遵守 <a href="https://developers.google.com/terms/api-services-user-data-policy">Google API Services User Data Policy</a>，包括 Limited Use 限制。</p>
+
+    <h2>3. 保存位置與保護方式</h2>
+    <p>Google 帳號設定與憑證保存在目前 Windows 使用者的應用程式資料目錄，透過 Windows DPAPI 加密。它們不會包含在程式安裝檔、一般設定匯出或程式內建的 .calbak 備份中。</p>
+    <p>同步後的任務、日曆提醒內容與歷史紀錄保存在本機 SQLite 資料庫，供顯示、查詢與離線提醒；資料庫本身並未整庫加密，存取保護依賴你的 Windows 帳號、裝置及磁碟安全設定。Google API 網路連線使用 HTTPS。</p>
+    <p>你自行建立的備份、歷史紀錄匯出或整機備份可能包含提醒標題與內容。這些副本由你選擇保存及分享的位置，登出程式不會自動刪除已匯出的副本。</p>
+
+    <h2>4. 保存期限、停止同步與刪除</h2>
+    <ul>
+      <li><strong>同步期間：</strong>選定來源的快取會隨成功同步更新；暫時斷線時保留上次成功資料與憑證，以供離線提醒及重試。沒有設定所有本機資料一律於固定天數後刪除。</li>
+      <li><strong>停用或移除 Google 來源：</strong>停止該來源同步並清除其目前的任務快取；目前資料庫內相關提醒歷史的私人標題與內容會清除，部分不含內容的狀態紀錄仍可能保留。</li>
+      <li><strong>登出 Google 帳號：</strong>移除該帳號的本機憑證、來源及快取，並清除目前資料庫內相關歷史的私人內容。其他帳號不受影響。</li>
+      <li><strong>撤銷授權：</strong>可在程式選「解除 Google 授權」，或前往 <a href="https://myaccount.google.com/connections">Google 帳號的第三方連線管理</a>移除存取權。Google 端撤銷授權可能影響同一帳號在其他裝置對本專案的連線；若程式離線，本機資料需待程式處理或由你登出清除。</li>
+      <li><strong>雲端資料與副本：</strong>移除來源、登出或撤銷授權不會刪除你的 Google 試算表或日曆。請自行管理既有備份、匯出檔與支援郵件；一般資料刪除不代表對磁碟做安全抹除。</li>
+    </ul>
+
+    <h2>5. 網站及其他網路功能</h2>
+    <p>本介紹網站由 GitHub Pages 託管，未加入廣告追蹤或第三方分析程式。造訪網站及下載檔案時，GitHub 可能依其 <a href="https://docs.github.com/en/site-policy/privacy-policies/github-general-privacy-statement">隱私權聲明</a>處理 IP 位址等技術資訊。Google 登入及雲端資料也受 <a href="https://policies.google.com/privacy">Google 隱私權政策</a>規範。</p>
+    <p>程式另有公開 Sheet CSV 同步、GitHub 版本檢查／下載與日曆資料更新，以及可選的天氣功能。這些功能會向你設定的來源或對應服務發送必要請求；天氣查詢會傳送所選地點的座標。它們不需要傳送你的 Google 授權憑證給 GitHub 或天氣服務。</p>
+
+    <h2>6. 政策更新與聯絡</h2>
+    <p>政策更新會在本頁標示日期。若 Google 資料用途有重大變更，會先更新說明，並在需要時於程式內取得新的同意或授權。</p>
+    <p>資料處理、支援郵件刪除或隱私相關問題，請聯絡 Bruce Yang：<a href="mailto:yang20110103@gmail.com">yang20110103@gmail.com</a>。開發者無法遠端刪除僅保存在你電腦或 Google 帳號中的資料，可提供操作協助。</p>
+  </main>
+  <footer><div class="wrap"><nav aria-label="頁尾導覽"><a href="./">回首頁</a><a href="terms.html">服務條款</a><a href="https://github.com/bruce-yang-422/cloud-alarm-overlay">GitHub 專案</a></nav><p class="meta">© 2026 Bruce Yang · Cloud Alarm Overlay</p></div></footer>
+</body>
+</html>

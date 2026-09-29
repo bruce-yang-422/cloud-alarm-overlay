@@ -35,7 +35,7 @@ internal sealed class CsvSheetParser : ICsvSheetParser
     }
     public IReadOnlyList<AlarmTask> ParseTasks(string csv,string source)
     {
-        if(source is not (TaskSources.SheetA or TaskSources.SheetB)) throw new ArgumentException("來源錯誤。");
+        if(!TaskSources.IsCloud(source)) throw new ArgumentException("來源錯誤。");
         var now=DateTime.Now;
         var result=Read(csv,"Id","Time","Title","Enabled").Select(row=>{
             if(!DateTime.TryParseExact(Get(row,"Time"),new[]{"yyyy-MM-dd HH:mm","yyyy-MM-dd HH:mm:ss","yyyy-MM-ddTHH:mm:ss"},CultureInfo.InvariantCulture,DateTimeStyles.None,out var at))

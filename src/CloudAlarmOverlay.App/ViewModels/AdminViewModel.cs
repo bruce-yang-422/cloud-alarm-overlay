@@ -10,8 +10,11 @@ namespace CloudAlarmOverlay.App.ViewModels;
 public partial class AdminViewModel(AdminSession session,IAdminSettingsStore store,ISettingsRepository settings,
     IAuditLogRepository audit,IAuditService auditService,ISyncLogRepository syncLogs,
     ISheetCsvClient client,ICsvSheetParser parser,IUserDialogs dialogs,PreferencesViewModel preferences,
-    ISystemEventStore events,IExitProtectionService exitProtection,IAutoStartService autoStart,IAuthenticationService authentication,CalendarDataViewModel calendarData):ObservableObject
+    ISystemEventStore events,IExitProtectionService exitProtection,IAutoStartService autoStart,IAuthenticationService authentication,CalendarDataViewModel calendarData,GoogleWorkspaceViewModel google):ObservableObject
 {
+    public GoogleWorkspaceViewModel Google=>google;
+    public string[] SyncPages {get;}=["Google 帳號與來源","公開 Sheet A／B"];
+    [ObservableProperty] private int syncPage;
     public CalendarDataViewModel CalendarData=>calendarData;
     public AdminSession Session=>session;
     public bool IsCompanyMode=>!session.IsPersonal;

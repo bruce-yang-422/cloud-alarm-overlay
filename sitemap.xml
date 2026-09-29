@@ -1,6 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
-    <loc>https://bruce-yang-422.github.io/cloud-alarm-overlay/</loc>
+    <loc>https://remind.stack-base.com/</loc>
+  </url>
+  <url>
+    <loc>https://remind.stack-base.com/privacy.html</loc>
+  </url>
+  <url>
+    <loc>https://remind.stack-base.com/terms.html</loc>
   </url>
 </urlset>

@@ -6,6 +6,8 @@ public static class TaskSources
     public const string Local = "本機";
     public const string SheetA = "SheetA";
     public const string SheetB = "SheetB";
+    public static bool IsCloud(string source)=>source is SheetA or SheetB ||
+        (source.StartsWith("Google:",StringComparison.Ordinal)&&Guid.TryParseExact(source[7..],"N",out _));
 }
 
 public static class AlarmLevels
