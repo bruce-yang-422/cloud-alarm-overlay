@@ -18,6 +18,7 @@ public sealed record CalendarEntry(AlarmTask Task,DateTime Start,DateTime End,bo
     public string Source=>Task.Source.StartsWith("Google:")?"Google 日曆／試算表":Task.Source;
     public bool CanEdit=>Task.Source==TaskSources.Local||Task.IsGoogleCalendar;
     public string EditLabel=>Task.IsGoogleCalendar?"調整本機提醒":"編輯活動／提醒";
+    public string PreviewHint=>Period+"\n雙擊查看詳細資料";
 }
 public sealed record CalendarDay(DateTime Date,bool InMonth,IReadOnlyList<CalendarEntry> Events)
 {
@@ -105,7 +106,9 @@ public partial class TaskCalendarViewModel(ITaskSchedulingService scheduling,ISe
     [RelayCommand] private void SelectEvent(CalendarEntry entry)
     {
         Selected=entry;
-        if(SelectedDay<entry.Start.Date||SelectedDay>entry.LastDay)SelectedDay=entry.Start.Date<Month&&entry.LastDay>=Month?Month:entry.Start.Date;
+        // Rebuild the day list only when the day changes, so a double-click lands on the same item.
+        if(SelectedDay>=entry.Start.Date&&SelectedDay<=entry.LastDay)return;
+        SelectedDay=entry.Start.Date<Month&&entry.LastDay>=Month?Month:entry.Start.Date;
         UpdateDay();
     }
     [RelayCommand] private void CloseDetails()=>Selected=null;

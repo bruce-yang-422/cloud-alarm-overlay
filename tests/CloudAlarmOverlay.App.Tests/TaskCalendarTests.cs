@@ -133,6 +133,25 @@ public sealed class TaskCalendarTests
             await Dispatcher.Yield(DispatcherPriority.ApplicationIdle);window.UpdateLayout();
             var routine=Descendants(view).OfType<Button>().First(b=>b.DataContext is CalendarEntry e&&e.Task.Id=="routine");routine.Command.Execute(routine.CommandParameter);
             Assert.Equal("午休",main.TaskCalendar.Selected!.Title);Assert.True(((StackPanel)view.FindName("DayDetails")).IsVisible);
+            // The side card only lists the day's items; details open in the preview window on double-click.
+            Assert.Null(view.FindName("EventDetails"));
+            await Dispatcher.Yield(DispatcherPriority.ApplicationIdle);window.UpdateLayout();
+            Assert.True(Descendants(view).OfType<Button>().Single(b=>b.DataContext is CalendarEntry e&&e.Task.Id=="routine").Tag is true);
+            Assert.All(Descendants(view).OfType<Button>().Where(b=>b.DataContext is CalendarEntry e&&e.Task.Id!="routine"),b=>Assert.False(b.Tag is true));
+            var previewEntry=main.TaskCalendar.DayEvents.Single(e=>e.Title=="寵物展");
+            var preview=new TaskPreviewWindow(new(previewEntry.Task),previewEntry.EditLabel,canCopy:true){ShowActivated=false,ShowInTaskbar=false};
+            try
+            {
+                preview.Show();preview.UpdateLayout();
+                var edit=(Button)preview.FindName("EditButton");Assert.True(edit.IsVisible);Assert.Equal("編輯活動／提醒",edit.Content);
+                Assert.True(((Button)preview.FindName("CopyButton")).IsVisible);
+                Capture(preview,"calendar-preview");
+                edit.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));Assert.Equal(TaskPreviewAction.Edit,preview.Action);
+            }
+            finally{preview.Close();}
+            var readOnly=new TaskPreviewWindow(new(previewEntry.Task)){ShowActivated=false,ShowInTaskbar=false};
+            try{readOnly.Show();readOnly.UpdateLayout();Assert.False(((Button)readOnly.FindName("EditButton")).IsVisible);Assert.Equal(TaskPreviewAction.None,readOnly.Action);}
+            finally{readOnly.Close();}
             main.TaskCalendar.CloseDetailsCommand.Execute(null);
             foreach(var width in new[]{1050,1440})foreach(var dark in new[]{false,true})
             {

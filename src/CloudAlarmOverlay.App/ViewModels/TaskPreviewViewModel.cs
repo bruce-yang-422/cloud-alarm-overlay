@@ -10,7 +10,7 @@ public sealed class TaskPreviewViewModel
     public string Note {get;}
     public string Summary {get;}
     public string HistoryDetails {get;}
-    public string Notice {get;}
+    public string Notice {get;init;}
     public TaskPreviewViewModel(AlarmTask? task,AcknowledgementLog? entry=null)
     {
         Title=entry?.TaskName??task?.Title??"任務詳細訊息";

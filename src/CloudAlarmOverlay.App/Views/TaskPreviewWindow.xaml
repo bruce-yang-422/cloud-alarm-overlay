@@ -5,7 +5,11 @@
  FontFamily="Segoe UI, Microsoft JhengHei UI" Background="{adaptive:AdaptiveBrush #F7FAFE}" Foreground="{adaptive:AdaptiveBrush #16243E}">
  <Window.Resources><ResourceDictionary><ResourceDictionary.MergedDictionaries><ResourceDictionary Source="../Styles/LightTheme.xaml"/></ResourceDictionary.MergedDictionaries></ResourceDictionary></Window.Resources>
  <DockPanel Margin="24">
-  <Button DockPanel.Dock="Bottom" Content="關閉" IsCancel="True" HorizontalAlignment="Right" Padding="24,10" Margin="0,16,0,0"/>
+  <DockPanel DockPanel.Dock="Bottom" Margin="0,16,0,0" LastChildFill="False">
+   <Button DockPanel.Dock="Right" Content="關閉" IsCancel="True" Padding="24,10" Margin="0"/>
+   <Button x:Name="EditButton" DockPanel.Dock="Left" Click="OnEdit" Style="{StaticResource Primary}" Padding="20,10" Visibility="Collapsed"/>
+   <Button x:Name="CopyButton" DockPanel.Dock="Left" Content="複製為本機活動／提醒" Click="OnCopy" Padding="16,10" Visibility="Collapsed"/>
+  </DockPanel>
   <ScrollViewer VerticalScrollBarVisibility="Auto"><StackPanel>
    <TextBlock Text="{Binding Notice}" Style="{StaticResource Muted}" TextWrapping="Wrap"/>
    <TextBlock Text="{Binding Title}" FontSize="25" FontWeight="SemiBold" TextWrapping="Wrap" Margin="0,10,0,12"/>

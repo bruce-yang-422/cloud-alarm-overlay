@@ -17,6 +17,12 @@ public sealed class CalendarDateSelectedConverter:System.Windows.Data.IMultiValu
         =>values.Length==2 && values[0] is DateTime date && values[1] is DateTime selected && date.Date==selected.Date;
     public object[] ConvertBack(object value,Type[] targetTypes,object parameter,System.Globalization.CultureInfo culture)=>throw new NotSupportedException();
 }
+public sealed class CalendarEntrySelectedConverter:System.Windows.Data.IMultiValueConverter
+{
+    public object Convert(object[] values,Type targetType,object parameter,System.Globalization.CultureInfo culture)
+        =>values.Length==2 && values[0] is CalendarEntry entry && Equals(entry,values[1]);
+    public object[] ConvertBack(object value,Type[] targetTypes,object parameter,System.Globalization.CultureInfo culture)=>throw new NotSupportedException();
+}
 public partial class TaskCalendarView:UserControl
 {
     private TaskCalendarViewModel? calendar;
@@ -55,9 +61,14 @@ public partial class TaskCalendarView:UserControl
         for(var i=0;i<VisualTreeHelper.GetChildrenCount(parent);i++)
         {var child=VisualTreeHelper.GetChild(parent,i);yield return child;foreach(var descendant in Descendants(child))yield return descendant;}
     }
-    private void Preview(object sender,RoutedEventArgs e)
+    private void PreviewEntry(object sender,System.Windows.Input.MouseButtonEventArgs e)
     {
-        if((sender as FrameworkElement)?.DataContext is CalendarEntry entry)
-            new TaskPreviewWindow(new(entry.Task)){Owner=Window.GetWindow(this)}.ShowDialog();
+        var entry=(sender as FrameworkElement)?.DataContext switch{CalendarEntry c=>c,CalendarSegment s=>s.Entry,_=>null};
+        if(entry is null || DataContext is not MainViewModel main)return;
+        e.Handled=true;
+        var preview=new TaskPreviewWindow(new(entry.Task){Notice=entry.CanEdit?"預覽":"唯讀預覽（可複製為本機活動）"},entry.CanEdit?entry.EditLabel:null,canCopy:true){Owner=Window.GetWindow(this)};
+        preview.ShowDialog();
+        if(preview.Action==TaskPreviewAction.Edit)main.EditCalendarEntryCommand.Execute(entry);
+        else if(preview.Action==TaskPreviewAction.Copy)main.CopyCalendarEntryCommand.Execute(entry);
     }
 }
