@@ -1,6 +1,6 @@
 {
-  "latestVersion": "1.3.0",
-  "downloadUrl": "https://github.com/bruce-yang-422/cloud-alarm-overlay/releases/download/v1.3.0/CloudAlarmOverlay-v1.3.0-Setup-x64.exe",
-  "sha256": "ab778847161d03a924b4bdb2def324fed2d581576cf1f91db95207ebe4ffd7b8",
-  "releaseNote": "## 提醒與天氣\n\n- **稍後提醒**：忙碌時可延後 5、10、15 或 30 分鐘。強制通知延後免驗證碼，正式確認仍需驗證。\n- **首頁天氣**：顯示現在與明天天氣，支援縣市／鄉鎮市區、地名關鍵字及郵遞區號快選；點擊可查看氣象署詳細預報。\n\n## 任務與分享\n\n- **任務資料**：新增本機任務 CSV 匯入與匯出。\n- **倒數分享**：支援 1:1 與 2:3 比例的倒數／正數分享圖片。\n- **離線工具**：任務產生器資源已本機化，斷網仍可手動輸入並匯出。\n\n## 管理與介面改善\n\n- 新增管理員 JSON 設定匯入／匯出，以及日誌自動清理（預設保留 30 天，可調整）。\n- 每月農曆改用內建曆法；節氣仍使用 Sheet A。\n- 改善任務、提醒紀錄與番茄鐘歷程介面，新增連線狀態卡。\n\n## 升級須知\n\nv1.2.0 可直接覆蓋升級，保留既有任務、設定與歷史。**升級前請先備份，並儲存正在編輯的內容。**\n\n[查看完整改版說明](https://github.com/bruce-yang-422/cloud-alarm-overlay/releases/tag/v1.3.0)"
+  "latestVersion": "1.4.0",
+  "downloadUrl": "https://github.com/bruce-yang-422/cloud-alarm-overlay/releases/download/v1.4.0/CloudAlarmOverlay-v1.4.0-Setup-x64.exe",
+  "sha256": "d35f24ec2faa57d70adedc6f99e6b2231ece5a5957cfdb1ffa926e743cd36152",
+  "releaseNote": "## 任務月曆與跨日活動\n\n- 「我的任務」可切換**清單／月曆**，日期格顯示農曆、假日與節氣，每週起始日可在設定調整。\n- 活動可設定**開始與結束日期**，跨週、跨月接續顯示；活動期間與提醒時間分開設定。\n- 右側「當日工作」列出當天活動與日常任務，雙擊即可查看詳細資料、編輯或複製為本機活動。\n\n## 健康提醒與氣象資訊\n\n- **喝水、久坐、螢幕休息、伸展**四項提醒，預設關閉，可設定間隔、時段與工作日，並配合番茄鐘休息。\n- 首頁依所在地顯示生效中的**氣象署警特報與地震報告**，點擊查看官方資訊。\n\n## 介面改善\n\n- 首頁重新規劃為下一個提醒、今日進度、重要追蹤與需要處理的問題。\n- 個人設定與管理者專區重新分類；軟體更新說明支援 Markdown，更容易閱讀。\n\n## 升級須知\n\nv1.3.0 可直接覆蓋升級，保留既有任務、設定與歷史。**升級前請先備份，並儲存正在編輯的內容。** 新版備份格式為第 4 版，請以 v1.4.0 還原。Google 帳號整合尚未對所有使用者開放。\n\n[查看完整改版說明](https://github.com/bruce-yang-422/cloud-alarm-overlay/releases/tag/v1.4.0)"
 }
