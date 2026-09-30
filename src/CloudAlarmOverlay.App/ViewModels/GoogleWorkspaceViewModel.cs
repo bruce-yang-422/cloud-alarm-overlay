@@ -7,11 +7,25 @@ using CloudAlarmOverlay.Core.Services;
 
 namespace CloudAlarmOverlay.App.ViewModels;
 
-public partial class GoogleWorkspaceViewModel(IGoogleWorkspace workspace,IBrowserLauncher browser):ObservableObject
+public partial class GoogleWorkspaceViewModel(IGoogleWorkspace workspace,IBrowserLauncher browser,IUserDialogs? dialogs=null):ObservableObject
 {
+    public bool ConfirmDiscardDraft()=>dialogs?.ConfirmAdminAction("捨棄尚未儲存的變更？","尚未儲存的來源或任務編輯將被捨棄。Google 雲端資料不會改變。","捨棄變更")??false;
     public ObservableCollection<GoogleAccount> Accounts {get;}=[];
-    public ObservableCollection<GoogleSourceDraft> Tabs {get;}=[new(new(){Id="",Name="帳號管理"})];
-    public IEnumerable<GoogleSourceDraft> SourceCards=>Tabs.Where(t=>t.Id!="");
+    public ObservableCollection<GoogleSourceDraft> Tabs {get;}=[new(new(){Id="",Name="Google 帳號與同步"})];
+    public IEnumerable<GoogleSourceDraft> SourceCards=>Tabs.Where(t=>t.Id!=""&&(string.IsNullOrEmpty(SourceAccountFilter)||t.AccountId==SourceAccountFilter));
+    [ObservableProperty] [NotifyPropertyChangedFor(nameof(SourceCards))] private string sourceAccountFilter="";
+    public IEnumerable<GoogleAccount> SourceAccountFilters=>new[]{new GoogleAccount("","","全部帳號","")}.Concat(Accounts);
+    public bool HasSourceChanges=>Selected is {Id.Length:>0} draft&&draft.HasChanges;
+    public bool HasTaskEdits=>taskDraft is {} draft&&(!draft.Exists||TaskFields.Any(f=>draft.Fields.GetValueOrDefault(f.Name)!=f.Value));
+    public void ClearTaskEditor(){taskDraft=null;HasTaskDraft=false;TaskFields.Clear();EditSummary="";EditTaskId="";}
+    public void DiscardSource()
+    {
+        if(Selected is not {Id.Length:>0} draft)return;
+        if(draft.IsNew){Tabs.Remove(draft);Selected=Tabs[0];OnPropertyChanged(nameof(SourceCards));}
+        else draft.Restore();
+        OnPropertyChanged(nameof(HasSourceChanges));
+    }
+    private void SourceDraftChanged(object? sender,System.ComponentModel.PropertyChangedEventArgs e)=>OnPropertyChanged(nameof(HasSourceChanges));
     [ObservableProperty] [NotifyPropertyChangedFor(nameof(IsOverview))] [NotifyPropertyChangedFor(nameof(IsSource))] private GoogleSourceDraft? selected;
     [ObservableProperty] private GoogleAccount? selectedAccount;
     [ObservableProperty] private string accountLabel="個人";
@@ -42,6 +56,9 @@ public partial class GoogleWorkspaceViewModel(IGoogleWorkspace workspace,IBrowse
         CanSignIn=snapshot.Configured;
         ConfigurationStatus=snapshot.Configured?(snapshot.UsesBuiltInClient?"使用 Cloud Alarm Overlay 的 Google 登入":"使用組織自訂 Google 登入設定"):"此版本尚未設定 Google 登入，請聯絡軟體提供者。";
         var id=SelectedAccount?.Id;
+        // Replacing a renamed account can briefly clear ComboBox.SelectedValue. Preserve each draft's
+        // stable account ID while updating display records, including unsaved source drafts.
+        var draftAccounts=Tabs.Select(t=>(Draft:t,AccountId:t.AccountId)).ToArray();
         foreach(var removed in Accounts.Where(a=>snapshot.Accounts.All(x=>x.Id!=a.Id)).ToArray())Accounts.Remove(removed);
         foreach(var account in snapshot.Accounts)
         {
@@ -49,12 +66,16 @@ public partial class GoogleWorkspaceViewModel(IGoogleWorkspace workspace,IBrowse
             if(current is null)Accounts.Add(account);else if(current!=account)Accounts[Accounts.IndexOf(current)]=account;
         }
         SelectedAccount=Accounts.FirstOrDefault(a=>a.Id==id)??Accounts.FirstOrDefault();
+        foreach(var entry in draftAccounts)
+            if(Accounts.Any(a=>a.Id==entry.AccountId))entry.Draft.AccountId=entry.AccountId;
         foreach(var source in snapshot.Sources)
         {
             var draft=Tabs.FirstOrDefault(t=>t.Id==source.Id);
             if(draft is null)Tabs.Add(new(source));else{draft.Status=source.Status;draft.LastSync=source.LastSuccess?.ToLocalTime().ToString("yyyy-MM-dd HH:mm")??"尚未成功同步";}
         }
-        OnPropertyChanged(nameof(SourceCards));
+        foreach(var draft in Tabs)draft.AccountLabel=Accounts.FirstOrDefault(a=>a.Id==draft.AccountId) is {} account?account.Label+" · "+account.Email:"";
+        if(!string.IsNullOrEmpty(SourceAccountFilter)&&!Accounts.Any(a=>a.Id==SourceAccountFilter))SourceAccountFilter="";
+        OnPropertyChanged(nameof(SourceCards));OnPropertyChanged(nameof(SourceAccountFilters));
         Selected??=Tabs[0];
     }
     private async Task RunAsync(Func<CancellationToken,Task> action,string success)
@@ -66,9 +87,15 @@ public partial class GoogleWorkspaceViewModel(IGoogleWorkspace workspace,IBrowse
         finally{operation.Dispose();operation=null;Busy=false;}
     }
     public Task ImportAsync(string json)=>RunAsync(ct=>workspace.ImportClientAsync(json,ct),"OAuth 設定已匯入，可新增 Google 帳號。");
+    public Task RenameAccountAsync(string accountId,string name)=>RunAsync(ct=>workspace.RenameAccountAsync(accountId,name,ct),"帳號名稱已更新。");
     [RelayCommand] private Task UseBuiltInClientAsync()=>RunAsync(ct=>workspace.UseBuiltInClientAsync(ct),"已恢復程式內建的 Google 登入設定。");
     [RelayCommand(CanExecute=nameof(CanSignIn))] private Task SignInAsync()=>RunAsync(ct=>workspace.SignInAsync(AccountLabel,UseSheets,UseCalendar,url=>browser.Open(new Uri(url)),ct,WriteSheets),"帳號已連線。憑證有效時會在背景自動續用。");
-    partial void OnSelectedChanged(GoogleSourceDraft? value){taskDraft=null;HasTaskDraft=false;TaskFields.Clear();EditSummary="";}
+    partial void OnSelectedChanged(GoogleSourceDraft? oldValue,GoogleSourceDraft? newValue)
+    {
+        if(oldValue is not null)oldValue.PropertyChanged-=SourceDraftChanged;
+        if(newValue is not null)newValue.PropertyChanged+=SourceDraftChanged;
+        ClearTaskEditor();OnPropertyChanged(nameof(HasSourceChanges));
+    }
     [RelayCommand] private Task ReadTaskAsync()=>ReadTaskCoreAsync(EditTaskId);
     [RelayCommand] private Task NewTaskAsync()=>ReadTaskCoreAsync("");
     private Task ReadTaskCoreAsync(string id)=>RunAsync(async ct=>
@@ -103,7 +130,7 @@ public partial class GoogleWorkspaceViewModel(IGoogleWorkspace workspace,IBrowse
     {
         if(Busy)return;
         if(SelectedAccount is null){Message="請先登入 Google 帳號。";return;}
-        var tab=new GoogleSourceDraft(new(){AccountId=SelectedAccount.Id});tab.Locked=false;Tabs.Add(tab);Selected=tab;OnPropertyChanged(nameof(SourceCards));
+        var tab=new GoogleSourceDraft(new(){AccountId=SelectedAccount.Id});tab.IsNew=true;tab.Locked=false;Tabs.Add(tab);Selected=tab;OnPropertyChanged(nameof(SourceCards));
     }
     [RelayCommand] private Task LoadResourcesAsync()=>RunAsync(async ct=>
     {
@@ -115,7 +142,7 @@ public partial class GoogleWorkspaceViewModel(IGoogleWorkspace workspace,IBrowse
     [RelayCommand] private Task SaveSourceAsync()=>RunAsync(async ct=>
     {
         var draft=Selected??throw new ArgumentException("請選擇來源。");
-        await workspace.SaveSourceAsync(draft.Value(),ct);draft.Locked=true;
+        await workspace.SaveSourceAsync(draft.Value(),ct);draft.Accept();OnPropertyChanged(nameof(HasSourceChanges));
     },"來源設定已儲存並鎖定，背景同步將自動執行。");
     [RelayCommand] private Task SyncSelectedAsync()=>RunAsync(ct=>workspace.SyncAsync(IsOverview?null:Selected!.Id,ct:ct),"同步已完成，請查看每個來源的狀態。");
     public Task RemoveSourceAsync()=>RunAsync(async ct=>
@@ -129,13 +156,26 @@ public partial class GoogleWorkspaceViewModel(IGoogleWorkspace workspace,IBrowse
 
 public partial class GoogleSourceDraft:ObservableObject
 {
+    private GoogleSource saved=new();
+    public bool IsNew {get;set;}
+    public bool HasChanges=>IsNew||Value()!=saved;
+    public void Accept(){saved=Value();IsNew=false;Locked=true;}
+    public void Restore()
+    {
+        var value=saved;Name=value.Name;Kind=value.Kind=="Sheet"?"Google Sheets":"Google 日曆";AccountId=value.AccountId;
+        ResourceId=value.ResourceId;TabId=value.TabId;Enabled=value.Enabled;AllowWrite=value.AllowWrite;IntervalMinutes=value.IntervalMinutes;
+        ReminderMinutes=value.ReminderMinutes;IncludeAllDay=value.IncludeAllDay;AllDayHour=value.AllDayHour;Resources.Clear();SelectedResource=null;Locked=true;
+    }
+    [ObservableProperty] private string accountLabel="";
     public GoogleSourceDraft(GoogleSource value)
     {
         Id=value.Id;Name=value.Name;AccountId=value.AccountId;Kind=value.Kind=="Calendar"?"Google 日曆":"Google Sheets";
         ResourceId=value.ResourceId;TabId=value.TabId;Enabled=value.Enabled;AllowWrite=value.AllowWrite;IntervalMinutes=value.IntervalMinutes;
         ReminderMinutes=value.ReminderMinutes;IncludeAllDay=value.IncludeAllDay;AllDayHour=value.AllDayHour;Status=value.Status;LastSync=value.LastSuccess?.ToLocalTime().ToString("yyyy-MM-dd HH:mm")??"尚未成功同步";
+        saved=Value();
     }
     public string Id {get;}
+    public string NavigationGroup=>Id==""?"管理":"同步來源";
     [ObservableProperty] private string name="";
     [ObservableProperty] private string accountId="";
     [ObservableProperty] [NotifyPropertyChangedFor(nameof(IsSheet))] [NotifyPropertyChangedFor(nameof(IsCalendar))] private string kind="Google Sheets";

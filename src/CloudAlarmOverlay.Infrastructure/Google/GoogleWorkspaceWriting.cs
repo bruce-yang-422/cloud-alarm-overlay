@@ -101,7 +101,7 @@ internal sealed partial class GoogleWorkspace
                 throw new InvalidOperationException("寫入後內容與預期不同，請至 Google Sheets 確認是否有同時編輯。");
             var updated=source with{LastAttempt=null,Status="寫入已回讀確認，等待同步"};
             state.Sources[state.Sources.IndexOf(source)]=updated;await vault.WriteAsync(state,ct);
-            await audit.RecordAsync(new(){UserId=$"Google:{account.Id}",Action=delete?"Google Tasks 刪除":"Google Tasks 寫入",NewValue=$"來源 {source.Id}；已回讀確認",CreatedAt=clock.GetLocalNow().DateTime},ct);
+            await audit.RecordAsync(new(){UserId=$"Google:{account.Id}",Action=delete?"Google Tasks 刪除":"Google Tasks 寫入",NewValue=$"來源 {source.Id}；已回讀確認",CreatedAt=clock.GetLocalNow().LocalDateTime},ct);
         }
         finally{gate.Release();Notify();}
     }

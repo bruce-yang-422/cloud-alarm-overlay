@@ -8,9 +8,9 @@ public sealed class LocalTaskImportStore(Database db) : ILocalTaskImportStore
         LocalTaskCsvService.Validate(task,DateTime.Now);
         return await db.ExecuteAsync("""
             INSERT OR IGNORE INTO Tasks(Id,Title,Description,Note,ScheduledAt,Source,Level,Enabled,IsTriggered,
-                RequireAcknowledgement,Recurrence,SkipOnHoliday,CreatedAt,UpdatedAt)
+                RequireAcknowledgement,Recurrence,SkipOnHoliday,CreatedAt,UpdatedAt,ActivityStartAt,ActivityEndAt,ActivityAllDay)
             VALUES(@Id,@Title,@Description,@Note,@ScheduledAt,'本機',@Level,@Enabled,0,
-                @RequireAcknowledgement,@Recurrence,@SkipOnHoliday,@CreatedAt,@UpdatedAt);
+                @RequireAcknowledgement,@Recurrence,@SkipOnHoliday,@CreatedAt,@UpdatedAt,@ActivityStartAt,@ActivityEndAt,@ActivityAllDay);
             """,task,ct)==1;
     }
 }

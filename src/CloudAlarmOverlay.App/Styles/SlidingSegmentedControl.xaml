@@ -34,4 +34,22 @@
    </Grid></Border>
   </ControlTemplate></Setter.Value></Setter>
  </Style>
+ <!-- Form choices size to their labels; navigation can still use equal-width segments. -->
+ <Style x:Key="CompactPillSelector" TargetType="controls:SlidingSegmentedControl" BasedOn="{StaticResource PillSlidingSegmentedControl}">
+  <Setter Property="HorizontalAlignment" Value="Left"/><Setter Property="FontSize" Value="13"/>
+  <Setter Property="MinHeight" Value="34"/><Setter Property="Height" Value="34"/><Setter Property="Padding" Value="3"/>
+  <Setter Property="ItemsPanel"><Setter.Value><ItemsPanelTemplate><StackPanel Orientation="Horizontal"/></ItemsPanelTemplate></Setter.Value></Setter>
+  <Setter Property="ItemContainerStyle"><Setter.Value><Style TargetType="ListBoxItem">
+   <Setter Property="Foreground" Value="{adaptive:AdaptiveBrush #697C99}"/><Setter Property="MinWidth" Value="68"/>
+   <Setter Property="Template"><Setter.Value><ControlTemplate TargetType="ListBoxItem">
+    <Border x:Name="Choice" Padding="16,3" BorderThickness="1" BorderBrush="Transparent" CornerRadius="16" Background="Transparent"><ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/></Border>
+    <ControlTemplate.Triggers>
+     <Trigger Property="IsSelected" Value="True"><Setter Property="Foreground" Value="{adaptive:AdaptiveBrush #16243E}"/><Setter Property="FontWeight" Value="SemiBold"/></Trigger>
+     <Trigger Property="IsMouseOver" Value="True"><Setter TargetName="Choice" Property="BorderBrush" Value="{adaptive:AdaptiveBrush #D6E1EF}"/></Trigger>
+     <Trigger Property="IsKeyboardFocused" Value="True"><Setter TargetName="Choice" Property="BorderBrush" Value="{adaptive:AdaptiveBrush #0766FF}"/></Trigger>
+     <Trigger Property="IsEnabled" Value="False"><Setter Property="Opacity" Value=".45"/></Trigger>
+    </ControlTemplate.Triggers>
+   </ControlTemplate></Setter.Value></Setter>
+  </Style></Setter.Value></Setter>
+ </Style>
 </ResourceDictionary>

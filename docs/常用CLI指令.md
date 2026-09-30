@@ -153,14 +153,7 @@ artifacts\installer\CloudAlarmOverlay-v1.2.0-Setup-x64.exe
 
 打包腳本會拒絕小於或等於 `version.json` 已發布版本的號碼，也會檢查發布資料夾中的程式版本，避免 `-SkipPublish` 混用舊檔。先完成打包與上傳，驗證安裝檔後再更新 `version.json`。
 
-本機若使用 Inno Setup 7 遇到 `EndUpdateResource failed (110)`，此次已驗證可使用 `artifacts/tools/InnoSetup6` 內的可攜式 Inno Setup 6.7.3（含繁體中文語系檔）完成封裝：
-
-```powershell
-.\installer\build-installer.ps1 -Version 1.2.0 `
-  -Iscc '.\artifacts\tools\InnoSetup6\ISCC.exe'
-```
-
-此工具目錄只保留在本機，不納入 Git；其他電腦請指定自己安裝的編譯器路徑。
+若遇到 `EndUpdateResource failed (110)`，可將 Inno Setup 的暫存與輸出位置改至獨立系統暫存目錄，成功後將安裝包複製回 `artifacts/installer/` 並核對 SHA-256。舊的專案內可攜式編譯器已清理；使用本機安裝的 Inno Setup 7／6。
 
 例如：
 

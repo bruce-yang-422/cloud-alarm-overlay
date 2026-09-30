@@ -18,6 +18,84 @@ namespace CloudAlarmOverlay.App.Tests;
 public sealed class HomePinUiTests
 {
     [Fact]
+    public Task Home_attention_and_health_cards_follow_real_states_and_fit_small_windows() => MilestoneOneTests.RunSta(async () =>
+    {
+        using var fixture=new Fixture();await fixture.Initialize();
+        await fixture.Get<ITaskRepository>().SaveLocalAsync(Sample("home-demo") with {Title="完成下午出貨資料",Description="核對訂單並更新出貨紀錄。",ScheduledAt=DateTime.Now.AddMinutes(33)});
+        await fixture.Get<ICountdownRepository>().SaveAsync(new CountdownItem{Id="home-milestone",Title="專案上線",TargetAt=DateTime.Today.AddDays(15),CreatedAt=DateTime.Today.AddDays(-5),IsPinned=true});
+        var main=fixture.Get<MainViewModel>();await main.InitializeAsync();
+        var window=fixture.Get<MainWindow>();window.Height=900;
+        var health=fixture.Get<HealthToolsService>();
+        try
+        {
+            window.Show();
+            main.ConnectionGroups=[];main.LocalScheduleHealth=new("正常","執行中","Healthy");
+            var attention=(Border)window.FindName("HomeAttentionCard");
+            var healthCard=(Border)window.FindName("HomeHealthCard");
+            await Dispatcher.Yield(DispatcherPriority.ApplicationIdle);
+            Assert.Equal(Visibility.Collapsed,attention.Visibility);
+            Assert.Equal(Visibility.Collapsed,healthCard.Visibility);
+            main.ConnectionGroups=[new("個人帳號","Google",[
+                new("日曆","Google 日曆",new("需重新登入","授權已失效","Error")),
+                new("已停用的來源","Google Sheets",new("已停用","","Inactive")),
+                new("新增的來源","Google Sheets",new("等待同步","","Pending"))])];
+            Assert.Single(main.HomeAttention);
+            for(var i=0;i<4;i++)await health.SaveToolAsync(new(){Kind=HealthTools.Kinds[i],Enabled=true,IntervalMinutes=20+i*10,Start=new(0,0),End=new(23,59),Days=127});
+            main.UpdateClock(DateTime.Now);
+            await Dispatcher.Yield(DispatcherPriority.ApplicationIdle);
+            Assert.Equal(Visibility.Visible,healthCard.Visibility);
+            Assert.Equal(Visibility.Visible,attention.Visibility);
+            Assert.Equal(4,main.HealthTools.EnabledCount);
+            Assert.Equal(0,main.TodayProgress);
+            main.TodayCount=4;main.AcknowledgedCount=2;main.PendingCount=2;
+            Assert.Equal(50,main.TodayProgress);
+            var scroll=Ancestors(healthCard).OfType<ScrollViewer>().First();
+            foreach(var width in new[]{1050,1440})foreach(var dark in new[]{false,true})
+            {
+                window.Width=width;AdaptiveBrushExtension.Apply(dark,ThemeColorStyle.Default);
+                await Dispatcher.Yield(DispatcherPriority.ApplicationIdle);window.UpdateLayout();
+                scroll.ScrollToEnd();await Dispatcher.Yield(DispatcherPriority.ApplicationIdle);window.UpdateLayout();
+                foreach(var card in new[]{healthCard,attention})foreach(var element in Descendants(card).OfType<FrameworkElement>().Where(e=>e is Button or TextBlock && e.IsVisible))
+                {
+                    var origin=element.TranslatePoint(new Point(),card);
+                    Assert.True(origin.X>=-1 && origin.X+element.ActualWidth<=card.ActualWidth+1,$"{element.Name} overflows at {width}");
+                }
+                Capture(window,$"home-dashboard-{width}-"+(dark?"dark":"light"));
+                scroll.ScrollToTop();await Dispatcher.Yield(DispatcherPriority.ApplicationIdle);window.UpdateLayout();
+                Capture(window,$"home-dashboard-top-{width}-"+(dark?"dark":"light"));
+            }
+            await main.HealthTools.TogglePauseCommand.ExecuteAsync(null);
+            Assert.Equal("今日已暫停",main.HealthTools.HomeSummary);
+            Assert.All(main.HealthTools.Cards,c=>Assert.Equal("已暫停",c.Countdown));
+            Assert.True(main.HealthTools.HasEnabledTools);
+            await main.HealthTools.TogglePauseCommand.ExecuteAsync(null);
+            Assert.DoesNotContain("已暫停",main.HealthTools.HomeSummary);
+            foreach(var card in main.HealthTools.Cards.Skip(1))await card.ToggleCommand.ExecuteAsync(null);
+            main.UpdateClock(DateTime.Now);await Dispatcher.Yield(DispatcherPriority.ApplicationIdle);window.UpdateLayout();
+            Assert.True(main.HealthTools.HasEnabledTools);
+            Assert.Equal(1,main.HealthTools.EnabledCount);
+            Assert.Equal(Visibility.Visible,healthCard.Visibility);
+            Assert.DoesNotContain(Descendants(healthCard).OfType<TextBlock>(),t=>t.IsVisible && t.Text=="螢幕休息");
+            await main.HealthTools.Cards[0].ToggleCommand.ExecuteAsync(null);
+            main.UpdateClock(DateTime.Now);await Dispatcher.Yield(DispatcherPriority.ApplicationIdle);
+            Assert.Equal(Visibility.Collapsed,healthCard.Visibility);
+            main.ConnectionGroups=[];await Dispatcher.Yield(DispatcherPriority.ApplicationIdle);
+            Assert.Equal(Visibility.Collapsed,attention.Visibility);
+            main.LocalScheduleHealth=new("中斷","排程未執行","Stopped");
+            await Dispatcher.Yield(DispatcherPriority.ApplicationIdle);
+            Assert.Equal(Visibility.Visible,attention.Visibility);
+            Assert.Equal("本機排程",Assert.Single(main.HomeAttention).Name);
+            main.OpenHealthToolsCommand.Execute(null);Assert.Equal(7,main.PageIndex);
+        }
+        finally{window.ForceClose();AdaptiveBrushExtension.Apply(false,ThemeColorStyle.Default);}
+    });
+
+    private static IEnumerable<DependencyObject> Ancestors(DependencyObject node)
+    {
+        while(VisualTreeHelper.GetParent(node) is {} parent){yield return parent;node=parent;}
+    }
+
+    [Fact]
     public Task More_than_two_pins_scroll_without_stretching_left_dashboard_cards() => MilestoneOneTests.RunSta(async () =>
     {
         using var fixture=new Fixture();await fixture.Initialize();
@@ -137,7 +215,7 @@ public sealed class HomePinUiTests
             main.PageIndex=4;await Dispatcher.Yield(DispatcherPriority.ApplicationIdle);
             var view=Descendants(window).OfType<PreferencesView>().Single();
             var tabs=(TabControl)view.FindName("SettingsTabs");
-            tabs.SelectedItem=tabs.Items.OfType<TabItem>().Single(t=>(string)t.Header=="首頁釘選");
+            tabs.SelectedItem=tabs.Items.OfType<TabItem>().Single(t=>(string)t.Header=="首頁與天氣");
             await Dispatcher.Yield(DispatcherPriority.ApplicationIdle);window.UpdateLayout();
             var selector=(ComboBox)view.FindName("HomePinLimitSelector");
             Assert.True(selector.IsVisible);Assert.Equal(5,selector.SelectedItem);

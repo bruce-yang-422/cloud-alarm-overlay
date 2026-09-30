@@ -194,6 +194,54 @@ public sealed class HealthToolsTests
         await Enable(); await AdvanceTo(10, 20); await health.MarkDisplayedAsync([Screen.Pending!.Id], "old");
         clock.At = clock.At.AddDays(7); await health.TickAsync(); Assert.Empty(health.Snapshot.Events);
     }
+    [Fact] public void Workdays_skip_holidays_include_makeup_days_and_cross_long_breaks()
+    {
+        Holiday[] holidays = [new(){Date=new(2026,10,3),Type="補班日"},new(){Date=new(2026,10,9),Type="國定假日"}];
+        var options = new HealthToolOptions { Enabled=true, DayMode="Workdays" };
+        Assert.Equal(new DateTime(2026,10,3,9,30,0),options.NextAfter(new(2026,10,2,17,30,0),holidays:holidays));
+        Assert.False(options.IsActive(new(2026,10,9,10,0,0),holidays));
+        Assert.True(options.IsActive(new(2026,10,3,10,0,0),holidays));
+        Assert.False(options.IsActive(new(2026,10,4,10,0,0),holidays));
+        Assert.True((options with{DayMode="Custom"}).IsActive(new(2026,10,9,10,0,0),holidays));
+        Assert.False((options with{DayMode="Custom"}).IsActive(new(2026,10,3,10,0,0),holidays));
+        Assert.True((options with{DayMode="Everyday"}).IsActive(new(2026,10,4,10,0,0),holidays));
+        var longBreak=Enumerable.Range(0,14).Select(i=>new Holiday{Date=new DateOnly(2026,10,1).AddDays(i),Type="放假日"}).ToArray();
+        Assert.Equal(new DateTime(2026,10,15,9,30,0),options.NextAfter(new(2026,10,1),holidays:longBreak));
+        Assert.Throws<ArgumentException>(()=>(options with{DayMode="invalid"}).Validate());
+    }
+    [Theory]
+    [InlineData("Water")][InlineData("Sitting")][InlineData("Screen")][InlineData("Stretch")]
+    public async Task Workday_mode_persists_and_live_calendar_changes_suppress_pending_and_alignment(string kind)
+    {
+        var calendar=new Holidays();calendar.Rows=[new(){Date=new(2026,10,3),Type="補班日"}];
+        var service=new HealthToolsService(settings,clock,calendar);
+        clock.At=new(2026,10,2,17,50,0);
+        await service.SaveToolAsync(new(){Kind=kind,Enabled=true,DayMode="Workdays"});
+        Assert.Equal(new DateTime(2026,10,3,9,30,0),service.Snapshot.Tools.Single(t=>t.Options.Kind==kind).NextAt);
+        var restarted=new HealthToolsService(settings,clock,calendar);await restarted.InitializeAsync();
+        Assert.Equal("Workdays",restarted.Snapshot.Tools.Single(t=>t.Options.Kind==kind).Options.DayMode);
+        clock.At=new(2026,10,3,9,29,50);await service.TickAsync();
+        clock.At=clock.At.AddSeconds(10);await service.TickAsync();Assert.Single(service.Ready(new(),false,false));
+        calendar.Rows=[new(){Date=new(2026,10,3),Type="放假日"}];clock.At=clock.At.AddMinutes(1);await service.TickAsync();
+        Assert.Empty(service.Ready(new(),false,false));Assert.Null(service.Snapshot.Tools.Single(t=>t.Options.Kind==kind).Pending);
+        Assert.Equal(new DateTime(2026,10,5,9,30,0),service.Snapshot.Tools.Single(t=>t.Options.Kind==kind).NextAt);
+        await service.SavePreferencesAsync("AutoAlign","Right");await service.ObservePomodoroAsync(Focus);
+        await service.ObservePomodoroAsync(new("Focus","AwaitingConfirmation"));Assert.Empty(service.Snapshot.AlignmentKinds);
+        Assert.Empty(service.Ready(new(),false,false));
+    }
+    [Fact] public async Task Older_settings_keep_custom_weekdays_without_opt_in_to_workdays()
+    {
+        var options=HealthTools.Defaults().Select(o=>new HealthToolState(o with{Enabled=true})).ToArray();
+        var json=System.Text.Json.JsonSerializer.Serialize(new HealthToolsState{Tools=options}).Replace(",\"DayMode\":\"Custom\"","");
+        Assert.DoesNotContain("DayMode",json);await settings.SaveAsync(new(){Key=HealthToolsService.SettingsKey,Value=json});
+        await health.InitializeAsync();Assert.All(health.Snapshot.Tools,t=>{Assert.Equal("Custom",t.Options.DayMode);Assert.Equal(62,t.Options.Days);});
+    }
+    private sealed class Holidays : IHolidayRepository
+    {
+        public IReadOnlyList<Holiday> Rows=[];
+        public Task<IReadOnlyList<Holiday>> GetAllAsync(CancellationToken cancellationToken=default)=>Task.FromResult(Rows);
+        public Task ReplaceCacheAsync(IReadOnlyList<Holiday> holidays,CancellationToken cancellationToken=default){Rows=holidays;return Task.CompletedTask;}
+    }
     private sealed class Clock : TimeProvider
     {
         public DateTime At = new(2026, 9, 29, 10, 0, 0);

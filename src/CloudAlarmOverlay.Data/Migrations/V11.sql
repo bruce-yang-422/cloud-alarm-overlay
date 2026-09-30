@@ -1,0 +1,5 @@
+ALTER TABLE Tasks ADD COLUMN CalendarStartAt TEXT;
+ALTER TABLE Tasks ADD COLUMN GoogleReminderEnabled INTEGER;
+ALTER TABLE Tasks ADD COLUMN GoogleReminderAt TEXT;
+ALTER TABLE Tasks ADD COLUMN CalendarReminderEnabled INTEGER;
+ALTER TABLE Tasks ADD COLUMN CalendarReminderAt TEXT;

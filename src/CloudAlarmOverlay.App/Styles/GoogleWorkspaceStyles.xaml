@@ -1,0 +1,54 @@
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:adaptive="clr-namespace:CloudAlarmOverlay.App.Styles">
+ <ResourceDictionary.MergedDictionaries><ResourceDictionary Source="SettingsFormStyles.xaml"/></ResourceDictionary.MergedDictionaries>
+ <Style TargetType="TextBlock" BasedOn="{StaticResource {x:Type TextBlock}}"><Setter Property="Foreground" Value="{adaptive:AdaptiveBrush WorkspaceText}"/></Style>
+ <Style x:Key="WorkspaceMuted" TargetType="TextBlock" BasedOn="{StaticResource Muted}"><Setter Property="Foreground" Value="{adaptive:AdaptiveBrush WorkspaceMuted}"/></Style>
+ <Style x:Key="WorkspaceFieldLabel" TargetType="TextBlock" BasedOn="{StaticResource FieldLabel}"><Setter Property="Foreground" Value="{adaptive:AdaptiveBrush WorkspaceMuted}"/></Style>
+ <Style x:Key="WorkspaceSection" TargetType="TextBlock" BasedOn="{StaticResource SectionTitle}"><Setter Property="Foreground" Value="{adaptive:AdaptiveBrush WorkspaceText}"/></Style>
+ <Style x:Key="WorkspaceGroup" TargetType="Border" BasedOn="{StaticResource SettingsGroup}"><Setter Property="Background" Value="{adaptive:AdaptiveBrush WorkspaceSurface}"/><Setter Property="BorderBrush" Value="{adaptive:AdaptiveBrush WorkspaceBorder}"/><Setter Property="CornerRadius" Value="8"/></Style>
+ <Style x:Key="WorkspaceButton" TargetType="Button">
+  <Setter Property="FontSize" Value="13"/><Setter Property="MinHeight" Value="32"/><Setter Property="Padding" Value="12,5"/><Setter Property="Margin" Value="0,0,8,0"/><Setter Property="Cursor" Value="Hand"/>
+  <Setter Property="HorizontalContentAlignment" Value="Center"/><Setter Property="Foreground" Value="{adaptive:AdaptiveBrush WorkspaceText}"/><Setter Property="Background" Value="{adaptive:AdaptiveBrush WorkspaceSurface}"/><Setter Property="BorderBrush" Value="{adaptive:AdaptiveBrush WorkspaceBorder}"/><Setter Property="BorderThickness" Value="1"/>
+  <Setter Property="Template"><Setter.Value><ControlTemplate TargetType="Button">
+   <Border x:Name="Surface" Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="6" Padding="{TemplateBinding Padding}"><ContentPresenter HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}" VerticalAlignment="Center" RecognizesAccessKey="True"/></Border>
+   <ControlTemplate.Triggers>
+    <Trigger Property="IsMouseOver" Value="True"><Setter TargetName="Surface" Property="Background" Value="{adaptive:AdaptiveBrush WorkspaceHover}"/></Trigger>
+    <Trigger Property="IsPressed" Value="True"><Setter TargetName="Surface" Property="Opacity" Value=".7"/></Trigger>
+    <Trigger Property="IsKeyboardFocused" Value="True"><Setter TargetName="Surface" Property="BorderBrush" Value="{adaptive:AdaptiveBrush #0766FF}"/><Setter TargetName="Surface" Property="BorderThickness" Value="1"/></Trigger>
+    <Trigger Property="IsEnabled" Value="False"><Setter TargetName="Surface" Property="Opacity" Value=".4"/></Trigger>
+   </ControlTemplate.Triggers>
+  </ControlTemplate></Setter.Value></Setter>
+ </Style>
+ <Style x:Key="WorkspaceQuietButton" TargetType="Button" BasedOn="{StaticResource {x:Type Button}}"><Setter Property="Background" Value="Transparent"/><Setter Property="BorderThickness" Value="0"/></Style>
+ <Style x:Key="WorkspaceNavigationFocus" TargetType="Control">
+  <Setter Property="Template"><Setter.Value><ControlTemplate TargetType="Control"><Border Margin="2" BorderBrush="{adaptive:AdaptiveBrush #0766FF}" BorderThickness="1" CornerRadius="5"/></ControlTemplate></Setter.Value></Setter>
+ </Style>
+ <Style x:Key="SourceListItem" TargetType="ListBoxItem">
+  <Setter Property="HorizontalContentAlignment" Value="Stretch"/><Setter Property="Margin" Value="0,0,0,4"/><Setter Property="FocusVisualStyle" Value="{StaticResource WorkspaceNavigationFocus}"/><Setter Property="Cursor" Value="Hand"/><Setter Property="AutomationProperties.Name" Value="{Binding Name}"/>
+  <Setter Property="Template"><Setter.Value><ControlTemplate TargetType="ListBoxItem">
+   <Border x:Name="ItemBorder" CornerRadius="6" Background="Transparent" BorderBrush="Transparent" BorderThickness="1" Padding="10,9">
+    <Grid><Border x:Name="SelectionMark" Width="3" Height="18" CornerRadius="1.5" Background="{adaptive:AdaptiveBrush Accent}" HorizontalAlignment="Left" Margin="-10,0,0,0" Visibility="Collapsed"/><ContentPresenter/></Grid>
+   </Border>
+   <ControlTemplate.Triggers>
+    <Trigger Property="IsMouseOver" Value="True"><Setter TargetName="ItemBorder" Property="Background" Value="{adaptive:AdaptiveBrush WorkspaceHover}"/></Trigger>
+    <Trigger Property="IsSelected" Value="True"><Setter TargetName="ItemBorder" Property="Background" Value="{adaptive:AdaptiveBrush WorkspaceSelected}"/><Setter TargetName="ItemBorder" Property="BorderBrush" Value="{adaptive:AdaptiveBrush WorkspaceBorder}"/><Setter TargetName="SelectionMark" Property="Visibility" Value="Visible"/></Trigger>
+    <Trigger Property="IsEnabled" Value="False"><Setter Property="Opacity" Value=".45"/></Trigger>
+   </ControlTemplate.Triggers>
+  </ControlTemplate></Setter.Value></Setter>
+ </Style>
+ <DataTemplate x:Key="WorkspaceSourceIcon">
+  <Border x:Name="IconSurface" Width="28" Height="28" CornerRadius="7" Background="{adaptive:AdaptiveBrush #E3F6ED}" VerticalAlignment="Center">
+   <Path x:Name="Glyph" Data="M3,2 L17,2 17,18 3,18 Z M3,7 L17,7 M3,12 L17,12 M8,7 L8,18" Width="16" Height="17" Stretch="Uniform" Stroke="{adaptive:AdaptiveBrush #18964A}" StrokeThickness="1.5" StrokeLineJoin="Round" StrokeStartLineCap="Round" StrokeEndLineCap="Round" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+  </Border>
+  <DataTemplate.Triggers>
+   <DataTrigger Binding="{Binding IsCalendar}" Value="True"><Setter TargetName="Glyph" Property="Data" Value="M2,4 L18,4 18,18 2,18 Z M2,8 L18,8 M6,1 L6,5 M14,1 L14,5 M6,12 L8,12 M12,12 L14,12 M6,15 L8,15"/><Setter TargetName="Glyph" Property="Stroke" Value="{adaptive:AdaptiveBrush #0766FF}"/><Setter TargetName="IconSurface" Property="Background" Value="{adaptive:AdaptiveBrush #E6F0FF}"/></DataTrigger>
+   <DataTrigger Binding="{Binding Id}" Value=""><Setter TargetName="Glyph" Property="Data" Value="M10,2 A4,4 0 1 1 10,10 A4,4 0 1 1 10,2 M2,20 C2,10 18,10 18,20"/><Setter TargetName="Glyph" Property="Stroke" Value="{adaptive:AdaptiveBrush WorkspaceText}"/><Setter TargetName="IconSurface" Property="Background" Value="{adaptive:AdaptiveBrush WorkspaceHover}"/></DataTrigger>
+  </DataTemplate.Triggers>
+ </DataTemplate>
+ <DataTemplate x:Key="WorkspaceAccountStatus">
+  <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+   <Ellipse x:Name="Dot" Width="6" Height="6" Fill="{adaptive:AdaptiveBrush #BA3D45}" Margin="0,0,5,0" VerticalAlignment="Center"/><TextBlock Text="{Binding}" Foreground="{adaptive:AdaptiveBrush WorkspaceMuted}" FontSize="11"/>
+  </StackPanel>
+  <DataTemplate.Triggers><DataTrigger Binding="{Binding}" Value="已連線"><Setter TargetName="Dot" Property="Fill" Value="{adaptive:AdaptiveBrush #18964A}"/></DataTrigger></DataTemplate.Triggers>
+ </DataTemplate>
+ <Style TargetType="Button" BasedOn="{StaticResource WorkspaceButton}"/>
+</ResourceDictionary>

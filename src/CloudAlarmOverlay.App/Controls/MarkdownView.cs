@@ -17,6 +17,9 @@ public sealed class MarkdownView : RichTextBox
 {
     public static readonly DependencyProperty TextProperty = DependencyProperty.Register(nameof(Text), typeof(string), typeof(MarkdownView), new PropertyMetadata("", (d, _) => ((MarkdownView)d).Render()));
     public string Text { get => (string)GetValue(TextProperty); set => SetValue(TextProperty, value); }
+    public static readonly DependencyProperty ReadingLayoutProperty = DependencyProperty.Register(nameof(ReadingLayout), typeof(bool), typeof(MarkdownView),
+        new PropertyMetadata(false, (d, _) => ((MarkdownView)d).Render()));
+    public bool ReadingLayout { get => (bool)GetValue(ReadingLayoutProperty); set => SetValue(ReadingLayoutProperty, value); }
     public MarkdownView()
     {
         IsReadOnly = true; IsDocumentEnabled = true; BorderThickness = new Thickness(0);
@@ -36,6 +39,7 @@ public sealed class MarkdownView : RichTextBox
         var html = new HtmlDocument();
         html.LoadHtml(Markdown.ToHtml(Text ?? "", Pipeline));
         var document = new FlowDocument { PagePadding = new Thickness(0) };
+        if (ReadingLayout) { document.LineHeight = 23; document.LineStackingStrategy = LineStackingStrategy.BlockLineHeight; }
         AddBlocks(html.DocumentNode, document.Blocks);
         Document = document;
     }
@@ -51,7 +55,12 @@ public sealed class MarkdownView : RichTextBox
                 loose = null;
                 var list = new System.Windows.Documents.List { MarkerStyle = node.Name == "ol" ? TextMarkerStyle.Decimal : TextMarkerStyle.Disc, Margin = new Thickness(0, 4, 0, 10), Padding = new Thickness(24, 0, 0, 0) };
                 if (int.TryParse(node.GetAttributeValue("start", "1"), out var start) && start > 0) list.StartIndex = start;
-                foreach (var item in node.Elements("li")) { var li = new ListItem(); RegisterAnchor(item, li); AddBlocks(item, li.Blocks); list.ListItems.Add(li); }
+                foreach (var item in node.Elements("li"))
+                {
+                    var li = new ListItem(); RegisterAnchor(item, li); AddBlocks(item, li.Blocks);
+                    if (ReadingLayout) { li.Margin = new Thickness(0, 0, 0, 8); foreach (var p in li.Blocks.OfType<Paragraph>()) p.Margin = new Thickness(0); }
+                    list.ListItems.Add(li);
+                }
                 blocks.Add(list);
             }
             else if (node.Name is "blockquote" or "div" or "section")
@@ -68,6 +77,11 @@ public sealed class MarkdownView : RichTextBox
             {
                 loose = null; var p = new Paragraph { Margin = new Thickness(0, 0, 0, 12) };
                 if (node.Name.StartsWith('h')) { p.FontSize = node.Name == "h1" ? 28 : node.Name == "h2" ? 23 : 19; p.FontWeight = FontWeights.Bold; }
+                if (ReadingLayout && node.Name.StartsWith('h'))
+                {
+                    p.FontSize = node.Name == "h1" ? 21 : node.Name == "h2" ? 17 : 15;
+                    p.FontWeight = FontWeights.SemiBold; p.Margin = new Thickness(0, blocks.Count == 0 ? 0 : 16, 0, 8);
+                }
                 if (node.Name == "pre") { p.FontFamily = new FontFamily("Consolas"); p.Padding = new Thickness(10); p.BorderBrush = Brushes.SlateGray; p.BorderThickness = new Thickness(1); p.Inlines.Add(new Run(HtmlEntity.DeEntitize(node.InnerText))); }
                 else AddInlines(node, p.Inlines);
                 blocks.Add(p);

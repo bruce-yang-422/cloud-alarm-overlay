@@ -1,4 +1,4 @@
-using System.IO.Compression;
+﻿using System.IO.Compression;
 using System.Globalization;
 using System.Text;
 using CloudAlarmOverlay.Core;
@@ -98,7 +98,7 @@ public sealed class PlannedFeaturesTests : IDisposable, IAppPaths
     [Fact] public async Task Version_nine_upgrade_keeps_tasks_and_old_logs()
     {
         var (task,id)=await Display();await Get<IRuntimeStore>().CompleteAsync(id);
-        await Get<Database>().ExecuteAsync("ALTER TABLE AcknowledgementLogs DROP COLUMN SnoozeCount; ALTER TABLE Occurrences DROP COLUMN SnoozedUntil; PRAGMA user_version=9;");
+        await Get<Database>().ExecuteAsync("ALTER TABLE AcknowledgementLogs DROP COLUMN SnoozeCount; ALTER TABLE Occurrences DROP COLUMN SnoozedUntil; ALTER TABLE Tasks DROP COLUMN CalendarStartAt; ALTER TABLE Tasks DROP COLUMN GoogleReminderEnabled; ALTER TABLE Tasks DROP COLUMN GoogleReminderAt; ALTER TABLE Tasks DROP COLUMN CalendarReminderEnabled; ALTER TABLE Tasks DROP COLUMN CalendarReminderAt; ALTER TABLE Tasks DROP COLUMN ActivityStartAt; ALTER TABLE Tasks DROP COLUMN ActivityEndAt; ALTER TABLE Tasks DROP COLUMN ActivityAllDay; PRAGMA user_version=9;");
         await Get<IDatabaseInitializer>().InitializeAsync();
         Assert.Equal(task.Title,(await Get<ITaskRepository>().GetByIdAsync(task.Id))!.Title);
         Assert.Equal(0,await Get<ISnoozeStore>().CountAsync(id));

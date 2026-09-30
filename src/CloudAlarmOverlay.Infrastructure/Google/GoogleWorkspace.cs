@@ -9,10 +9,10 @@ namespace CloudAlarmOverlay.Infrastructure.Google;
 
 internal sealed partial class GoogleWorkspace(IGoogleVault vault,GoogleApi api,ITaskRepository tasks,
     ICsvSheetParser parser,IDeviceIdentityService identity,IAudienceFilterService audience,IEmployeeRepository employees,
-    ChangeSignal changes,TimeProvider clock,IPrivateSourceStore privateSources,IAuditService audit,GoogleBuiltInClient builtIn):IGoogleWorkspace,IDisposable
+    ChangeSignal changes,TimeProvider clock,IPrivateSourceStore privateSources,IAuditService audit,GoogleBuiltInClient builtIn,AdminSession admin):IGoogleWorkspace,IDisposable
 {
     // Personal Google connections belong to the current Windows user's vault.
-    // Google consent and source permissions govern access, independently of company administrator sessions.
+    // Personal account/source operations follow Google consent; changing the OAuth client requires local administration.
     private readonly SemaphoreSlim gate=new(1,1);
     public event Action? Changed;
     private void Notify(){changes.Notify();Changed?.Invoke();}
@@ -25,12 +25,14 @@ internal sealed partial class GoogleWorkspace(IGoogleVault vault,GoogleApi api,I
     }
     public async Task UseBuiltInClientAsync(CancellationToken ct=default)
     {
+        admin.RequireAdmin();
         await gate.WaitAsync(ct);
         try
         {
             var state=await vault.ReadAsync(ct);
             var client=builtIn.Client??throw new InvalidOperationException("此版本尚未內建 Google 登入設定。");
             if(state.Accounts.Count>0)throw new InvalidOperationException("切換登入設定前，請先登出所有 Google 帳號。");
+            admin.RequireAdmin();
             await vault.WriteAsync(state with{Client=client,UsesBuiltInClient=true},ct);
         }
         finally{gate.Release();}Notify();
@@ -45,14 +47,31 @@ internal sealed partial class GoogleWorkspace(IGoogleVault vault,GoogleApi api,I
         }
         finally{gate.Release();}
     }
+    public async Task RenameAccountAsync(string accountId,string name,CancellationToken ct=default)
+    {
+        name=name.Trim();
+        if(name.Length is <1 or >40 || name.Any(char.IsControl))throw new ArgumentException("帳號名稱請輸入 1–40 個字，不能包含換行或控制字元。");
+        await gate.WaitAsync(ct);
+        try
+        {
+            var state=await ReadStateAsync(ct);
+            var index=state.Accounts.FindIndex(a=>a.Id==accountId);
+            if(index<0)throw new InvalidOperationException("此帳號已移除，請重新整理帳號清單。");
+            state.Accounts[index]=state.Accounts[index] with{Label=name};
+            await vault.WriteAsync(state,ct);
+        }
+        finally{gate.Release();}Notify();
+    }
     public async Task ImportClientAsync(string json,CancellationToken ct=default)
     {
+        admin.RequireAdmin();
         var client=GoogleApi.ParseClient(json);
         await gate.WaitAsync(ct);
         try
         {
             var state=await ReadStateAsync(ct);
             if(state.Accounts.Count>0&&state.Client?.Id!=client.Id)throw new InvalidOperationException("更換 OAuth 專案前，請先登出所有 Google 帳號。");
+            admin.RequireAdmin();
             await vault.WriteAsync(state with{Client=client,UsesBuiltInClient=false},ct);
         }
         finally{gate.Release();}Notify();
@@ -206,13 +225,17 @@ internal sealed partial class GoogleWorkspace(IGoogleVault vault,GoogleApi api,I
         {
             var state=await ReadStateAsync(ct);
             var device=await identity.GetLocalAsync(ct);if(device is null)return;
-            foreach(var orphan in (await tasks.GetAllAsync(ct)).Select(t=>t.Source).Where(s=>s.StartsWith("Google:",StringComparison.Ordinal)&&state.Sources.All(x=>x.CacheSource!=s)).Distinct())
+            var cachedTasks=await tasks.GetAllAsync(ct);
+            foreach(var orphan in cachedTasks.Select(t=>t.Source).Where(s=>s.StartsWith("Google:",StringComparison.Ordinal)&&state.Sources.All(x=>x.CacheSource!=s)).Distinct())
                 await privateSources.ClearAsync(orphan,ct);
             foreach(var source in state.Sources.ToArray())
             {
+                // Older calendar cache rows lack reminder metadata. Refresh them on upgrade without
+                // waiting out a saved polling interval; failures still obey the persisted retry delay.
+                var needsReminderUpgrade=source.Kind=="Calendar"&&cachedTasks.Any(t=>t.Source==source.CacheSource&&!t.IsGoogleCalendar);
                 if(!source.Enabled||(sourceId is not null&&source.Id!=sourceId)||
                     (automatic&&source.RetryAfter>clock.GetUtcNow())||
-                    (automatic&&source.LastAttempt is {} at&&clock.GetUtcNow()-at<TimeSpan.FromMinutes(source.IntervalMinutes)))continue;
+                    (automatic&&!needsReminderUpgrade&&source.LastAttempt is {} at&&clock.GetUtcNow()-at<TimeSpan.FromMinutes(source.IntervalMinutes)))continue;
                 var next=source with{LastAttempt=clock.GetUtcNow()};
                 // Persist attempt before transport to bound retry rates across restarts.
                 state.Sources[state.Sources.IndexOf(source)]=next;await vault.WriteAsync(state,ct);
@@ -272,7 +295,7 @@ internal sealed partial class GoogleWorkspace(IGoogleVault vault,GoogleApi api,I
             var zone=GoogleApi.Text(doc,"timeZone");
             if(doc.TryGetProperty("items",out var events))foreach(var item in events.EnumerateArray())
             {
-                var task=GoogleCalendarProjection.Project(item,source,SourceLabel(state,source),zone,now);
+                var task=GoogleCalendarProjection.Project(item,source,SourceLabel(state,source),zone,now,doc.TryGetProperty("defaultReminders",out var defaults)?defaults:default);
                 if(task is not null)items.Add(task);
             }
             page=GoogleApi.Text(doc,"nextPageToken");

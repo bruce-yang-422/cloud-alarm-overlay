@@ -1,4 +1,4 @@
-﻿using System.IO;
+using System.IO;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
@@ -15,7 +15,7 @@ using Microsoft.Extensions.Hosting;
 namespace CloudAlarmOverlay.App.Tests;
 public sealed class MilestoneTwoTests
 {
-    [Fact] public async Task Admin_login_four_pages_locks_export_and_expiry_work_end_to_end()
+    [Fact] public async Task Admin_grouped_pages_locks_export_and_expiry_work_end_to_end()
     {
         await MilestoneOneTests.RunSta(async()=>{
             var paths=new Paths();var clock=new Clock();var dialogs=new Dialogs();var autoStart=new AutoStart();
@@ -128,9 +128,9 @@ public sealed class MilestoneTwoTests
                 await vm.Admin.SessionChangedAsync();await Dispatcher.Yield(DispatcherPriority.ApplicationIdle);
                 Assert.True(vm.Admin.IsAuthenticated);
                 vm.PageIndex=4;window.UpdateLayout();
-                ((TabControl)Descendants<PreferencesView>(window).Single().FindName("SettingsTabs")).SelectedIndex=4;
+                ((TabControl)Descendants<PreferencesView>(window).Single().FindName("SettingsTabs")).SelectedValue=SettingsPage.Appearance;
                 window.UpdateLayout();
-                Assert.Contains(Descendants<TextBox>(window),t=>System.Windows.Automation.AutomationProperties.GetName(t)=="更新資訊 HTTPS 連結"&&t.IsVisible&&t.IsEnabled);
+                Assert.DoesNotContain(Descendants<TextBox>(window),t=>System.Windows.Automation.AutomationProperties.GetName(t)=="更新資訊 HTTPS 連結"&&t.IsVisible);
                 Assert.DoesNotContain(Descendants<Button>(window),b=>Equals(b.Content,"🔒 管理者登入")&&b.IsVisible);
                 vm.OpenAdminCommand.Execute("0");
                 window.UpdateLayout();
@@ -138,33 +138,33 @@ public sealed class MilestoneTwoTests
                 Assert.Equal(5,Assert.Single(vm.NavigationItems,item=>item.IsSelected).PageIndex);
                 Assert.DoesNotContain(Descendants<Button>(window),b=>b.IsVisible&&b.Content is string label&&new[]{"同步來源","本機設定","系統紀錄","操作稽核","備份與還原"}.Contains(label));
                 Assert.Contains(Descendants<Button>(window),b=>Equals(b.Content,"登出管理者")&&b.IsVisible);
-                for(var i=0;i<5;i++)
+                for(var i=0;i<9;i++)
                 {
                     vm.Admin.SelectedTab=i;window.UpdateLayout();await Dispatcher.Yield(DispatcherPriority.ApplicationIdle);
                     Assert.True(Descendants<AdminView>(window).Single().IsVisible);
                     Assert.Equal(5,Assert.Single(vm.NavigationItems,item=>item.IsSelected).PageIndex);
-                    Assert.Equal(i is 2 or 3,vm.Admin.ShowsLogFilter);
-                    if(i==0)
+                    Assert.Equal(i==7,vm.Admin.ShowsLogFilter);
+                    if(i==1)
                     {
                         Assert.DoesNotContain(Descendants<GoogleWorkspaceView>(Descendants<AdminView>(window).Single()),v=>v.IsVisible);
-                        Assert.Contains(Descendants<TextBlock>(window),t=>Equals(t.Text,"同步間隔（Sheet A／B 共用）")&&t.IsVisible);
-                        var intervalSlider=Assert.Single(Descendants<Slider>(window),s=>System.Windows.Automation.AutomationProperties.GetName(s)=="共用同步間隔秒數"&&s.IsVisible);
-                        Assert.Equal(5,intervalSlider.TickFrequency);
-                        intervalSlider.Value=50;
-                        Assert.Equal(50,vm.IntervalSeconds);
+                        var interval=Assert.Single(Descendants<ComboBox>(window),c=>System.Windows.Automation.AutomationProperties.GetName(c)=="共用同步間隔秒數"&&c.IsVisible);
+                        Assert.Equal(new[]{30,35,40,45,50,55,60},interval.Items.Cast<int>());
+                        interval.SelectedItem=50;Assert.Equal(50,vm.IntervalSeconds);
                         Assert.Equal(2,Descendants<TextBlock>(Descendants<AdminView>(window).Single()).Count(t=>Equals(t.Text,"連線狀態")&&t.IsVisible));
                         Assert.DoesNotContain(Descendants<TextBlock>(window),t=>Equals(t.Text,"›  連線測試輸出")&&t.IsVisible);
                     }
-                    if(i==1)
+                    if(i==4)
                     {
-                        Assert.Contains(Descendants<TextBlock>(window),t=>Equals(t.Text,"管理者帳號與密碼")&&t.IsVisible);
-                        Assert.Contains(Descendants<Button>(window),b=>Equals(b.Content,"儲存管理者帳密")&&b.IsVisible);
-                        Assert.Contains(Descendants<CheckBox>(window),c=>Equals(c.Content,"登入 Windows 後自動啟動程式")&&c.IsVisible);
-                        Assert.Contains(Descendants<TextBlock>(window),t=>Equals(t.Text,"結束程式密碼保護")&&t.IsVisible);
-                        Assert.Contains(Descendants<Button>(window),b=>Equals(b.Content,"設定／重設專用密碼")&&b.IsVisible);
+                        Assert.Contains(Descendants<Button>(window),b=>Equals(b.Content,"修改帳號與密碼…")&&b.IsVisible);
+                        Assert.Contains(Descendants<Button>(window),b=>Equals(b.Content,"設定／重設專用密碼…")&&b.IsVisible);
                         Assert.Contains(Descendants<CheckBox>(window),c=>Equals(c.Content,"結束程式時要求密碼")&&c.IsVisible);
                     }
-                    if(i==4){Assert.True(Descendants<BackupMaintenanceView>(window).Single().IsVisible);vm.Preferences.Maintenance.RequireAdministrator();}
+                    if(i==5)
+                    {
+                        Assert.Contains(Descendants<CheckBox>(window),c=>Equals(c.Content,"登入 Windows 後自動啟動程式")&&c.IsVisible);
+                        Assert.Contains(Descendants<TextBox>(window),t=>System.Windows.Automation.AutomationProperties.GetName(t)=="更新資訊 HTTPS 連結"&&t.IsVisible&&t.IsEnabled);
+                    }
+                    if(i==6){Assert.True(Descendants<BackupMaintenanceView>(window).Single().IsVisible);vm.Preferences.Maintenance.RequireAdministrator();}
                     Screenshot(window,"admin-page-"+i);
                 }
                 vm.Admin.SelectedTab=1;window.Width=1050;window.Height=680;window.UpdateLayout();
@@ -198,9 +198,9 @@ public sealed class MilestoneTwoTests
                 Assert.Contains("登入",vm.Status);
                 Assert.Equal("",(await host.Services.GetRequiredService<SyncConfiguration>().LoadAsync()).SheetAId);
                 vm.PageIndex=4;window.UpdateLayout();
-                ((TabControl)Descendants<PreferencesView>(window).Single().FindName("SettingsTabs")).SelectedIndex=4;
+                ((TabControl)Descendants<PreferencesView>(window).Single().FindName("SettingsTabs")).SelectedValue=SettingsPage.Appearance;
                 window.UpdateLayout();
-                Assert.Contains(Descendants<TextBox>(window),t=>System.Windows.Automation.AutomationProperties.GetName(t)=="更新資訊 HTTPS 連結"&&t.IsVisible&&!t.IsEnabled);
+                Assert.DoesNotContain(Descendants<TextBox>(window),t=>System.Windows.Automation.AutomationProperties.GetName(t)=="更新資訊 HTTPS 連結"&&t.IsVisible);
                 vm.PageIndex=5;Assert.Equal(0,vm.PageIndex);
             }
             finally{login?.Close();window?.ForceClose();if(Directory.Exists(paths.DataDirectory))Directory.Delete(paths.DataDirectory,true);}

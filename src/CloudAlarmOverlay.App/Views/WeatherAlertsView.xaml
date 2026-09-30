@@ -1,0 +1,32 @@
+<UserControl x:Class="CloudAlarmOverlay.App.Views.WeatherAlertsView"
+ xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+ xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+ xmlns:adaptive="clr-namespace:CloudAlarmOverlay.App.Styles">
+ <UserControl.Resources><BooleanToVisibilityConverter x:Key="VisibleIf"/></UserControl.Resources>
+ <StackPanel MaxWidth="360">
+  <StackPanel Visibility="{Binding HasAlerts,Converter={StaticResource VisibleIf}}" Margin="8,2,0,4">
+   <TextBlock Text="{Binding AlertHeading}" FontSize="11" Foreground="{adaptive:AdaptiveBrush WorkspaceMuted}" Margin="0,0,0,4" TextWrapping="Wrap"/>
+   <ItemsControl ItemsSource="{Binding AlertBadges}" x:Name="Badges">
+    <ItemsControl.ItemsPanel><ItemsPanelTemplate><WrapPanel/></ItemsPanelTemplate></ItemsControl.ItemsPanel>
+    <ItemsControl.ItemTemplate><DataTemplate>
+     <Button Command="{Binding DataContext.OpenAlertCommand,RelativeSource={RelativeSource AncestorType=UserControl}}"
+       CommandParameter="{Binding}" AutomationProperties.Name="{Binding Label}" Cursor="Hand"
+       Padding="7,4" Margin="0,0,5,4" MinWidth="0" MinHeight="28" FontSize="12"
+       Foreground="{adaptive:AdaptiveBrush CountdownSoonAccent}" Background="{adaptive:AdaptiveBrush CountdownSoonSurface}"
+       BorderThickness="0" ToolTipService.ShowDuration="30000">
+      <Button.ToolTip><ToolTip MaxWidth="360"><TextBlock Text="{Binding Details}" TextWrapping="Wrap"/></ToolTip></Button.ToolTip>
+      <StackPanel Orientation="Horizontal">
+       <Path Data="{Binding IconPath}" Stroke="{Binding Foreground,RelativeSource={RelativeSource AncestorType=Button}}"
+        StrokeThickness="1.7" StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round"
+        Width="17" Height="17" Stretch="Uniform" Margin="0,0,5,0"/>
+       <TextBlock Text="{Binding Label}" VerticalAlignment="Center" Foreground="{Binding Foreground,RelativeSource={RelativeSource AncestorType=Button}}"/>
+      </StackPanel>
+     </Button>
+    </DataTemplate></ItemsControl.ItemTemplate>
+   </ItemsControl>
+  </StackPanel>
+  <Button Content="{Binding AlertStatus}" Command="{Binding OpenAlertOverviewCommand}" ToolTip="{Binding AlertStatusDetails}"
+   FontSize="11" Margin="8,2,0,4" Padding="0,2" MinHeight="0" MinWidth="0" BorderThickness="0" Background="Transparent"
+   HorizontalAlignment="Left" Foreground="{adaptive:AdaptiveBrush WorkspaceMuted}" Visibility="{Binding HasAlertStatus,Converter={StaticResource VisibleIf}}"/>
+ </StackPanel>
+</UserControl>

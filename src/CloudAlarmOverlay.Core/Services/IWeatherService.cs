@@ -6,6 +6,8 @@ public interface IWeatherService
     WeatherLocation? EffectiveLocation { get; }
     WeatherSnapshot? Snapshot { get; }
     bool IsStale { get; }
+    WeatherAlertSnapshot? Alerts { get; }
+    bool AlertsStale { get; }
     Task LoadAsync(CancellationToken ct = default);
     Task SaveAsync(WeatherOptions options, CancellationToken ct = default);
     Task<IReadOnlyList<WeatherLocation>> SearchAsync(string city, CancellationToken ct = default);

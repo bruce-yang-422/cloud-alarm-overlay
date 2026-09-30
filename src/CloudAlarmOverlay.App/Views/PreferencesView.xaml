@@ -1,169 +1,327 @@
-<UserControl xmlns:c="clr-namespace:CloudAlarmOverlay.App.Controls" x:Class="CloudAlarmOverlay.App.Views.PreferencesView" xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:weatherViews="clr-namespace:CloudAlarmOverlay.App.Views" xmlns:adaptive="clr-namespace:CloudAlarmOverlay.App.Styles"><UserControl.Resources><ResourceDictionary><ResourceDictionary.MergedDictionaries><ResourceDictionary Source="../Styles/LightTheme.xaml"/></ResourceDictionary.MergedDictionaries></ResourceDictionary></UserControl.Resources>
- <Grid>
-  <Grid.RowDefinitions><RowDefinition Height="*"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
-  <TabControl x:Name="SettingsTabs" SelectedIndex="{Binding SelectedSettingsTab}" Style="{StaticResource FolderTabs}" AutomationProperties.Name="設定分類">
-   <TabControl.ItemContainerStyle><Style TargetType="TabItem" BasedOn="{StaticResource FolderTabItem}"><Setter Property="Padding" Value="10,8,16,8"/></Style></TabControl.ItemContainerStyle>
-   <TabItem Header="通知音效"><ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">  <Border Padding="0"><StackPanel>
-   <WrapPanel Margin="0,0,0,12">
-    <TextBlock Text="通知音效設定" FontSize="20" FontWeight="SemiBold" Margin="0,0,16,0"/>
-    <TextBlock Text="各等級可獨立開關，變更自動儲存。" Style="{StaticResource Muted}"/>
-   </WrapPanel>
-   <Border BorderBrush="{adaptive:AdaptiveBrush #DEE6F1}" BorderThickness="1" CornerRadius="8">
-    <StackPanel>
-     <Border Background="{adaptive:AdaptiveBrush #F1F5FA}" CornerRadius="7,7,0,0" Padding="12,9">
-      <Grid>
-       <Grid.ColumnDefinitions><ColumnDefinition Width="124"/><ColumnDefinition Width="88"/><ColumnDefinition Width="1.2*"/><ColumnDefinition Width="88"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
-       <TextBlock Text="提醒等級" FontWeight="SemiBold"/>
-       <TextBlock Grid.Column="1" Text="音效開關" FontWeight="SemiBold"/>
-       <TextBlock Grid.Column="2" Text="聲音選擇" FontWeight="SemiBold"/>
-       <TextBlock Grid.Column="3" Text="試聽" FontWeight="SemiBold"/>
-       <TextBlock Grid.Column="4" Text="備註" FontWeight="SemiBold"/>
-      </Grid>
-     </Border>
-     <ItemsControl ItemsSource="{Binding Sounds}">
-      <ItemsControl.ItemTemplate><DataTemplate>
-       <Border BorderBrush="{adaptive:AdaptiveBrush #DEE6F1}" BorderThickness="0,1,0,0" Padding="12,8">
+﻿<UserControl xmlns:vm="clr-namespace:CloudAlarmOverlay.App.ViewModels" xmlns:adaptive="clr-namespace:CloudAlarmOverlay.App.Styles" xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:c="clr-namespace:CloudAlarmOverlay.App.Controls" xmlns:weatherViews="clr-namespace:CloudAlarmOverlay.App.Views" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" x:Class="CloudAlarmOverlay.App.Views.PreferencesView" Validation.Error="ValidationChanged" Loaded="WorkspaceLoaded" SizeChanged="ResizeWorkspace" FontSize="14">
+  <UserControl.Resources>
+    <ResourceDictionary>
+      <ResourceDictionary.MergedDictionaries>
+        <ResourceDictionary Source="../Styles/AdminWorkspaceStyles.xaml" />
+      </ResourceDictionary.MergedDictionaries>
+      <CollectionViewSource x:Key="SettingsNavigation" Source="{Binding Navigation}">
+        <CollectionViewSource.GroupDescriptions>
+          <PropertyGroupDescription PropertyName="Group" />
+        </CollectionViewSource.GroupDescriptions>
+      </CollectionViewSource>
+    </ResourceDictionary>
+  </UserControl.Resources>
+  <Grid>
+    <Grid.RowDefinitions>
+      <RowDefinition Height="Auto" />
+      <RowDefinition Height="*" />
+    </Grid.RowDefinitions>
+    <Button x:Name="NavigationToggle" Content="☰ 分類" Click="ToggleNavigation" HorizontalAlignment="Left" Visibility="Collapsed" Margin="0,0,0,10" AutomationProperties.Name="開啟設定分類" />
+    <Grid x:Name="WorkspaceGrid" Grid.Row="1">
+      <Grid.ColumnDefinitions>
+        <ColumnDefinition x:Name="NavigationColumn" Width="184" />
+        <ColumnDefinition Width="*" />
+      </Grid.ColumnDefinitions>
+      <Border x:Name="NavigationPanel" Panel.ZIndex="2" Background="{adaptive:AdaptiveBrush WorkspaceSidebar}" BorderBrush="{adaptive:AdaptiveBrush WorkspaceBorder}" BorderThickness="1,1,0,1" CornerRadius="8,0,0,8" Padding="8,12">
+        <ListBox x:Name="NavigationList" ItemsSource="{Binding Source={StaticResource SettingsNavigation}}" SelectedValuePath="Page" SelectedValue="{Binding SelectedPage,Mode=TwoWay}" ItemContainerStyle="{StaticResource AdminNavigationItem}" Background="Transparent" BorderThickness="0" ScrollViewer.HorizontalScrollBarVisibility="Disabled" AutomationProperties.Name="設定分類">
+          <ListBox.GroupStyle>
+            <GroupStyle>
+              <GroupStyle.HeaderTemplate>
+                <DataTemplate>
+                  <TextBlock Text="{Binding Name}" Style="{StaticResource AdminNavGroup}" />
+                </DataTemplate>
+              </GroupStyle.HeaderTemplate>
+            </GroupStyle>
+          </ListBox.GroupStyle>
+          <ListBox.ItemTemplate>
+            <DataTemplate>
+              <Grid>
+                <Grid.ColumnDefinitions>
+                  <ColumnDefinition Width="26" />
+                  <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+                <TextBlock Text="{Binding Icon}" FontFamily="Segoe MDL2 Assets" FontSize="16" VerticalAlignment="Center" Foreground="{adaptive:AdaptiveBrush WorkspaceMuted}" />
+                <TextBlock Grid.Column="1" Text="{Binding Name}" Foreground="{adaptive:AdaptiveBrush WorkspaceText}" FontSize="13" VerticalAlignment="Center" TextWrapping="Wrap" />
+              </Grid>
+            </DataTemplate>
+          </ListBox.ItemTemplate>
+        </ListBox>
+      </Border>
+      <Border Grid.Column="1" Background="{adaptive:AdaptiveBrush WorkspaceSurface}" BorderBrush="{adaptive:AdaptiveBrush WorkspaceBorder}" BorderThickness="1" CornerRadius="0,8,8,0">
         <Grid>
-         <Grid.ColumnDefinitions><ColumnDefinition Width="124"/><ColumnDefinition Width="88"/><ColumnDefinition Width="1.2*"/><ColumnDefinition Width="88"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
-         <ContentControl Content="{Binding}" ContentTemplate="{StaticResource LevelBadge}" VerticalAlignment="Center"/>
-         <CheckBox Grid.Column="1" IsChecked="{Binding Enabled}" Style="{StaticResource PillSwitch}" VerticalAlignment="Center" AutomationProperties.Name="{Binding Level,Converter={StaticResource AlarmLevelLabel}}" ToolTip="只切換音效，不影響通知顯示"/>
-         <ComboBox Grid.Column="2" ItemsSource="{Binding Available}" SelectedItem="{Binding Name}" IsEnabled="{Binding HasSounds}" Margin="0,0,16,0" VerticalAlignment="Center" AutomationProperties.Name="通知聲音選擇"/>
-         <Button Grid.Column="3" Content="{Binding PreviewButtonLabel}" Style="{StaticResource SoundPreviewButton}" IsEnabled="{Binding HasSounds}" Command="{Binding DataContext.PreviewSoundCommand,RelativeSource={RelativeSource AncestorType=UserControl}}" CommandParameter="{Binding}" Margin="0,0,12,0" Padding="8,6" VerticalAlignment="Center" ToolTip="試聽目前聲音，不變更音效開關；若無聲請檢查 Windows 靜音"/>
-         <TextBlock Grid.Column="4" Text="{Binding Note}" Style="{StaticResource Muted}" FontSize="12" VerticalAlignment="Center"/>
+          <Grid.RowDefinitions>
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+          </Grid.RowDefinitions>
+          <TabControl x:Name="SettingsTabs" SelectedValuePath="Tag" SelectedValue="{Binding SelectedPage,Mode=TwoWay}" Style="{StaticResource AdminContentTabs}" AutomationProperties.Name="設定內容">
+            <TabItem Header="通知音效" Tag="{x:Static vm:SettingsPage.Sound}">
+              <ScrollViewer Style="{StaticResource AdminScroll}">
+                <StackPanel Style="{StaticResource AdminBody}">
+                  <DockPanel>
+                    <Button DockPanel.Dock="Right" Content="預覽提醒…" Click="PreviewReminder" Margin="0" />
+                    <TextBlock Text="通知音效" Style="{StaticResource AdminTitle}" />
+                  </DockPanel>
+                  <TextBlock Text="各提醒等級獨立設定，變更即時儲存。" Style="{StaticResource AdminDescription}" />
+                  <StackPanel>
+                    <Border BorderBrush="{adaptive:AdaptiveBrush #DEE6F1}" BorderThickness="1" CornerRadius="8">
+                      <StackPanel>
+                        <ItemsControl ItemsSource="{Binding Sounds}">
+                          <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                              <Border BorderBrush="{adaptive:AdaptiveBrush #DEE6F1}" BorderThickness="0,1,0,0" Padding="16">
+                                <Grid>
+                                  <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="60" />
+                                    <ColumnDefinition Width="180" />
+                                    <ColumnDefinition Width="90" />
+                                  </Grid.ColumnDefinitions>
+                                  <CheckBox Grid.Column="1" IsChecked="{Binding Enabled}" Style="{StaticResource SettingsSwitch}" VerticalAlignment="Center" AutomationProperties.Name="{Binding Level,Converter={StaticResource AlarmLevelLabel}}" ToolTip="只切換音效，不影響通知顯示" />
+                                  <ComboBox Grid.Column="2" ItemsSource="{Binding Available}" SelectedItem="{Binding Name}" IsEnabled="{Binding HasSounds}" Margin="0,0,16,0" VerticalAlignment="Center" AutomationProperties.Name="通知聲音選擇" />
+                                  <Button Grid.Column="3" Content="{Binding PreviewButtonLabel}" Style="{StaticResource SoundPreviewButton}" IsEnabled="{Binding HasSounds}" Command="{Binding DataContext.PreviewSoundCommand,RelativeSource={RelativeSource AncestorType=UserControl}}" CommandParameter="{Binding}" Margin="0,0,12,0" Padding="8,6" VerticalAlignment="Center" ToolTip="試聽目前聲音，不變更音效開關；若無聲請檢查 Windows 靜音" />
+                                  <StackPanel VerticalAlignment="Center">
+                                    <ContentControl Content="{Binding}" ContentTemplate="{StaticResource LevelBadge}" VerticalAlignment="Center" />
+                                    <TextBlock Text="{Binding Note}" Style="{StaticResource WorkspaceMuted}" FontSize="12" VerticalAlignment="Center" Margin="0,6,14,0" />
+                                  </StackPanel>
+                                </Grid>
+                              </Border>
+                            </DataTemplate>
+                          </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                      </StackPanel>
+                    </Border>
+                  </StackPanel>
+                </StackPanel>
+              </ScrollViewer>
+            </TabItem>
+            <TabItem Header="勿擾與顯示" Tag="{x:Static vm:SettingsPage.Quiet}">
+              <ScrollViewer Style="{StaticResource AdminScroll}">
+                <StackPanel Style="{StaticResource AdminBody}">
+                  <TextBlock Text="勿擾與顯示" Style="{StaticResource AdminTitle}" />
+                  <TextBlock Text="安排安靜時段，調整提醒顯示方式。" Style="{StaticResource AdminDescription}" />
+                  <StackPanel>
+                    <TextBlock Text="{Binding QuietLockLabel}" Margin="0,20,0,6" />
+                    <TextBlock Text="個人提醒延至時段結束後顯示；強制通知照常提醒。可設定跨午夜時段。" TextWrapping="Wrap" Foreground="{adaptive:AdaptiveBrush #697C99}" />
+                    <ItemsControl ItemsSource="{Binding QuietPeriods}" IsEnabled="{Binding CanEditQuiet}" Margin="0,12,0,0">
+                      <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                          <StackPanel Orientation="Horizontal">
+                            <TextBox Text="{Binding Start,UpdateSourceTrigger=PropertyChanged}" MaxLength="5" Width="100" AutomationProperties.Name="靜音開始時間 HH:mm" />
+                            <TextBlock Text="至" Margin="12" VerticalAlignment="Center" />
+                            <TextBox Text="{Binding End,UpdateSourceTrigger=PropertyChanged}" MaxLength="5" Width="100" AutomationProperties.Name="靜音結束時間 HH:mm" />
+                            <Button Content="移除" Command="{Binding DataContext.RemoveQuietCommand,RelativeSource={RelativeSource AncestorType=UserControl}}" CommandParameter="{Binding}" Margin="12,0,0,0" />
+                          </StackPanel>
+                        </DataTemplate>
+                      </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                    <Button Content="＋ 新增靜音時段" Command="{Binding AddQuietCommand}" IsEnabled="{Binding CanEditQuiet}" HorizontalAlignment="Left" Margin="0,8" />
+                    <TextBlock Text="時間可直接輸入，例如 12:00。格式為 24 小時制。" Foreground="{adaptive:AdaptiveBrush #697C99}" Margin="0,0,0,12" />
+                    <TextBlock Text="{Binding FlashLockLabel}" Margin="0,16,0,6" />
+                    <ComboBox ItemsSource="{Binding FlashChoices}" IsEditable="True" Text="{Binding FlashMilliseconds,UpdateSourceTrigger=PropertyChanged,ValidatesOnExceptions=True,NotifyOnValidationError=True}" IsEnabled="{Binding CanEditFlash}" Width="140" HorizontalAlignment="Left" />
+                  </StackPanel>
+                </StackPanel>
+              </ScrollViewer>
+            </TabItem>
+            <TabItem Header="外觀與視窗" Tag="{x:Static vm:SettingsPage.Appearance}">
+              <ScrollViewer Style="{StaticResource AdminScroll}">
+                <StackPanel Style="{StaticResource AdminBody}">
+                  <TextBlock Text="外觀與視窗" Style="{StaticResource AdminTitle}" />
+                  <TextBlock Text="選擇適合你的明暗、配色與視窗行為。變更即時儲存。" Style="{StaticResource AdminDescription}" />
+                  <weatherViews:MaintenanceView DataContext="{Binding Maintenance}" />
+                  <Border Style="{StaticResource AdminRow}" DataContext="{Binding Calendar}">
+                    <Grid><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                      <StackPanel Margin="0,0,20,0"><TextBlock Text="月曆每週起始日" FontWeight="SemiBold"/><TextBlock Text="用於「我的任務」月曆，預設星期日。設定一次後即會記住。" Style="{StaticResource WorkspaceMuted}" FontSize="12" Margin="0,4,0,0"/>
+                      <TextBlock Text="{Binding PreferenceMessage}" Foreground="{adaptive:AdaptiveBrush CalendarHolidayText}" FontSize="12"/></StackPanel>
+                      <ComboBox x:Name="CalendarWeekStartPicker" Grid.Column="1" ItemsSource="{Binding WeekStartOptions}" DisplayMemberPath="Label" SelectedValuePath="Value" SelectedValue="{Binding WeekStart,Mode=TwoWay}" Width="120" VerticalAlignment="Center" AutomationProperties.Name="月曆每週起始日"/>
+                    </Grid>
+                  </Border>
+                </StackPanel>
+              </ScrollViewer>
+            </TabItem>
+            <TabItem Header="首頁與天氣" Tag="{x:Static vm:SettingsPage.Home}">
+              <ScrollViewer Style="{StaticResource AdminScroll}">
+                <StackPanel Style="{StaticResource AdminBody}">
+                  <TextBlock Text="首頁與天氣" Style="{StaticResource AdminTitle}" />
+                  <TextBlock Text="讓首頁保留你關心的提醒與天氣資訊。" Style="{StaticResource AdminDescription}" />
+                  <Border Style="{StaticResource AdminRow}">
+                    <Grid>
+                      <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                      </Grid.ColumnDefinitions>
+                      <StackPanel Margin="0,0,20,0">
+                        <TextBlock Text="首頁釘選上限" FontWeight="SemiBold" />
+                        <TextBlock Text="任務與倒數／正數共用 2～5 張名額。降低上限前，請先取消超出的釘選。" Style="{StaticResource WorkspaceMuted}" FontSize="12" Margin="0,4,0,0" />
+                      </StackPanel>
+                      <ComboBox x:Name="HomePinLimitSelector" ItemsSource="{Binding HomePinLimitChoices}" SelectedItem="{Binding HomePinLimit}" Width="100" AutomationProperties.Name="首頁釘選卡片上限" Grid.Column="1" />
+                    </Grid>
+                  </Border>
+                  <Border Height="0" Background="{adaptive:AdaptiveBrush WorkspaceBorder}" Margin="0,16" />
+                  <StackPanel DataContext="{Binding Weather}" Margin="0,12">
+                    <DockPanel>
+                      <CheckBox Content="" IsChecked="{Binding Enabled}" Margin="12,0,0,0" AutomationProperties.Name="顯示天氣" Style="{StaticResource SettingsSwitch}" DockPanel.Dock="Right" />
+                      <TextBlock Text="天氣" FontWeight="SemiBold" Style="{StaticResource WorkspaceSection}" />
+                    </DockPanel>
+                    <TextBlock Text="{Binding LocationLabel}" Margin="0,0,0,8" />
+                    <weatherViews:WeatherLocationPicker />
+                    <WrapPanel>
+                      <Button Content="使用預設地點" Command="{Binding SelectDefaultCommand}" />
+                    </WrapPanel>
+                    <TextBlock Text="天氣：Open-Meteo.com（CC BY 4.0）；行政區：內政部國土測繪中心" Style="{StaticResource WorkspaceMuted}" />
+                    <Expander Header="資料來源與使用說明" Margin="0,12,0,0">
+                      <StackPanel Margin="0,10,0,0">
+                        <TextBlock Text="選擇所在地的縣市與鄉鎮市區；區域天氣以主要聚落或公所附近為參考。" TextWrapping="Wrap" Margin="0,0,0,8" />
+                        <TextBlock Text="不使用 IP 定位。免費 API 限非商業用途；公司使用請確認服務授權。預報日期依台北時區。" Style="{StaticResource WorkspaceMuted}" TextWrapping="Wrap" Margin="0,8" />
+                      </StackPanel>
+                    </Expander>
+                  </StackPanel>
+                </StackPanel>
+              </ScrollViewer>
+            </TabItem>
+            <TabItem Header="編輯與分享" Tag="{x:Static vm:SettingsPage.Editing}">
+              <ScrollViewer Style="{StaticResource AdminScroll}">
+                <StackPanel Style="{StaticResource AdminBody}">
+                  <TextBlock Text="編輯與分享" Style="{StaticResource AdminTitle}" />
+                  <TextBlock Text="管理常用表情與分享圖片的預設方式。" Style="{StaticResource AdminDescription}" />
+                  <DockPanel>
+                    <Button DockPanel.Dock="Right" Content="恢復預設…" Click="ResetEmojiDefaults" />
+                    <TextBlock Text="常用 emoji · 最多 60 個" Style="{StaticResource WorkspaceSection}" />
+                  </DockPanel>
+                  <StackPanel>
+                    <ListBox ItemsSource="{Binding EmojiItems}" SelectedItem="{Binding SelectedEmoji}" Margin="0,12,0,8" Background="Transparent" BorderThickness="0" Padding="0" ScrollViewer.HorizontalScrollBarVisibility="Disabled" ScrollViewer.VerticalScrollBarVisibility="Disabled" KeyboardNavigation.DirectionalNavigation="Contained" AutomationProperties.Name="常用 emoji 方塊清單">
+                      <ListBox.ItemsPanel>
+                        <ItemsPanelTemplate>
+                          <WrapPanel />
+                        </ItemsPanelTemplate>
+                      </ListBox.ItemsPanel>
+                      <ListBox.ItemContainerStyle>
+                        <Style TargetType="ListBoxItem">
+                          <Setter Property="Width" Value="44" />
+                          <Setter Property="Height" Value="44" />
+                          <Setter Property="Margin" Value="0,0,6,6" />
+                          <Setter Property="HorizontalContentAlignment" Value="Center" />
+                          <Setter Property="VerticalContentAlignment" Value="Center" />
+                          <Setter Property="ToolTip" Value="{Binding}" />
+                          <Setter Property="Template">
+                            <Setter.Value>
+                              <ControlTemplate TargetType="ListBoxItem">
+                                <Border x:Name="Tile" Background="{adaptive:AdaptiveBrush #F2F6FC}" BorderBrush="{adaptive:AdaptiveBrush #E0E8F2}" BorderThickness="1" CornerRadius="10">
+                                  <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                </Border>
+                                <ControlTemplate.Triggers>
+                                  <Trigger Property="IsMouseOver" Value="True">
+                                    <Setter TargetName="Tile" Property="Background" Value="{adaptive:AdaptiveBrush #E7F0FF}" />
+                                  </Trigger>
+                                  <Trigger Property="IsSelected" Value="True">
+                                    <Setter TargetName="Tile" Property="Background" Value="{adaptive:AdaptiveBrush #DFEBFF}" />
+                                    <Setter TargetName="Tile" Property="BorderBrush" Value="{adaptive:AdaptiveBrush #246BDF}" />
+                                  </Trigger>
+                                  <Trigger Property="IsKeyboardFocusWithin" Value="True">
+                                    <Setter TargetName="Tile" Property="BorderThickness" Value="2" />
+                                    <Setter TargetName="Tile" Property="BorderBrush" Value="{adaptive:AdaptiveBrush #246BDF}" />
+                                  </Trigger>
+                                </ControlTemplate.Triggers>
+                              </ControlTemplate>
+                            </Setter.Value>
+                          </Setter>
+                        </Style>
+                      </ListBox.ItemContainerStyle>
+                      <ListBox.ItemTemplate>
+                        <DataTemplate>
+                          <c:EmojiGlyph Text="{Binding}" Width="30" Height="30" />
+                        </DataTemplate>
+                      </ListBox.ItemTemplate>
+                    </ListBox>
+                    <WrapPanel>
+                      <TextBox x:Name="NewEmojiInput" Text="{Binding NewEmoji,UpdateSourceTrigger=PropertyChanged}" Width="88" MaxLength="24" Margin="0,0,6,6" ToolTip="輸入或貼上 emoji（Windows 鍵 + 句點）" AutomationProperties.Name="新增 emoji">
+                        <TextBox.InputBindings>
+                          <KeyBinding Key="Enter" Command="{Binding AddEmojiCommand}" />
+                        </TextBox.InputBindings>
+                      </TextBox>
+                      <Button Content="Windows emoji" Click="OpenWindowsEmoji" Padding="10,6" Margin="0,0,6,6" ToolTip="Windows 鍵 + 句點" />
+                      <Button Content="＋ 新增" Command="{Binding AddEmojiCommand}" Padding="12,6" Margin="0,0,16,6" />
+                      <Button Content="← 左移" Command="{Binding MoveEmojiCommand}" CommandParameter="left" Padding="10,6" Margin="0,0,6,6" />
+                      <Button Content="右移 →" Command="{Binding MoveEmojiCommand}" CommandParameter="right" Padding="10,6" Margin="0,0,6,6" />
+                      <Button Content="移除" Command="{Binding RemoveEmojiCommand}" Padding="10,6" Margin="0,0,6,6" />
+                    </WrapPanel>
+                  </StackPanel>
+                  <Border Height="1" Background="{adaptive:AdaptiveBrush WorkspaceBorder}" Margin="0,24" />
+                  <StackPanel>
+                    <TextBlock Text="倒數卡片分享圖片" FontSize="15" FontWeight="SemiBold" />
+                    <TextBlock Text="從倒數卡片、資料表或首頁釘選卡的分享按鈕，預覽、複製或另存 PNG。" Style="{StaticResource WorkspaceMuted}" TextWrapping="Wrap" Margin="0,8,0,16" />
+                    <CheckBox Content="預設在圖片右下角顯示 Cloud Alarm Overlay" IsChecked="{Binding CountdownShareBranding}" Margin="0,0,0,12" />
+                    <TextBlock Text="圖片不包含備註。分享視窗可調整單張圖片的名稱標示，尺寸與背景也可在分享時選擇。" Style="{StaticResource WorkspaceMuted}" TextWrapping="Wrap" />
+                  </StackPanel>
+                </StackPanel>
+              </ScrollViewer>
+            </TabItem>
+            <TabItem Header="Google 帳號與同步" Tag="{x:Static vm:SettingsPage.Google}">
+              <weatherViews:GoogleWorkspaceView x:Name="GooglePage" DataContext="{Binding Google}" Margin="24" />
+            </TabItem>
+            <TabItem Header="軟體更新" Tag="{x:Static vm:SettingsPage.Updates}">
+              <ScrollViewer Style="{StaticResource AdminScroll}">
+                <StackPanel Style="{StaticResource AdminBody}">
+                  <TextBlock Text="軟體更新" Style="{StaticResource AdminTitle}" />
+                  <TextBlock Text="查看公開版本與更新內容，再決定是否下載。" Style="{StaticResource AdminDescription}" />
+                  <weatherViews:SoftwareUpdateView DataContext="{Binding Maintenance}" />
+                </StackPanel>
+              </ScrollViewer>
+            </TabItem>
+            <TabItem Header="我的裝置" Tag="{x:Static vm:SettingsPage.Device}">
+              <ScrollViewer Style="{StaticResource AdminScroll}">
+                <StackPanel Style="{StaticResource AdminBody}">
+                  <TextBlock Text="我的裝置" Style="{StaticResource AdminTitle}" />
+                  <TextBlock Text="此電腦的裝置識別與程式資訊。" Style="{StaticResource AdminDescription}" />
+                  <StackPanel>
+                    <Border Style="{StaticResource AdminCard}" Padding="20">
+                      <StackPanel>
+                        <TextBlock Text="這部電腦" FontSize="15" FontWeight="SemiBold" />
+                        <TextBlock Text="{Binding DataContext.DeviceLabel,RelativeSource={RelativeSource AncestorType=Window}}" Margin="0,12" TextWrapping="Wrap" />
+                        <TextBlock Text="{Binding DeviceDescription}" Style="{StaticResource WorkspaceMuted}" />
+                      </StackPanel>
+                    </Border>
+                    <Border x:Name="ApplicationInfoCard" Style="{StaticResource AdminCard}" Padding="20">
+                      <StackPanel>
+                        <TextBlock Text="程式資訊" FontSize="15" FontWeight="SemiBold" Margin="0,0,0,16" />
+                        <TextBlock Text="{Binding ApplicationName}" FontSize="18" FontWeight="SemiBold" Foreground="{adaptive:AdaptiveBrush #0766FF}" Margin="0,0,0,18" />
+                        <Grid>
+                          <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="135" />
+                            <ColumnDefinition Width="*" />
+                          </Grid.ColumnDefinitions>
+                          <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                          </Grid.RowDefinitions>
+                          <TextBlock Text="作者" Style="{StaticResource WorkspaceMuted}" Margin="0,0,0,12" />
+                          <TextBlock Grid.Column="1" Text="{Binding ApplicationAuthor}" Foreground="{adaptive:AdaptiveBrush #16243E}" Margin="0,0,0,12" />
+                          <TextBlock Grid.Row="1" Text="程式更新日期" Style="{StaticResource WorkspaceMuted}" Margin="0,0,0,12" />
+                          <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding ApplicationLastUpdated}" ToolTip="目前安裝包的建置日期" Foreground="{adaptive:AdaptiveBrush #16243E}" Margin="0,0,0,12" />
+                          <TextBlock Grid.Row="2" Text="版本" Style="{StaticResource WorkspaceMuted}" />
+                          <TextBlock Grid.Row="2" Grid.Column="1" Text="{Binding ApplicationVersion}" Foreground="{adaptive:AdaptiveBrush #16243E}" />
+                        </Grid>
+                      </StackPanel>
+                    </Border>
+                  </StackPanel>
+                  <Button Content="查看軟體更新 ›" Click="OpenUpdates" HorizontalAlignment="Left" />
+                </StackPanel>
+              </ScrollViewer>
+            </TabItem>
+          </TabControl>
+          <Border x:Name="DraftFooter" Grid.Row="1" Visibility="Collapsed" BorderBrush="{adaptive:AdaptiveBrush WorkspaceBorder}" BorderThickness="0,1,0,0" Padding="24,12">
+            <DockPanel>
+              <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
+                <Button Content="捨棄變更" Click="DiscardDraft" />
+                <Button Content="儲存變更" Style="{StaticResource AdminPrimary}" Click="SaveDraft" Margin="0" />
+              </StackPanel>
+              <TextBlock Text="有尚未儲存的變更" Style="{StaticResource WorkspaceMuted}" FontSize="12" VerticalAlignment="Center" />
+            </DockPanel>
+          </Border>
+          <TextBlock x:Name="OperationResult" Grid.Row="2" Style="{StaticResource AdminResult}" Margin="24,8,24,12" AutomationProperties.LiveSetting="Polite" />
         </Grid>
-       </Border>
-      </DataTemplate></ItemsControl.ItemTemplate>
-     </ItemsControl>
-    </StackPanel>
-   </Border>
-   <Border x:Name="ReminderPreviewCard" Style="{StaticResource Card}" Margin="0,20,0,0" Padding="18">
-    <StackPanel>
-     <TextBlock Text="提醒預覽" FontSize="18" FontWeight="SemiBold"/>
-     <TextBlock Text="預覽各等級的通知視窗與確認方式，不會建立提醒紀錄。" Style="{StaticResource Muted}" Margin="0,6,0,12"/>
-     <WrapPanel>
-      <Button Content="一般提醒" Command="{Binding DataContext.PreviewCommand,RelativeSource={RelativeSource AncestorType=Window}}" CommandParameter="一般提醒" Padding="16,9" Margin="0,0,10,8"/>
-      <Button Content="重要提醒" Command="{Binding DataContext.PreviewCommand,RelativeSource={RelativeSource AncestorType=Window}}" CommandParameter="重要提醒" Padding="16,9" Margin="0,0,10,8"/>
-      <Button Content="緊急提醒" Command="{Binding DataContext.PreviewCommand,RelativeSource={RelativeSource AncestorType=Window}}" CommandParameter="緊急提醒" Padding="16,9" Margin="0,0,10,8"/>
-      <Button Content="強制通知" Command="{Binding DataContext.PreviewCommand,RelativeSource={RelativeSource AncestorType=Window}}" CommandParameter="強制通知" Padding="16,9" Margin="0,0,10,8"/>
-     </WrapPanel>
-    </StackPanel>
-   </Border>
-  </StackPanel></Border>
-
-</ScrollViewer></TabItem><TabItem Header="通知偏好"><ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">  <Border Padding="0"><StackPanel>
-   <TextBlock Text="通知偏好" FontSize="20" FontWeight="SemiBold"/>
-   <TextBlock Text="{Binding FlashLockLabel}" Margin="0,16,0,6"/>
-   <ComboBox ItemsSource="{Binding FlashChoices}" SelectedItem="{Binding FlashMilliseconds}" IsEditable="True" Text="{Binding FlashMilliseconds}" IsEnabled="{Binding CanEditFlash}" Width="140" HorizontalAlignment="Left"/>
-   <TextBlock Text="{Binding QuietLockLabel}" Margin="0,20,0,6"/>
-   <TextBlock Text="個人提醒延至時段結束後顯示；強制通知照常提醒。可設定跨午夜時段。" TextWrapping="Wrap" Foreground="{adaptive:AdaptiveBrush #697C99}"/>
-   <ItemsControl ItemsSource="{Binding QuietPeriods}" IsEnabled="{Binding CanEditQuiet}" Margin="0,12,0,0">
-    <ItemsControl.ItemTemplate><DataTemplate><StackPanel Orientation="Horizontal">
-     <TextBox Text="{Binding Start,UpdateSourceTrigger=PropertyChanged}" MaxLength="5" Width="100" AutomationProperties.Name="靜音開始時間 HH:mm"/>
-     <TextBlock Text="至" Margin="12" VerticalAlignment="Center"/>
-     <TextBox Text="{Binding End,UpdateSourceTrigger=PropertyChanged}" MaxLength="5" Width="100" AutomationProperties.Name="靜音結束時間 HH:mm"/>
-     <Button Content="移除" Command="{Binding DataContext.RemoveQuietCommand,RelativeSource={RelativeSource AncestorType=UserControl}}" CommandParameter="{Binding}" Margin="12,0,0,0"/>
-    </StackPanel></DataTemplate></ItemsControl.ItemTemplate>
-   </ItemsControl>
-   <Button Content="＋ 新增靜音時段" Command="{Binding AddQuietCommand}" IsEnabled="{Binding CanEditQuiet}" HorizontalAlignment="Left" Margin="0,8"/>
-   <TextBlock Text="時間可直接輸入，例如 12:00。格式為 24 小時制。" Foreground="{adaptive:AdaptiveBrush #697C99}" Margin="0,0,0,12"/>
-   <Button Content="儲存通知偏好" Command="{Binding SaveCommand}" Style="{StaticResource Primary}" HorizontalAlignment="Left"/>
-  </StackPanel></Border>
-
-</ScrollViewer></TabItem><TabItem Header="常用 emoji"><ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">  <Border Padding="0"><StackPanel>
-   <DockPanel LastChildFill="True">
-    <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
-     <Button Content="恢復預設" Command="{Binding ResetEmojisCommand}" Padding="12,6" ToolTip="按儲存後套用"/>
-     <Button Content="儲存" Command="{Binding SaveEmojisCommand}" Style="{StaticResource Primary}" Padding="18,6"/>
-    </StackPanel>
-    <StackPanel VerticalAlignment="Center">
-     <TextBlock Text="常用 emoji" FontSize="20" FontWeight="SemiBold"/>
-     <TextBlock Text="選取後可移除或調整順序，最多 60 個。" Foreground="{adaptive:AdaptiveBrush #697C99}" FontSize="12" Margin="0,4,8,0" TextWrapping="Wrap"/>
-    </StackPanel>
-   </DockPanel>
-   <ListBox ItemsSource="{Binding EmojiItems}" SelectedItem="{Binding SelectedEmoji}" Margin="0,12,0,8"
-            Background="Transparent" BorderThickness="0" Padding="0"
-            ScrollViewer.HorizontalScrollBarVisibility="Disabled" ScrollViewer.VerticalScrollBarVisibility="Disabled"
-            KeyboardNavigation.DirectionalNavigation="Contained" AutomationProperties.Name="常用 emoji 方塊清單">
-    <ListBox.ItemsPanel><ItemsPanelTemplate><WrapPanel/></ItemsPanelTemplate></ListBox.ItemsPanel>
-    <ListBox.ItemContainerStyle><Style TargetType="ListBoxItem">
-     <Setter Property="Width" Value="44"/><Setter Property="Height" Value="44"/><Setter Property="Margin" Value="0,0,6,6"/>
-     <Setter Property="HorizontalContentAlignment" Value="Center"/><Setter Property="VerticalContentAlignment" Value="Center"/>
-     <Setter Property="ToolTip" Value="{Binding}"/>
-     <Setter Property="Template"><Setter.Value><ControlTemplate TargetType="ListBoxItem">
-      <Border x:Name="Tile" Background="{adaptive:AdaptiveBrush #F2F6FC}" BorderBrush="{adaptive:AdaptiveBrush #E0E8F2}" BorderThickness="1" CornerRadius="10"><ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/></Border>
-      <ControlTemplate.Triggers>
-       <Trigger Property="IsMouseOver" Value="True"><Setter TargetName="Tile" Property="Background" Value="{adaptive:AdaptiveBrush #E7F0FF}"/></Trigger>
-       <Trigger Property="IsSelected" Value="True"><Setter TargetName="Tile" Property="Background" Value="{adaptive:AdaptiveBrush #DFEBFF}"/><Setter TargetName="Tile" Property="BorderBrush" Value="{adaptive:AdaptiveBrush #246BDF}"/></Trigger>
-       <Trigger Property="IsKeyboardFocusWithin" Value="True"><Setter TargetName="Tile" Property="BorderThickness" Value="2"/><Setter TargetName="Tile" Property="BorderBrush" Value="{adaptive:AdaptiveBrush #246BDF}"/></Trigger>
-      </ControlTemplate.Triggers>
-     </ControlTemplate></Setter.Value></Setter>
-    </Style></ListBox.ItemContainerStyle>
-    <ListBox.ItemTemplate><DataTemplate><c:EmojiGlyph Text="{Binding}" Width="30" Height="30"/></DataTemplate></ListBox.ItemTemplate>
-   </ListBox>
-   <WrapPanel>
-    <TextBox x:Name="NewEmojiInput" Text="{Binding NewEmoji,UpdateSourceTrigger=PropertyChanged}" Width="88" MaxLength="24" Margin="0,0,6,6" ToolTip="輸入或貼上 emoji（Windows 鍵 + 句點）" AutomationProperties.Name="新增 emoji">
-     <TextBox.InputBindings><KeyBinding Key="Enter" Command="{Binding AddEmojiCommand}"/></TextBox.InputBindings>
-    </TextBox>
-    <Button Content="Windows emoji" Click="OpenWindowsEmoji" Padding="10,6" Margin="0,0,6,6" ToolTip="Windows 鍵 + 句點"/><Button Content="＋ 新增" Command="{Binding AddEmojiCommand}" Padding="12,6" Margin="0,0,16,6"/>
-    <Button Content="← 左移" Command="{Binding MoveEmojiCommand}" CommandParameter="left" Padding="10,6" Margin="0,0,6,6"/>
-    <Button Content="右移 →" Command="{Binding MoveEmojiCommand}" CommandParameter="right" Padding="10,6" Margin="0,0,6,6"/>
-    <Button Content="移除" Command="{Binding RemoveEmojiCommand}" Padding="10,6" Margin="0,0,6,6"/>
-   </WrapPanel>
-   <TextBlock Text="{Binding EmojiMessage}" Foreground="{adaptive:AdaptiveBrush #3664A0}" FontSize="12" TextWrapping="Wrap"/>
-  </StackPanel></Border>
-</ScrollViewer></TabItem>   <TabItem Header="我的裝置"><ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled"><StackPanel>
-    <Border Style="{StaticResource Card}" Padding="20"><StackPanel>
-     <TextBlock Text="我的裝置" FontSize="20" FontWeight="SemiBold"/>
-     <TextBlock Text="{Binding DataContext.DeviceLabel,RelativeSource={RelativeSource AncestorType=Window}}" Margin="0,12" TextWrapping="Wrap"/>
-     <TextBlock Text="裝置識別由 IT 分配，僅供查看。" Style="{StaticResource Muted}"/>
-    </StackPanel></Border>
-    <Border x:Name="ApplicationInfoCard" Style="{StaticResource Card}" Padding="20"><StackPanel>
-     <TextBlock Text="程式資訊" FontSize="20" FontWeight="SemiBold" Margin="0,0,0,16"/>
-     <TextBlock Text="{Binding ApplicationName}" FontSize="18" FontWeight="SemiBold" Foreground="{adaptive:AdaptiveBrush #0766FF}" Margin="0,0,0,18"/>
-     <Grid>
-      <Grid.ColumnDefinitions><ColumnDefinition Width="135"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
-      <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
-      <TextBlock Text="作者" Style="{StaticResource Muted}" Margin="0,0,0,12"/>
-      <TextBlock Grid.Column="1" Text="{Binding ApplicationAuthor}" Foreground="{adaptive:AdaptiveBrush #16243E}" Margin="0,0,0,12"/>
-      <TextBlock Grid.Row="1" Text="最後更新日期" Style="{StaticResource Muted}" Margin="0,0,0,12"/>
-      <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding ApplicationLastUpdated}" ToolTip="目前安裝包的建置日期" Foreground="{adaptive:AdaptiveBrush #16243E}" Margin="0,0,0,12"/>
-      <TextBlock Grid.Row="2" Text="版本" Style="{StaticResource Muted}"/>
-      <TextBlock Grid.Row="2" Grid.Column="1" Text="{Binding ApplicationVersion}" Foreground="{adaptive:AdaptiveBrush #16243E}"/>
-     </Grid>
-    </StackPanel></Border>
-   </StackPanel></ScrollViewer></TabItem>
-   <TabItem Header="外觀與資料"><ScrollViewer VerticalScrollBarVisibility="Auto"><views:MaintenanceView xmlns:views="clr-namespace:CloudAlarmOverlay.App.Views" DataContext="{Binding Maintenance}"/></ScrollViewer></TabItem>
-   <TabItem Header="首頁釘選"><ScrollViewer VerticalScrollBarVisibility="Auto"><Border Style="{StaticResource Card}" Padding="20"><StackPanel>
-    <TextBlock Text="首頁釘選卡片" FontSize="20" FontWeight="SemiBold"/>
-    <TextBlock Text="「我的任務」與「倒數／正數」共用名額。例如上限 2 張，釘選 1 個任務後，倒數還可釘選 1 張。" Style="{StaticResource Muted}" TextWrapping="Wrap" Margin="0,8,0,20"/>
-    <TextBlock Text="卡片數量上限（預設 2 張）" Margin="0,0,0,8"/>
-    <StackPanel Orientation="Horizontal">
-     <ComboBox x:Name="HomePinLimitSelector" ItemsSource="{Binding HomePinLimitChoices}" SelectedItem="{Binding HomePinLimit}" Width="120" AutomationProperties.Name="首頁釘選卡片上限"/>
-     <Button Content="儲存上限" Command="{Binding SaveHomePinLimitCommand}" Style="{StaticResource Primary}" Margin="12,0,0,0"/>
-    </StackPanel>
-    <TextBlock Text="可選 2～5 張。降低上限前，請先取消超出的釘選。" Style="{StaticResource Muted}" TextWrapping="Wrap" Margin="0,12,0,0"/>
-    <TextBlock Text="{Binding HomePinMessage}" TextWrapping="Wrap" Margin="0,12,0,0"/>
-   </StackPanel></Border></ScrollViewer></TabItem>
-  <TabItem Header="天氣"><ScrollViewer VerticalScrollBarVisibility="Auto"><StackPanel DataContext="{Binding Weather}" Margin="0,12">
-<TextBlock Text="首頁天氣" FontSize="20" FontWeight="SemiBold"/>
-<CheckBox Content="顯示天氣（關閉並儲存後停止所有天氣連線）" IsChecked="{Binding Enabled}" Margin="0,12"/>
-<TextBlock Text="{Binding LocationLabel}" Margin="0,0,0,8"/>
-<weatherViews:WeatherLocationPicker/>
-<TextBlock Text="選擇所在地的縣市與鄉鎮市區；區域天氣以主要聚落或公所附近為參考。" TextWrapping="Wrap" Margin="0,0,0,8"/>
-<WrapPanel><Button Content="儲存天氣設定" Command="{Binding SaveCommand}" Style="{StaticResource Primary}"/><Button Content="使用公司預設地點" Command="{Binding UseDefaultCommand}"/></WrapPanel>
-<TextBlock Text="{Binding Message}" TextWrapping="Wrap" Margin="0,8"/>
-<TextBlock Text="天氣：Open-Meteo.com（CC BY 4.0）；行政區：內政部國土測繪中心" Style="{StaticResource Muted}"/>
-<TextBlock Text="不使用 IP 定位。免費 API 限非商業用途；公司使用請確認服務授權。預報日期依台北時區。" Style="{StaticResource Muted}" TextWrapping="Wrap" Margin="0,8"/>
-</StackPanel></ScrollViewer></TabItem><TabItem Header="分享圖片"><ScrollViewer VerticalScrollBarVisibility="Auto"><Border Style="{StaticResource Card}" Padding="20"><StackPanel>
-<TextBlock Text="倒數卡片分享圖片" FontSize="20" FontWeight="SemiBold"/>
-<TextBlock Text="從倒數卡片、資料表或首頁釘選卡的分享按鈕，預覽、複製或另存 PNG。" Style="{StaticResource Muted}" TextWrapping="Wrap" Margin="0,8,0,16"/>
-<CheckBox Content="預設在圖片右下角顯示 Cloud Alarm Overlay" IsChecked="{Binding CountdownShareBranding}" Margin="0,0,0,12"/>
-<Button Content="儲存分享圖片設定" Command="{Binding SaveCountdownShareCommand}" Style="{StaticResource Primary}" HorizontalAlignment="Left"/>
-<TextBlock Text="{Binding CountdownShareMessage}" TextWrapping="Wrap" Margin="0,12"/>
-<TextBlock Text="圖片不包含備註。分享視窗可調整單張圖片的名稱標示，尺寸與背景也可在分享時選擇。" Style="{StaticResource Muted}" TextWrapping="Wrap"/>
-</StackPanel></Border></ScrollViewer></TabItem>
-  <TabItem Header="Google 帳號"><weatherViews:GoogleWorkspaceView DataContext="{Binding Google}"/></TabItem>
-  </TabControl>
-  <TextBlock Grid.Row="1" Text="{Binding Message}" TextWrapping="Wrap" Foreground="{adaptive:AdaptiveBrush #3664A0}" Margin="0,8"><TextBlock.Style><Style TargetType="TextBlock"><Style.Triggers><DataTrigger Binding="{Binding IsGoogleSettings}" Value="True"><Setter Property="Visibility" Value="Collapsed"/></DataTrigger></Style.Triggers></Style></TextBlock.Style></TextBlock>
- </Grid>
+      </Border>
+    </Grid>
+  </Grid>
 </UserControl>

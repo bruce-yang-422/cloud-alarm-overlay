@@ -23,7 +23,7 @@
        </DataTemplate></ItemsControl.ItemTemplate>
       </ItemsControl>
      </ScrollViewer>
-     <TextBlock Foreground="{adaptive:AdaptiveBrush #7184A0}" FontSize="12" TextWrapping="Wrap" Margin="0,6,0,0" Text="可到「設定 → 常用 emoji」編輯清單。"/>
+     <TextBlock Foreground="{adaptive:AdaptiveBrush #7184A0}" FontSize="12" TextWrapping="Wrap" Margin="0,6,0,0" Text="可到「設定 → 編輯與分享 → 常用 emoji」編輯清單。"/>
     </StackPanel>
    </Border>
   </Popup>

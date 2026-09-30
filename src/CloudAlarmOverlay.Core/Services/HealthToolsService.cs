@@ -6,7 +6,7 @@ namespace CloudAlarmOverlay.Core.Services;
 
 // One atomic settings document keeps configuration, occurrence identity and seven-day history
 // together. Existing SQLite backup/restore includes it without a schema upgrade.
-public sealed class HealthToolsService(ISettingsRepository settings, TimeProvider clock)
+public sealed class HealthToolsService(ISettingsRepository settings, TimeProvider clock, IHolidayRepository? holidays = null)
 {
     public const string SettingsKey = "HealthToolsV1";
     public static readonly TimeSpan MaximumDeferral = TimeSpan.FromMinutes(30);
@@ -19,6 +19,24 @@ public sealed class HealthToolsService(ISettingsRepository settings, TimeProvide
     private DateTime? lastTick;
     private bool wasUnavailable;
     public bool IsPaused => Snapshot.PausedDate == DateOnly.FromDateTime(Now);
+    private IReadOnlyList<Holiday> holidayRows = [];
+    private DateTime? calendarCheckedAt;
+    public bool IsActive(HealthToolOptions options) => options.IsActive(Now, holidayRows);
+    private DateTime? NextAfter(HealthToolOptions options, DateTime? anchor = null) => options.NextAfter(Now, anchor, holidayRows);
+
+    private async Task RefreshCalendar(CancellationToken ct)
+    {
+        if (holidays is null || calendarCheckedAt is { } checkedAt && Now >= checkedAt && Now - checkedAt < TimeSpan.FromMinutes(1)) return;
+        var rows = await holidays.GetAllAsync(ct);
+        if (!rows.SequenceEqual(holidayRows))
+        {
+            if (initialized)
+                await Commit(Snapshot with { Tools = Snapshot.Tools.Select(t => t.Options.DayMode == "Workdays"
+                    ? t with { NextAt = t.Options.NextAfter(Now, t.Anchor, rows) } : t).ToArray() }, ct);
+            holidayRows = rows;
+        }
+        calendarCheckedAt = Now;
+    }
 
     private async Task Commit(HealthToolsState value, CancellationToken ct)
     {
@@ -28,6 +46,7 @@ public sealed class HealthToolsService(ISettingsRepository settings, TimeProvide
     }
     private async Task Initialize(CancellationToken ct)
     {
+        await RefreshCalendar(ct);
         if (initialized) return;
         var json = (await settings.GetAsync(SettingsKey, ct))?.Value;
         var data = json is null ? new HealthToolsState() : JsonSerializer.Deserialize<HealthToolsState>(json) ?? new();
@@ -38,7 +57,7 @@ public sealed class HealthToolsService(ISettingsRepository settings, TimeProvide
         if (data.EffectiveMode is not ("AutoAlign" or "Override" or "Delay")) throw new FormatException("番茄鐘協調模式無效。");
         // A restart never replays reminders that elapsed while the app was closed.
         await Commit(ClearPending(data, "離線期間略過") with
-        { AlignmentStage = "None", AlignmentKinds = [], Tools = data.Tools.Select(t => t with { Pending = null, NextAt = t.Options.NextAfter(Now, t.Anchor) }).ToArray() }, ct);
+        { AlignmentStage = "None", AlignmentKinds = [], Tools = data.Tools.Select(t => t with { Pending = null, NextAt = NextAfter(t.Options, t.Anchor) }).ToArray() }, ct);
         initialized = true;
         lastTick = Now;
     }
@@ -63,7 +82,7 @@ public sealed class HealthToolsService(ISettingsRepository settings, TimeProvide
             var data = Snapshot;
             var old = data.Tools.Single(t => t.Options.Kind == options.Kind);
             var events = old.Pending is null ? data.Events : [.. data.Events, new HealthEvent(old.Pending.Id, options.Kind, old.Pending.ScheduledAt, Now, "設定變更，略過")];
-            await Commit(data with { Events = events, Tools = data.Tools.Select(t => t.Options.Kind == options.Kind ? new HealthToolState(options, options.NextAfter(Now)) : t).ToArray() }, ct);
+            await Commit(data with { Events = events, Tools = data.Tools.Select(t => t.Options.Kind == options.Kind ? new HealthToolState(options, NextAfter(options)) : t).ToArray() }, ct);
         }
         finally { gate.Release(); }
     }
@@ -88,7 +107,7 @@ public sealed class HealthToolsService(ISettingsRepository settings, TimeProvide
         var data = Snapshot;
         if (data.EffectiveMode != mode)
             data = data with { AlignmentStage = "None", AlignmentKinds = [],
-                Tools = data.Tools.Select(t => t with { Anchor = null, NextAt = t.Options.NextAfter(Now) }).ToArray() };
+                Tools = data.Tools.Select(t => t with { Anchor = null, NextAt = NextAfter(t.Options) }).ToArray() };
         await Commit(data with { PomodoroMode = mode, CoordinatePomodoro = mode != "Override", NotificationSide = side }, ct);
     }
 
@@ -104,16 +123,16 @@ public sealed class HealthToolsService(ISettingsRepository settings, TimeProvide
             if (data.AlignmentStage == "Break" && (state.Phase != "Focus" && state.Status == "AwaitingConfirmation" || state is { Phase: "Focus", Status: "Idle" }))
             {
                 data = data with { AlignmentStage = "Done", Tools = data.Tools.Select(t => data.AlignmentKinds.Contains(t.Options.Kind)
-                    ? t with { Anchor = Now, NextAt = t.Options.NextAfter(Now, Now) } : t).ToArray(), AlignmentKinds = [] };
+                    ? t with { Anchor = Now, NextAt = NextAfter(t.Options, Now) } : t).ToArray(), AlignmentKinds = [] };
             }
             if (state is { Phase: "Focus", Status: "Idle", Round: 1 } && data.AlignmentStage != "None")
                 data = data with { AlignmentStage = "None", AlignmentKinds = [],
-                    Tools = data.Tools.Select(t => t with { NextAt = t.Options.NextAfter(Now, t.Anchor) }).ToArray() };
+                    Tools = data.Tools.Select(t => t with { NextAt = NextAfter(t.Options, t.Anchor) }).ToArray() };
             if (data.AlignmentStage == "None" && state.Phase == "Focus" && state.Status is "Running" or "Paused" or "AwaitingConfirmation")
                 data = ClearPending(data, "等待首次番茄鐘休息") with { AlignmentStage = "Focus" };
             if (data.AlignmentStage == "Focus" && (state is { Phase: "Focus", Status: "AwaitingConfirmation" } || state.Phase is "Break" or "LongBreak"))
             {
-                var kinds = IsPaused ? [] : data.Tools.Where(t => t.Options.IsActive(Now)).Select(t => t.Options.Kind).ToArray();
+                var kinds = IsPaused ? [] : data.Tools.Where(t => IsActive(t.Options)).Select(t => t.Options.Kind).ToArray();
                 data = data with { AlignmentStage = "Break", AlignmentKinds = kinds, Tools = data.Tools.Select(t => kinds.Contains(t.Options.Kind)
                     ? t with { Pending = new(t.Options.Kind + "@align@" + Now.ToString("O"), t.Options.Kind, Now) } : t).ToArray() };
             }
@@ -129,7 +148,7 @@ public sealed class HealthToolsService(ISettingsRepository settings, TimeProvide
             await Initialize(ct);
             var data = ClearPending(Snapshot, "今日暫停，略過");
             await Commit(data with { PausedDate = paused ? DateOnly.FromDateTime(Now) : null,
-                Tools = data.Tools.Select(t => t with { NextAt = t.Options.NextAfter(Now, t.Anchor) }).ToArray() }, ct);
+                Tools = data.Tools.Select(t => t with { NextAt = NextAfter(t.Options, t.Anchor) }).ToArray() }, ct);
         }
         finally { gate.Release(); }
     }
@@ -150,10 +169,10 @@ public sealed class HealthToolsService(ISettingsRepository settings, TimeProvide
             foreach (var tool in data.Tools)
             {
                 var next = tool;
-                if (reset || IsPaused || !tool.Options.IsActive(now))
+                if (reset || IsPaused || !IsActive(tool.Options))
                 {
                     if (tool.Pending is { } expired) events.Add(new(expired.Id, expired.Kind, expired.ScheduledAt, now, "不在提醒時段，略過"));
-                    next = tool with { Pending = null, NextAt = tool.NextAt <= now || reset ? tool.Options.NextAfter(now, tool.Anchor) : tool.NextAt };
+                    next = tool with { Pending = null, NextAt = tool.NextAt <= now || reset ? NextAfter(tool.Options, tool.Anchor) : tool.NextAt };
                 }
                 else if (data.EffectiveMode == "AutoAlign" && data.AlignmentStage is "Focus" or "Break")
                     next = tool; // The first shared break replaces the old periodic occurrences.
@@ -166,7 +185,7 @@ public sealed class HealthToolsService(ISettingsRepository settings, TimeProvide
                         events.Add(new(id, tool.Options.Kind, due, now, "近期已提醒，略過"));
                     else if (pending is null) pending = new(id, tool.Options.Kind, due);
                     else events.Add(new(id, tool.Options.Kind, due, now, "已合併至待提醒項目"));
-                    next = tool with { Pending = pending, NextAt = tool.Options.NextAfter(now, tool.Anchor) };
+                    next = tool with { Pending = pending, NextAt = NextAfter(tool.Options, tool.Anchor) };
                 }
                 tools.Add(next);
             }
@@ -182,7 +201,7 @@ public sealed class HealthToolsService(ISettingsRepository settings, TimeProvide
         var data = Snapshot;
         if (data.EffectiveMode == "AutoAlign" && data.AlignmentStage == "Focus") return [];
         var focus = data.EffectiveMode == "Delay" && pomodoro is { Status: "Running", Phase: "Focus" };
-        return data.Tools.Where(t => t.Options.IsActive(Now) && t.Pending is not null)
+        return data.Tools.Where(t => IsActive(t.Options) && t.Pending is not null)
             .Select(t => t.Pending!).Where(p => !focus || Now - p.ScheduledAt >= MaximumDeferral).ToArray();
     }
     public async Task MarkDisplayedAsync(IEnumerable<string> ids, string batchId, CancellationToken ct = default)

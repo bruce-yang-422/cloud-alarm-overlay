@@ -36,18 +36,28 @@
    </ControlTemplate.Triggers>
   </ControlTemplate></Setter.Value></Setter>
  </Style>
- <Style TargetType="ComboBox">
+ <Style x:Key="SettingsComboBox" TargetType="ComboBox">
   <Setter Property="Foreground" Value="{a:AdaptiveBrush #16243E}"/><Setter Property="Background" Value="{a:AdaptiveBrush #FDFEFF}"/>
   <Setter Property="MinHeight" Value="34"/><Setter Property="Margin" Value="0,4,0,8"/><Setter Property="Padding" Value="10,6"/>
   <Setter Property="ScrollViewer.HorizontalScrollBarVisibility" Value="Disabled"/>
   <Setter Property="Template"><Setter.Value><ControlTemplate TargetType="ComboBox">
    <Grid>
     <Border x:Name="Field" Background="{TemplateBinding Background}" BorderBrush="{a:AdaptiveBrush #D6E1EF}" BorderThickness="1" CornerRadius="7"/>
-    <ToggleButton Focusable="False" IsChecked="{Binding IsDropDownOpen,RelativeSource={RelativeSource TemplatedParent},Mode=TwoWay}">
-     <ToggleButton.Template><ControlTemplate TargetType="ToggleButton"><Border Background="Transparent"><TextBlock Text="⌄" HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0,0,12,0" Foreground="{a:AdaptiveBrush #697C99}"/></Border></ControlTemplate></ToggleButton.Template>
+    <ToggleButton x:Name="DropDownToggle" Focusable="False" Cursor="Hand" IsChecked="{Binding IsDropDownOpen,RelativeSource={RelativeSource TemplatedParent},Mode=TwoWay}" AutomationProperties.Name="展開選項">
+     <ToggleButton.Template><ControlTemplate TargetType="ToggleButton">
+      <Grid Background="Transparent">
+       <Border x:Name="ArrowArea" Width="32" Margin="0,3,3,3" HorizontalAlignment="Right" CornerRadius="5" Background="{a:AdaptiveBrush #F0F5FB}">
+        <Path x:Name="Chevron" Data="M 1,1 L 6,6 L 11,1" Width="12" Height="7" Stroke="{a:AdaptiveBrush #536C8D}" StrokeThickness="1.8" StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round" HorizontalAlignment="Center" VerticalAlignment="Center" RenderTransformOrigin="0.5,0.5"/>
+       </Border>
+      </Grid>
+      <ControlTemplate.Triggers>
+       <Trigger Property="IsMouseOver" Value="True"><Setter TargetName="ArrowArea" Property="Background" Value="{a:AdaptiveBrush #E6F0FF}"/><Setter TargetName="Chevron" Property="Stroke" Value="{a:AdaptiveBrush #0766FF}"/></Trigger>
+       <Trigger Property="IsChecked" Value="True"><Setter TargetName="ArrowArea" Property="Background" Value="{a:AdaptiveBrush #E6F0FF}"/><Setter TargetName="Chevron" Property="Stroke" Value="{a:AdaptiveBrush #0766FF}"/><Setter TargetName="Chevron" Property="RenderTransform"><Setter.Value><RotateTransform Angle="180"/></Setter.Value></Setter></Trigger>
+      </ControlTemplate.Triggers>
+     </ControlTemplate></ToggleButton.Template>
     </ToggleButton>
-    <ContentPresenter x:Name="Selection" Margin="10,5,32,5" VerticalAlignment="Center" IsHitTestVisible="False" Content="{TemplateBinding SelectionBoxItem}" ContentTemplate="{TemplateBinding SelectionBoxItemTemplate}" ContentStringFormat="{TemplateBinding SelectionBoxItemStringFormat}" TextElement.Foreground="{TemplateBinding Foreground}"/>
-    <TextBox x:Name="PART_EditableTextBox" Visibility="Collapsed" Margin="10,2,34,2" Padding="2" Background="Transparent" Foreground="{TemplateBinding Foreground}" IsReadOnly="{TemplateBinding IsReadOnly}" VerticalContentAlignment="Center">
+    <ContentPresenter x:Name="Selection" Margin="10,5,42,5" VerticalAlignment="Center" IsHitTestVisible="False" Content="{TemplateBinding SelectionBoxItem}" ContentTemplate="{TemplateBinding SelectionBoxItemTemplate}" ContentStringFormat="{TemplateBinding SelectionBoxItemStringFormat}" TextElement.Foreground="{TemplateBinding Foreground}"/>
+    <TextBox x:Name="PART_EditableTextBox" Visibility="Collapsed" Margin="10,2,42,2" Padding="2" Background="Transparent" Foreground="{TemplateBinding Foreground}" IsReadOnly="{TemplateBinding IsReadOnly}" VerticalContentAlignment="Center">
      <TextBox.Template><ControlTemplate TargetType="TextBox"><ScrollViewer x:Name="PART_ContentHost"/></ControlTemplate></TextBox.Template>
     </TextBox>
     <Popup x:Name="PART_Popup" IsOpen="{TemplateBinding IsDropDownOpen}" Placement="Bottom" AllowsTransparency="True" Focusable="False">
@@ -64,4 +74,5 @@
    </ControlTemplate.Triggers>
   </ControlTemplate></Setter.Value></Setter>
  </Style>
+ <Style TargetType="ComboBox" BasedOn="{StaticResource SettingsComboBox}"/>
 </ResourceDictionary>

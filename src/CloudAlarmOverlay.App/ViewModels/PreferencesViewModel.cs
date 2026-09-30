@@ -1,4 +1,4 @@
-using System.Collections.ObjectModel;
+﻿using System.Collections.ObjectModel;
 using System.Text.Json;
 using System.Reflection;
 using CommunityToolkit.Mvvm.ComponentModel;
@@ -7,11 +7,11 @@ using CloudAlarmOverlay.Core.Models;
 using CloudAlarmOverlay.Core.Repositories;
 using CloudAlarmOverlay.Core.Services;
 namespace CloudAlarmOverlay.App.ViewModels;
-public partial class PreferencesViewModel(ISettingsRepository settings,NotificationPreferences preferences,ISoundService sound,CloudAlarmOverlay.App.Services.EmojiLibrary emojis,MaintenanceViewModel maintenance,ChangeSignal changes,WeatherViewModel? weather=null,GoogleWorkspaceViewModel? google=null):ObservableObject
+public partial class PreferencesViewModel(ISettingsRepository settings,NotificationPreferences preferences,ISoundService sound,CloudAlarmOverlay.App.Services.EmojiLibrary emojis,MaintenanceViewModel maintenance,ChangeSignal changes,WeatherViewModel? weather=null,GoogleWorkspaceViewModel? google=null,CloudAlarmOverlay.App.Services.IUserDialogs? dialogs=null,TaskCalendarViewModel? calendar=null):ObservableObject
 {
-    public const int GoogleSettingsTabIndex=8;
-    [ObservableProperty] [NotifyPropertyChangedFor(nameof(IsGoogleSettings))] private int selectedSettingsTab;
-    public bool IsGoogleSettings=>SelectedSettingsTab==GoogleSettingsTabIndex;
+    public bool ConfirmDiscardChanges()=>dialogs?.ConfirmAdminAction("捨棄尚未儲存的變更？","此頁的修改尚未儲存。捨棄後會恢復已儲存的設定。","捨棄變更")??false;
+    public bool ConfirmResetEmojis()=>dialogs?.ConfirmAdminAction("恢復常用 emoji 預設？","將以程式預設清單取代草稿，儲存後才會生效。","恢復預設")??false;
+    public TaskCalendarViewModel? Calendar=>calendar;
     public GoogleWorkspaceViewModel? Google=>google;
     public WeatherViewModel? Weather => weather;
     [ObservableProperty] private bool countdownShareBranding=true;
@@ -21,7 +21,7 @@ public partial class PreferencesViewModel(ISettingsRepository settings,Notificat
         try
         {
             await settings.SaveAsync(new Setting{Key=CountdownShareSnapshot.BrandingSettingKey,Value=CountdownShareBranding?"true":"false"});
-            CountdownShareMessage="已儲存，新開啟的分享圖片會使用此設定。";
+            savedBranding=CountdownShareBranding;DraftsChanged?.Invoke();CountdownShareMessage="已儲存，新開啟的分享圖片會使用此設定。";
         }
         catch(Exception ex){CountdownShareMessage=ex.Message;}
     }
@@ -34,7 +34,7 @@ public partial class PreferencesViewModel(ISettingsRepository settings,Notificat
         {
             await settings.SaveAsync(new Setting{Key=HomePinOptions.SettingKey,Value=HomePinLimit.ToString()});
             changes.Notify();
-            HomePinMessage=$"已儲存：任務與倒數／正數合計最多 {HomePinLimit} 張卡片。";
+            savedPinLimit=HomePinLimit;DraftsChanged?.Invoke();HomePinMessage=$"已儲存：任務與倒數／正數合計最多 {HomePinLimit} 張卡片。";
         }
         catch(Exception ex){HomePinMessage=ex.Message;}
     }
@@ -79,7 +79,7 @@ public partial class PreferencesViewModel(ISettingsRepository settings,Notificat
     }
     [RelayCommand] private async Task SaveEmojisAsync()
     {
-        try { await emojis.SaveAsync(string.Join("\n", EmojiItems)); EmojiMessage = "常用 emoji 已儲存。"; }
+        try { await emojis.SaveAsync(string.Join("\n", EmojiItems)); savedEmojis=EmojiState();DraftsChanged?.Invoke();EmojiMessage = "常用 emoji 已儲存。"; }
         catch(Exception ex) { EmojiMessage = ex.Message; }
     }
     [RelayCommand] private void ResetEmojis() { SetEmojiItems(CloudAlarmOverlay.App.Services.EmojiLibrary.Defaults.Split('\n')); EmojiMessage = "已恢復預設，按儲存後套用。"; }
@@ -96,6 +96,7 @@ public partial class PreferencesViewModel(ISettingsRepository settings,Notificat
     public ObservableCollection<SoundRow> Sounds {get;}=[];
     public async Task LoadAsync()
     {
+        if(Calendar is not null)await Calendar.LoadPreferencesAsync();
         CountdownShareBranding=(await settings.GetAsync(CountdownShareSnapshot.BrandingSettingKey))?.Value!="false";
         if (Weather is not null) await Weather.LoadAsync();
         HomePinLimit=HomePinOptions.ReadLimit((await settings.GetAsync(HomePinOptions.SettingKey))?.Value);
@@ -111,13 +112,32 @@ public partial class PreferencesViewModel(ISettingsRepository settings,Notificat
         {
             var p=await preferences.SoundAsync(level);
             var row=new SoundRow{Level=level,Enabled=p.Enabled,Name=p.Name,Available=available};
-            row.PropertyChanged+=async(_,e)=>{
-                if(e.PropertyName is nameof(SoundRow.Enabled) or nameof(SoundRow.Name))
-                    try{await settings.SaveAsync(new Setting{Key="Sound:"+row.Level,Value=JsonSerializer.Serialize(new SoundPreference(row.Enabled,row.Name))});}
-                    catch(Exception ex){Message=ex.Message;}
+            var committed=new SoundPreference(row.Enabled,row.Name);
+            var gate=new SemaphoreSlim(1,1);var restoring=false;
+            row.PropertyChanged+=async(_,e)=>
+            {
+                if(restoring||e.PropertyName is not (nameof(SoundRow.Enabled) or nameof(SoundRow.Name)))return;
+                var requested=new SoundPreference(row.Enabled,row.Name);
+                await gate.WaitAsync();
+                try
+                {
+                    await settings.SaveAsync(new Setting{Key="Sound:"+row.Level,Value=JsonSerializer.Serialize(requested)});
+                    committed=requested;
+                }
+                catch(Exception ex)
+                {
+                    if(new SoundPreference(row.Enabled,row.Name)==requested)
+                    {
+                        restoring=true;
+                        try{row.Enabled=committed.Enabled;row.Name=committed.Name;}finally{restoring=false;}
+                    }
+                    Message="音效設定未儲存："+ex.Message;
+                }
+                finally{gate.Release();}
             };
             Sounds.Add(row);
         }
+        AcceptAllDrafts();
         foreach(var name in new[]{nameof(CanEditFlash),nameof(CanEditQuiet),nameof(FlashLockLabel),nameof(QuietLockLabel)})OnPropertyChanged(name);
     }
     [RelayCommand] private void AddQuiet(){if(CanEditQuiet)QuietPeriods.Add(new());}
@@ -132,7 +152,7 @@ public partial class PreferencesViewModel(ISettingsRepository settings,Notificat
             if(CanEditFlash)NotificationPreferences.Validate(flash);
             if(CanEditQuiet)await settings.SaveAsync(quiet);
             if(CanEditFlash)await settings.SaveAsync(flash);
-            Message="偏好設定已儲存。";
+            savedQuiet=QuietState();savedFlash=FlashMilliseconds;DraftsChanged?.Invoke();Message="偏好設定已儲存。";
         }
         catch(Exception ex){Message=ex.Message;}
     }
@@ -148,7 +168,7 @@ public partial class PreferencesViewModel(ISettingsRepository settings,Notificat
             row.PreviewStatus="已執行試聽；若無聲請檢查 Windows 靜音與音量。";
             await Task.Delay(1500);
         }
-        catch(Exception ex){row.PreviewStatus="試聽失敗："+ex.Message;Message=ex.Message;}
+        catch(Exception ex){row.PreviewStatus="試聽失敗："+ex.Message;}
         finally{row.IsPreviewing=false;}
     }
 }

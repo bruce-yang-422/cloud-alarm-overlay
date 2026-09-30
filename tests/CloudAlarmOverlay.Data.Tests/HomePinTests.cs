@@ -1,4 +1,4 @@
-using System.IO.Compression;
+﻿using System.IO.Compression;
 using CloudAlarmOverlay.Core;
 using CloudAlarmOverlay.Core.Models;
 using CloudAlarmOverlay.Core.Repositories;
@@ -138,7 +138,7 @@ public sealed class HomePinTests : IDisposable, IAppPaths
     public async Task Version_eight_upgrade_preserves_countdown_pins()
     {
         await Get<ICountdownRepository>().SaveAsync(Counter("existing"));
-        await Get<Database>().ExecuteAsync("DROP TABLE TaskHomePins; ALTER TABLE AcknowledgementLogs DROP COLUMN SnoozeCount; ALTER TABLE Occurrences DROP COLUMN SnoozedUntil; PRAGMA user_version=8;");
+        await Get<Database>().ExecuteAsync("DROP TABLE TaskHomePins; ALTER TABLE AcknowledgementLogs DROP COLUMN SnoozeCount; ALTER TABLE Occurrences DROP COLUMN SnoozedUntil; ALTER TABLE Tasks DROP COLUMN CalendarStartAt; ALTER TABLE Tasks DROP COLUMN GoogleReminderEnabled; ALTER TABLE Tasks DROP COLUMN GoogleReminderAt; ALTER TABLE Tasks DROP COLUMN CalendarReminderEnabled; ALTER TABLE Tasks DROP COLUMN CalendarReminderAt; ALTER TABLE Tasks DROP COLUMN ActivityStartAt; ALTER TABLE Tasks DROP COLUMN ActivityEndAt; ALTER TABLE Tasks DROP COLUMN ActivityAllDay; PRAGMA user_version=8;");
         await Get<IDatabaseInitializer>().InitializeAsync();
         Assert.True(Assert.Single(await Get<ICountdownRepository>().GetAllAsync()).IsPinned);
         Assert.Empty(await Get<ITaskHomePinRepository>().GetTaskIdsAsync());

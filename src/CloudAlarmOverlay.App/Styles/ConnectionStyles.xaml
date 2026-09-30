@@ -1,0 +1,23 @@
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:adaptive="clr-namespace:CloudAlarmOverlay.App.Styles">
+      <DataTemplate x:Key="HealthIndicator">
+       <StackPanel Orientation="Horizontal" ToolTip="{Binding Detail}" VerticalAlignment="Center">
+        <Ellipse x:Name="StateDot" Width="7" Height="7" Margin="0,0,6,0" VerticalAlignment="Center" Fill="{adaptive:AdaptiveBrush #8391A5}"/>
+        <TextBlock Text="{Binding Label}" Foreground="{adaptive:AdaptiveBrush #16243E}" FontSize="11" VerticalAlignment="Center"/>
+       </StackPanel>
+       <DataTemplate.Triggers>
+        <DataTrigger Binding="{Binding Severity}" Value="Healthy"><Setter TargetName="StateDot" Property="Fill" Value="{adaptive:AdaptiveBrush #18964A}"/></DataTrigger>
+        <DataTrigger Binding="{Binding Severity}" Value="Error"><Setter TargetName="StateDot" Property="Fill" Value="{adaptive:AdaptiveBrush #BA3D45}"/></DataTrigger>
+        <DataTrigger Binding="{Binding Severity}" Value="Stopped"><Setter TargetName="StateDot" Property="Fill" Value="{adaptive:AdaptiveBrush #DE624E}"/></DataTrigger>
+       </DataTemplate.Triggers>
+      </DataTemplate>
+      <DataTemplate x:Key="OverallHealthBadge">
+       <Border x:Name="Badge" Background="{adaptive:AdaptiveBrush #EEF3F9}" CornerRadius="12" Padding="7,4" ToolTip="{Binding Detail}">
+        <ContentControl Content="{Binding}" ContentTemplate="{StaticResource HealthIndicator}"/>
+       </Border>
+       <DataTemplate.Triggers>
+        <DataTrigger Binding="{Binding Severity}" Value="Healthy"><Setter TargetName="Badge" Property="Background" Value="{adaptive:AdaptiveBrush #E3F6ED}"/></DataTrigger>
+        <DataTrigger Binding="{Binding Severity}" Value="Error"><Setter TargetName="Badge" Property="Background" Value="{adaptive:AdaptiveBrush #FFF0EE}"/></DataTrigger>
+        <DataTrigger Binding="{Binding Severity}" Value="Stopped"><Setter TargetName="Badge" Property="Background" Value="{adaptive:AdaptiveBrush #FFF4E8}"/></DataTrigger>
+       </DataTemplate.Triggers>
+      </DataTemplate>
+</ResourceDictionary>

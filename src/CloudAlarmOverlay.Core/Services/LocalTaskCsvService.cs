@@ -19,8 +19,8 @@ public interface ILocalTaskImportStore
 public sealed class LocalTaskCsvService(ICsvSheetParser parser, ITaskRepository tasks, ITaskSchedulingService schedule,
     ILocalTaskImportStore store, ChangeSignal changes)
 {
-    private static readonly string[] Headers = ["Id","Time","Title","Description","Level","Enabled","RequireAck","Recurrence","SkipOnHoliday","TargetDeviceOrName","ExcludeDeviceOrName","Note"];
-    private static readonly string[] Descriptions = ["編號","提醒時間","名稱","詳細內容","等級","啟用","需要確認","重複規則","假日略過","通知對象（本機忽略）","排除對象（本機忽略）","備註"];
+    private static readonly string[] Headers = ["Id","Time","Title","Description","Level","Enabled","RequireAck","Recurrence","SkipOnHoliday","TargetDeviceOrName","ExcludeDeviceOrName","Note","ActivityStartAt","ActivityEndAt","ActivityAllDay"];
+    private static readonly string[] Descriptions = ["編號","提醒時間","名稱","詳細內容","等級","啟用","需要確認","重複規則","假日略過","通知對象（本機忽略）","排除對象（本機忽略）","備註","活動開始","活動結束（不含此時間）","全天活動"];
     public static string Decode(byte[] bytes)
     {
         try { return new UTF8Encoding(false, true).GetString(bytes).TrimStart('\uFEFF'); }
@@ -35,7 +35,8 @@ public sealed class LocalTaskCsvService(ICsvSheetParser parser, ITaskRepository 
     }
     public static string Export(IEnumerable<AlarmTask> tasks) => Write(new[] { Headers, Descriptions }.Concat(tasks.Where(t=>t.Source==TaskSources.Local).Select(t => new string?[] {
         t.Id,t.ScheduledAt.ToString("yyyy-MM-dd HH:mm:ss",CultureInfo.InvariantCulture),t.Title,t.Description,t.Level,t.Enabled?"TRUE":"FALSE",
-        t.RequireAcknowledgement?"TRUE":"FALSE",t.Recurrence,t.SkipOnHoliday?"TRUE":"FALSE","","",t.Note })));
+        t.RequireAcknowledgement?"TRUE":"FALSE",t.Recurrence,t.SkipOnHoliday?"TRUE":"FALSE","","",t.Note,
+        t.ActivityStartAt?.ToString("yyyy-MM-dd HH:mm:ss",CultureInfo.InvariantCulture),t.ActivityEndAt?.ToString("yyyy-MM-dd HH:mm:ss",CultureInfo.InvariantCulture),t.ActivityAllDay?"TRUE":"FALSE" })));
     public static string Template(DateTime now) => Export(new[] {
         new AlarmTask {Id="sample-1",Title="繳費提醒",ScheduledAt=now.Date.AddDays(7).AddHours(9),CreatedAt=now,UpdatedAt=now},
         new AlarmTask {Id="sample-2",Title="每月報表",ScheduledAt=now.Date.AddDays(1).AddHours(10),Recurrence="Monthly:10",CreatedAt=now,UpdatedAt=now}
@@ -69,7 +70,10 @@ public sealed class LocalTaskCsvService(ICsvSheetParser parser, ITaskRepository 
                 if(values.Length!=headers.Length)throw new FormatException("欄位數量與標題列不符，含逗號的內容需用雙引號包住。");
                 if(string.IsNullOrWhiteSpace(id))throw new FormatException("編號不可空白。");
                 var task=parser.ParseTasks(Write(new[]{headers,description,values}),TaskSources.SheetA).Single() with {
-                    Id=id,ExternalId=null,Source=TaskSources.Local,TargetDeviceOrName=null,ExcludeDeviceOrName=null,Note=Field("Note")};
+                    Id=id,ExternalId=null,Source=TaskSources.Local,TargetDeviceOrName=null,ExcludeDeviceOrName=null,Note=Field("Note"),
+                    ActivityStartAt=Field("ActivityStartAt")==""?null:DateTime.ParseExact(Field("ActivityStartAt"),"yyyy-MM-dd HH:mm:ss",CultureInfo.InvariantCulture),
+                    ActivityEndAt=Field("ActivityEndAt")==""?null:DateTime.ParseExact(Field("ActivityEndAt"),"yyyy-MM-dd HH:mm:ss",CultureInfo.InvariantCulture),
+                    ActivityAllDay=Field("ActivityAllDay").ToUpperInvariant() switch{"TRUE"=>true,"FALSE" or ""=>false,_=>throw new FormatException("全天活動請填 TRUE 或 FALSE。")}};
                 Validate(task,DateTime.Now);
                 var next=await schedule.GetNextOccurrenceAsync(task with {Enabled=true},DateTime.Now,ct);
                 result.Add(new(rowNumber,id,title,task,null,!seen.Add(id),next));
@@ -86,7 +90,8 @@ public sealed class LocalTaskCsvService(ICsvSheetParser parser, ITaskRepository 
         if(string.IsNullOrWhiteSpace(task.Title)||task.Title.Length>50||task.Description?.Length>1000||task.Note?.Length>500)
             throw new ArgumentException("名稱限 1–50 字、內容限 1,000 字、備註限 500 字。");
         Recurrence.RecurrenceRule.Validate(task.Recurrence);
-        if(task.Recurrence=="None" && task.ScheduledAt<=now)throw new ArgumentException("單次任務時間已過，請修改時間後再匯入。");
+        ActivityPeriod.Validate(task);
+        if(task.Recurrence=="None" && (task.Enabled||task.ActivityStartAt is null) && task.ScheduledAt<=now)throw new ArgumentException("單次任務時間已過，請修改時間後再匯入。");
     }
     public async Task<TaskImportResult> ImportAsync(IEnumerable<TaskImportRow> selected,bool newIds,CancellationToken ct=default)
     {

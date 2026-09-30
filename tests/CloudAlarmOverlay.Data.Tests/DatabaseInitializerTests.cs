@@ -1,4 +1,4 @@
-using CloudAlarmOverlay.Core.Services;
+﻿using CloudAlarmOverlay.Core.Services;
 using Microsoft.Data.Sqlite;
 
 namespace CloudAlarmOverlay.Data.Tests;
@@ -12,7 +12,7 @@ public sealed class DatabaseInitializerTests : IDisposable
     // Independent inventory for schema regression checks, not extracted from migration SQL.
     public static TheoryData<string, string> TableColumns => new()
     {
-        { "Tasks", "Id ExternalId Title Description ScheduledAt Source Level Enabled IsTriggered RequireAcknowledgement TargetDeviceOrName ExcludeDeviceOrName Recurrence SkipOnHoliday CreatedAt UpdatedAt Note" },
+        { "Tasks", "Id ExternalId Title Description ScheduledAt Source Level Enabled IsTriggered RequireAcknowledgement TargetDeviceOrName ExcludeDeviceOrName Recurrence SkipOnHoliday CreatedAt UpdatedAt Note CalendarStartAt GoogleReminderEnabled GoogleReminderAt CalendarReminderEnabled CalendarReminderAt ActivityStartAt ActivityEndAt ActivityAllDay" },
         { "Holidays", "Id Date Type Note Source" },
         { "LunarCalendar", "Id Date LunarDate LunarDay SolarTerm" },
         { "AcknowledgementLogs", "Id TaskId DeviceId DisplayName TriggeredAt AcknowledgedAt DurationSeconds Result SyncedAt SyncStatus TaskName ScheduledAt Source TaskSnapshotJson SnoozeCount" },

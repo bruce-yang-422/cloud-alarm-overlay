@@ -57,6 +57,10 @@ public partial class MainWindow:Window
         e.Handled=true;
         new TaskPreviewWindow(new(row.Task)){Owner=this}.ShowDialog();
     }
+    private void PreviewNextReminder(object sender,RoutedEventArgs e)
+    {
+        if(vm.NextReminder is {} row)new TaskPreviewWindow(new(row.Task)){Owner=this}.ShowDialog();
+    }
     public void StartTray(ChangeSignal changes,Func<Task> exit)
     {
         signal=changes;signal.Changed+=OnDataChanged;
@@ -181,6 +185,17 @@ public partial class MainWindow:Window
         if(sender is not Button { DataContext: NavigationItem item })return;
         if(item.PageIndex<0)await taskBuilderHost.OpenInBrowserAsync();
         else vm.NavigationIndex=item.PageIndex;
+    }
+    private void OpenConnections(object sender,RoutedEventArgs e)
+    {
+        var dialog=new ConnectionStatusWindow(vm){Owner=this};
+        if(dialog.ShowDialog()!=true)return;
+        if(dialog.Destination=="Google"){vm.Preferences.SelectedPage=SettingsPage.Google;vm.PageIndex=4;}
+        else if(dialog.Destination=="Shared")
+        {
+            if(vm.Admin.Session.IsAuthenticated){vm.Admin.SelectedTab=0;vm.PageIndex=5;}
+            else Login();
+        }
     }
     private void Login()
     {

@@ -53,7 +53,7 @@ public partial class App:Application
         if(string.IsNullOrWhiteSpace(maintenance.UpdateUrl))return;
         await maintenance.CheckUpdateAsync();
         if(maintenance.AvailableUpdate is {} info && !stopping)
-            MessageBox.Show($"有新版本 {info.LatestVersion}。請至「設定 → 外觀與資料」開啟下載頁。\n{info.ReleaseNote}","更新通知",MessageBoxButton.OK,MessageBoxImage.Information);
+            MessageBox.Show($"有新版本 {info.LatestVersion}。請至「設定 → 軟體更新」查看更新內容與下載安裝檔。","更新通知",MessageBoxButton.OK,MessageBoxImage.Information);
     }
     private void PowerChanged(object sender,PowerModeChangedEventArgs e)
     {if(e.Mode==PowerModes.Resume)host?.Services.GetRequiredService<RuntimeState>().Resume();}
@@ -93,10 +93,10 @@ public partial class App:Application
             session.RequireAdmin();
             if(host.Services.GetRequiredService<AlarmPresenter>().HasBlockingNotification)
             {MessageBox.Show(MainWindow,"請先完成緊急提醒／強制通知確認，再重置。");return;}
-            var answer=MessageBox.Show(MainWindow,
+            var confirmed=host.Services.GetRequiredService<IUserDialogs>().ConfirmAdminAction("恢復初始狀態",
                 "將永久清除本機所有任務、同步來源、個人設定、管理者帳密、裝置身分、番茄鐘資料、歷史與日誌。\n\n程式會關閉，下次啟動清除資料並回到首次設定。其他位置的匯出備份不會刪除。\n\n此操作無法復原，確定重置？",
-                "恢復初始狀態",MessageBoxButton.YesNo,MessageBoxImage.Warning,MessageBoxResult.No);
-            if(answer!=MessageBoxResult.Yes)return;
+                "清除並重置",destructive:true);
+            if(!confirmed)return;
             session.RequireAdmin();
             if(host.Services.GetRequiredService<AlarmPresenter>().HasBlockingNotification)
             {MessageBox.Show(MainWindow,"有新的緊急提醒／強制通知，請先完成確認。");return;}

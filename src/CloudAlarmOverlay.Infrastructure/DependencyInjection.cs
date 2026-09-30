@@ -14,6 +14,7 @@ public static class DependencyInjection
         services.AddSingleton<Google.GoogleApi>();
         services.AddSingleton<IGoogleWorkspace,Google.GoogleWorkspace>();
         services.AddSingleton<OpenMeteoWeatherClient>();
+        services.AddSingleton<CwaAlertClient>();
         services.AddSingleton<IWeatherService, WeatherService>();
         services.AddSingleton<ISheetCsvClient, SheetCsvClient>();
         services.AddSingleton<ICalendarDataSource, GitHubCalendarDataSource>();

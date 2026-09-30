@@ -1,35 +1,127 @@
-<UserControl x:Class="CloudAlarmOverlay.App.Views.MaintenanceView" xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
- <UserControl.Resources><ResourceDictionary><ResourceDictionary.MergedDictionaries><ResourceDictionary Source="../Styles/LightTheme.xaml"/></ResourceDictionary.MergedDictionaries></ResourceDictionary></UserControl.Resources>
- <StackPanel>
-  <TextBlock Text="外觀與資料" FontSize="20" FontWeight="SemiBold"/>
-  <TextBlock Text="明暗模式" Margin="0,12,0,6"/>
-  <ListBox Style="{StaticResource SegmentedSelector}" ItemsSource="{Binding Themes}" SelectedItem="{Binding ThemeChoice}" HorizontalAlignment="Left"/>
-  <TextBlock Text="色彩風格" Margin="0,12,0,6"/>
-  <ListBox Style="{StaticResource SegmentedSelector}" ItemsSource="{Binding ThemeColors}" SelectedItem="{Binding ThemeColorChoice}" HorizontalAlignment="Left">
-   <ListBox.ItemsPanel><ItemsPanelTemplate><WrapPanel/></ItemsPanelTemplate></ListBox.ItemsPanel>
-  </ListBox>
-  <TextBlock Text="跟隨系統會隨 Windows 切換明暗，並保留選擇的色彩風格。" Margin="0,6,0,12" TextWrapping="Wrap"/>
-  <Border Style="{StaticResource Card}" Margin="0,0,0,14">
-   <StackPanel>
-    <TextBlock Text="視窗行為" FontSize="18" FontWeight="SemiBold" Margin="0,0,0,10"/>
-    <Grid><Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
-     <CheckBox Content="縮放時維持寬高比例" IsChecked="{Binding KeepWindowAspectRatio}" Style="{StaticResource PillSwitch}" VerticalAlignment="Center" Margin="0,0,20,0"/>
-     <TextBlock Grid.Column="1" Text="開啟後，拖曳主視窗邊框時維持拖曳前的比例。關閉可自由調整寬高；最大化不受影響。變更自動儲存。" Style="{StaticResource Muted}" FontSize="12"/>
-    </Grid>
-   </StackPanel>
-  </Border>
-  <TextBlock Text="軟體更新" FontSize="18" FontWeight="SemiBold" Margin="0,16,0,6"/>
-  <TextBlock Text="{Binding VersionLabel}"/>
-  <TextBlock Text="公開 version.json 連結（管理者可設定）" Margin="0,12,0,0"/>
-  <TextBox Text="{Binding UpdateUrl,UpdateSourceTrigger=PropertyChanged}" IsEnabled="{Binding CanEditUpdateUrl}" AutomationProperties.Name="更新資訊 HTTPS 連結" ToolTip="只有登入管理員後才能修改公開更新網址"/>
-  <WrapPanel><Button Content="儲存更新來源" Command="{Binding SaveUpdateUrlCommand}"/><Button Content="檢查更新" Command="{Binding CheckUpdateCommand}"/><Button Content="下載新版安裝檔" Command="{Binding OpenDownloadCommand}"/></WrapPanel>
-  <Border Style="{StaticResource Card}" Margin="0,16,0,0">
-   <StackPanel>
-    <TextBlock Text="恢復初始狀態" FontSize="18" FontWeight="SemiBold"/>
-    <TextBlock Text="清除這台電腦的全部程式資料與設定，包含管理者帳密、任務及歷史。需管理者驗證；確認後關閉程式，下次啟動回到首次設定。建議先至管理員專區建立備份。" TextWrapping="Wrap" Margin="0,8,0,8"/>
-    <Button Content="重置所有資料與設定…" Click="ResetAll" HorizontalAlignment="Left"/>
-   </StackPanel>
-  </Border>
-  <TextBlock Text="{Binding Message}" TextWrapping="Wrap" Margin="0,16,0,0"/>
- </StackPanel>
+<UserControl xmlns:adaptive="clr-namespace:CloudAlarmOverlay.App.Styles" xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" x:Class="CloudAlarmOverlay.App.Views.MaintenanceView">
+  <UserControl.Resources>
+    <ResourceDictionary>
+      <ResourceDictionary.MergedDictionaries>
+        <ResourceDictionary Source="../Styles/AdminWorkspaceStyles.xaml" />
+      </ResourceDictionary.MergedDictionaries>
+      <Style x:Key="AppearanceChoice" TargetType="ListBoxItem">
+        <Setter Property="Padding" Value="10" />
+        <Setter Property="Margin" Value="0,0,10,10" />
+        <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+        <Setter Property="Cursor" Value="Hand" />
+        <Setter Property="Template">
+          <Setter.Value>
+            <ControlTemplate TargetType="ListBoxItem">
+              <Border x:Name="Tile" Background="{adaptive:AdaptiveBrush WorkspaceSurface}" BorderBrush="{adaptive:AdaptiveBrush WorkspaceBorder}" BorderThickness="1" CornerRadius="8" Padding="{TemplateBinding Padding}">
+                <ContentPresenter />
+              </Border>
+              <ControlTemplate.Triggers>
+                <Trigger Property="IsSelected" Value="True">
+                  <Setter TargetName="Tile" Property="BorderBrush" Value="{adaptive:AdaptiveBrush Accent}" />
+                  <Setter TargetName="Tile" Property="Background" Value="{adaptive:AdaptiveBrush #E6F0FF}" />
+                </Trigger>
+                <Trigger Property="IsMouseOver" Value="True">
+                  <Setter TargetName="Tile" Property="BorderBrush" Value="{adaptive:AdaptiveBrush Accent}" />
+                </Trigger>
+                <Trigger Property="IsKeyboardFocusWithin" Value="True">
+                  <Setter TargetName="Tile" Property="BorderThickness" Value="2" />
+                </Trigger>
+              </ControlTemplate.Triggers>
+            </ControlTemplate>
+          </Setter.Value>
+        </Setter>
+      </Style>
+    </ResourceDictionary>
+  </UserControl.Resources>
+  <StackPanel>
+    <TextBlock Text="明暗模式" Style="{StaticResource WorkspaceSection}" />
+    <ListBox ItemsSource="{Binding Themes}" SelectedItem="{Binding ThemeChoice}" Background="Transparent" BorderThickness="0" Padding="0" ItemContainerStyle="{StaticResource AppearanceChoice}" HorizontalAlignment="Left" ScrollViewer.HorizontalScrollBarVisibility="Disabled" AutomationProperties.Name="明暗模式">
+      <ListBox.ItemsPanel>
+        <ItemsPanelTemplate>
+          <WrapPanel />
+        </ItemsPanelTemplate>
+      </ListBox.ItemsPanel>
+      <ListBox.ItemTemplate>
+        <DataTemplate>
+          <StackPanel Width="112">
+            <Border Height="62" CornerRadius="4" BorderThickness="1" BorderBrush="{adaptive:AdaptiveBrush WorkspaceBorder}" Margin="0,0,0,8">
+              <Border.Style>
+                <Style TargetType="Border">
+                  <Setter Property="Background" Value="#FFFFFF" />
+                  <Style.Triggers>
+                    <DataTrigger Binding="{Binding}" Value="暗色">
+                      <Setter Property="Background" Value="#303640" />
+                    </DataTrigger>
+                    <DataTrigger Binding="{Binding}" Value="跟隨系統">
+                      <Setter Property="Background">
+                        <Setter.Value>
+                          <LinearGradientBrush StartPoint="0,0" EndPoint="1,0">
+                            <GradientStop Color="#FFFFFF" Offset="0.5" />
+                            <GradientStop Color="#303640" Offset="0.5" />
+                          </LinearGradientBrush>
+                        </Setter.Value>
+                      </Setter>
+                    </DataTrigger>
+                  </Style.Triggers>
+                </Style>
+              </Border.Style>
+              <Border Width="25" HorizontalAlignment="Left" Background="#667B8A9B" BorderThickness="0,0,1,0" BorderBrush="#8490A244" />
+            </Border>
+            <TextBlock Text="{Binding}" Foreground="{adaptive:AdaptiveBrush WorkspaceText}" HorizontalAlignment="Center" FontSize="13" />
+          </StackPanel>
+        </DataTemplate>
+      </ListBox.ItemTemplate>
+    </ListBox>
+    <TextBlock Text="介面配色" Style="{StaticResource WorkspaceSection}" Margin="0,18,0,12" />
+    <ListBox ItemsSource="{Binding ThemeColors}" SelectedItem="{Binding ThemeColorChoice}" Background="Transparent" BorderThickness="0" Padding="0" ItemContainerStyle="{StaticResource AppearanceChoice}" HorizontalAlignment="Left" ScrollViewer.HorizontalScrollBarVisibility="Disabled" AutomationProperties.Name="介面配色">
+      <ListBox.ItemsPanel>
+        <ItemsPanelTemplate>
+          <WrapPanel />
+        </ItemsPanelTemplate>
+      </ListBox.ItemsPanel>
+      <ListBox.ItemTemplate>
+        <DataTemplate>
+          <StackPanel Orientation="Horizontal">
+            <Ellipse Width="16" Height="16" Margin="0,0,8,0">
+              <Ellipse.Style>
+                <Style TargetType="Ellipse">
+                  <Setter Property="Fill" Value="#2364DF" />
+                  <Style.Triggers>
+                    <DataTrigger Binding="{Binding}" Value="櫻花粉">
+                      <Setter Property="Fill" Value="#CF86A0" />
+                    </DataTrigger>
+                    <DataTrigger Binding="{Binding}" Value="若竹綠">
+                      <Setter Property="Fill" Value="#4C9C88" />
+                    </DataTrigger>
+                    <DataTrigger Binding="{Binding}" Value="薰衣草紫">
+                      <Setter Property="Fill" Value="#9B8CCE" />
+                    </DataTrigger>
+                    <DataTrigger Binding="{Binding}" Value="夕陽橘">
+                      <Setter Property="Fill" Value="#D39265" />
+                    </DataTrigger>
+                    <DataTrigger Binding="{Binding}" Value="極簡銀白">
+                      <Setter Property="Fill" Value="#95A1B2" />
+                    </DataTrigger>
+                  </Style.Triggers>
+                </Style>
+              </Ellipse.Style>
+            </Ellipse>
+            <TextBlock Text="{Binding}" Foreground="{adaptive:AdaptiveBrush WorkspaceText}" FontSize="13" />
+          </StackPanel>
+        </DataTemplate>
+      </ListBox.ItemTemplate>
+    </ListBox>
+    <TextBlock Text="跟隨系統會隨 Windows 切換明暗，並保留選擇的配色。" Style="{StaticResource WorkspaceMuted}" FontSize="12" Margin="0,6,0,24" />
+    <TextBlock Text="視窗行為" Style="{StaticResource WorkspaceSection}" />
+    <Border Style="{StaticResource AdminRow}">
+      <DockPanel>
+        <CheckBox DockPanel.Dock="Right" IsChecked="{Binding KeepWindowAspectRatio}" Style="{StaticResource SettingsSwitch}" VerticalAlignment="Center" Margin="16,0,0,0" AutomationProperties.Name="縮放時維持寬高比例" />
+        <StackPanel>
+          <TextBlock Text="調整大小時維持比例" FontWeight="SemiBold" />
+          <TextBlock Text="拖曳視窗邊框時維持比例，不影響最大化。" Style="{StaticResource WorkspaceMuted}" FontSize="12" Margin="0,4,0,0" />
+        </StackPanel>
+      </DockPanel>
+    </Border>
+    <TextBlock Text="{Binding Message}" Style="{StaticResource AdminResult}" />
+  </StackPanel>
 </UserControl>

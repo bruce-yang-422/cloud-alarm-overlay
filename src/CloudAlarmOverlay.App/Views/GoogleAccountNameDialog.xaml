@@ -1,0 +1,24 @@
+<Window x:Class="CloudAlarmOverlay.App.Views.GoogleAccountNameDialog"
+ xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+ xmlns:adaptive="clr-namespace:CloudAlarmOverlay.App.Styles" Title="重新命名 Google 帳號"
+ Width="460" SizeToContent="Height" ResizeMode="NoResize" WindowStyle="None" WindowStartupLocation="CenterOwner" ShowInTaskbar="False"
+ FontFamily="Segoe UI, Microsoft JhengHei UI" FontSize="13" Background="{adaptive:AdaptiveBrush #F7FAFE}">
+ <WindowChrome.WindowChrome><WindowChrome CaptionHeight="0" ResizeBorderThickness="0" GlassFrameThickness="0" CornerRadius="12"/></WindowChrome.WindowChrome>
+ <Window.Resources><ResourceDictionary><ResourceDictionary.MergedDictionaries><ResourceDictionary Source="../Styles/SettingsFormStyles.xaml"/></ResourceDictionary.MergedDictionaries></ResourceDictionary></Window.Resources>
+ <Border Padding="28" CornerRadius="12" BorderBrush="{adaptive:AdaptiveBrush #DEE6F1}" BorderThickness="1">
+  <StackPanel>
+   <StackPanel MouseLeftButtonDown="DragHeader" Margin="0,0,0,22">
+    <TextBlock Text="重新命名帳號" FontSize="20" FontWeight="SemiBold" Margin="0,0,0,8"/>
+    <TextBlock x:Name="AccountEmail" Style="{StaticResource Muted}" TextWrapping="Wrap"/>
+   </StackPanel>
+   <TextBlock Text="帳號名稱" Style="{StaticResource FieldLabel}"/>
+   <TextBox x:Name="NameInput" MaxLength="40" AutomationProperties.Name="帳號名稱" TextChanged="InputChanged"/>
+   <TextBlock Text="例如：工作排程、家庭生活、接案專用。" Style="{StaticResource Muted}" FontSize="12" Margin="0,8,0,14"/>
+   <TextBlock Text="此名稱只用於本程式，Google 帳號名稱與電子郵件保持不變。" Style="{StaticResource Muted}" FontSize="12"/>
+   <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,24,0,0">
+    <Button Content="取消" IsCancel="True" MinWidth="80"/>
+    <Button x:Name="SaveButton" Content="儲存名稱" Style="{StaticResource SettingsPrimary}" IsDefault="True" Click="Save" Margin="0"/>
+   </StackPanel>
+  </StackPanel>
+ </Border>
+</Window>

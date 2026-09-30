@@ -1,4 +1,4 @@
-using CloudAlarmOverlay.App.ViewModels;
+﻿using CloudAlarmOverlay.App.ViewModels;
 using CloudAlarmOverlay.App.Views;
 using CloudAlarmOverlay.BackgroundServices;
 using CloudAlarmOverlay.Core;
@@ -48,6 +48,7 @@ public static class CompositionRoot
         services.AddSingleton<TaskBuilderHostService>();
         services.AddSingleton<IBrowserLauncher, BrowserLauncher>();
         services.AddSingleton<ILoggerProvider, LocalFileLoggerProvider>();
+        services.AddSingleton<TaskCalendarViewModel>();
         services.AddSingleton<PreferencesViewModel>();
         services.AddSingleton<MaintenanceViewModel>();
         services.AddSingleton<EmojiLibrary>();

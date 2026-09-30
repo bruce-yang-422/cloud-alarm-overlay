@@ -37,6 +37,15 @@ public partial class TaskEditorViewModel : ObservableObject
     [ObservableProperty] private string taskTitle="";
     [ObservableProperty] private string description="";
     [ObservableProperty] private string note="";
+    [ObservableProperty,NotifyPropertyChangedFor(nameof(IsActivityTimed)),NotifyPropertyChangedFor(nameof(CanRepeatReminder))] private bool hasActivity;
+    [ObservableProperty,NotifyPropertyChangedFor(nameof(IsActivityTimed))] private bool activityAllDay;
+    [ObservableProperty] private DateTime? activityStartDate=DateTime.Today;
+    [ObservableProperty] private DateTime? activityEndDate=DateTime.Today;
+    [ObservableProperty] private string activityStartTime="10:00";
+    [ObservableProperty] private string activityEndTime="20:00";
+    public bool IsActivityTimed=>HasActivity&&!ActivityAllDay;
+    public bool CanRepeatReminder=>!HasActivity;
+    partial void OnHasActivityChanged(bool value){if(value)Repeat="不重複";}
     [ObservableProperty] private DateTime? date=DateTime.Today;
     [ObservableProperty] private int selectedHour = 9;
     [ObservableProperty] private int selectedMinute;
@@ -94,7 +103,7 @@ public partial class TaskEditorViewModel : ObservableObject
         OnRepeatDaysChanged(RepeatDays);
         OnPropertyChanged(nameof(ScheduleHeading));OnPropertyChanged(nameof(RequiresDays));OnPropertyChanged(nameof(IsWeekly));OnPropertyChanged(nameof(IsMonthly));OnPropertyChanged(nameof(IsLunar));OnPropertyChanged(nameof(IsLunarDate));OnPropertyChanged(nameof(IsAnnual));
     }
-    public TaskEditorViewModel(ITaskService service,AlarmTask? task,bool copy,ITaskSchedulingService? scheduling=null)
+    public TaskEditorViewModel(ITaskService service,AlarmTask? task,bool copy,ITaskSchedulingService? scheduling=null,DateTime? activityDate=null)
     {
         this.service=service; this.scheduling=scheduling;
         foreach(var month in Months)month.PropertyChanged+=(_,e)=>{if(ready&&e.PropertyName==nameof(DayChoice.IsSelected))_=RefreshNextReminderAsync();};
@@ -104,11 +113,18 @@ public partial class TaskEditorViewModel : ObservableObject
                 if(!updatingDays&&args.PropertyName==nameof(DayChoice.IsSelected))
                     RepeatDays=string.Join(",",(IsWeekly?Weekdays:LunarDays).Where(d=>d.IsSelected).Select(d=>d.Value));
             };
-        Heading=task is null?"新增本機任務":copy?"複製為本機任務":"編輯本機任務";
+        Heading=activityDate is not null?"新增活動":task is null?"新增本機任務":copy?"複製為本機任務":"編輯本機任務";
         var at=DateTime.Now.AddMinutes(5);
         original=task is null?new AlarmTask{Id=Guid.NewGuid().ToString("N"),Level=AlarmLevels.Low,Title="",ScheduledAt=at,CreatedAt=DateTime.Now,UpdatedAt=DateTime.Now}:
             copy?task with{Id=Guid.NewGuid().ToString("N"),ExternalId=null,Source=TaskSources.Local,IsTriggered=false,CreatedAt=DateTime.Now,ScheduledAt=task.Recurrence!="None"||task.ScheduledAt>at?task.ScheduledAt:at}:task;
         TaskTitle=original.Title;Description=original.Description??"";Note=original.Note??"";Date=original.ScheduledAt.Date;
+        HasActivity=original.ActivityStartAt.HasValue;
+        ActivityAllDay=original.ActivityAllDay;
+        if(original.ActivityStartAt is {} begin && original.ActivityEndAt is {} end)
+        {
+            ActivityStartDate=begin.Date;ActivityEndDate=ActivityAllDay?end.AddDays(-1).Date:end.Date;
+            ActivityStartTime=begin.ToString("HH:mm");ActivityEndTime=end.ToString("HH:mm");
+        }
         SelectedHour=original.ScheduledAt.Hour;SelectedMinute=original.ScheduledAt.Minute;Level=original.Level;Enabled=original.Enabled;SkipOnHoliday=original.SkipOnHoliday;
         if(Level==AlarmLevels.Max)Level=AlarmLevels.High;
         var parts=original.Recurrence.Split(':');RepeatDays=parts.Length>1?parts[1]:"1,2,3,4,5";
@@ -118,6 +134,7 @@ public partial class TaskEditorViewModel : ObservableObject
             foreach(var month in Months)month.IsSelected=parts[2].Split(',').Contains(month.Value.ToString(CultureInfo.InvariantCulture));
         if(IsAnnual){AnnualMonth=int.Parse(parts[2]);AnnualDay=int.Parse(parts[1]);}
         if(parts[0]=="LunarDate"){LunarMonth=int.Parse(parts[1]);LunarDate=int.Parse(parts[2]);IncludeLeapMonth=parts.Length==4&&parts[3]=="Both";}
+        if(activityDate is {} selected){HasActivity=true;ActivityStartDate=ActivityEndDate=selected.Date;Enabled=false;Date=selected.Date;SelectedHour=9;SelectedMinute=0;}
         ready=true;
         _=RefreshNextReminderAsync();
     }
@@ -139,9 +156,23 @@ public partial class TaskEditorViewModel : ObservableObject
             "農曆"=>"LunarDay:"+RepeatDays.Replace(" ",""), _=>"None"
         };
         CloudAlarmOverlay.Core.Recurrence.RecurrenceRule.Validate(recurrence);
-        return original with {Title=TaskTitle.Trim(),Description=Description,Note=Note,
+        DateTime? activityStart=null,activityEnd=null;
+        if(HasActivity)
+        {
+            if(ActivityStartDate is not {} start || ActivityEndDate is not {} end)throw new ArgumentException("請填寫活動開始與結束日期。");
+            if(ActivityAllDay){activityStart=start.Date;activityEnd=end.Date.AddDays(1);}
+            else
+            {
+                if(!TimeOnly.TryParseExact(ActivityStartTime,"HH:mm",CultureInfo.InvariantCulture,DateTimeStyles.None,out var from)
+                    ||!TimeOnly.TryParseExact(ActivityEndTime,"HH:mm",CultureInfo.InvariantCulture,DateTimeStyles.None,out var to))throw new ArgumentException("活動時間請使用 HH:mm 格式，例如 10:00、20:00。");
+                activityStart=start.Date+from.ToTimeSpan();activityEnd=end.Date+to.ToTimeSpan();
+            }
+        }
+        var result=original with {Title=TaskTitle.Trim(),Description=Description,Note=Note,
+            ActivityStartAt=activityStart,ActivityEndAt=activityEnd,ActivityAllDay=HasActivity&&ActivityAllDay,
             ScheduledAt=Date.Value.Date+new TimeSpan(SelectedHour,SelectedMinute,0),
             Level=Level,Enabled=Enabled,SkipOnHoliday=SkipOnHoliday,Recurrence=recurrence};
+        ActivityPeriod.Validate(result);return result;
     }
     [RelayCommand]
     private async Task SaveAsync()

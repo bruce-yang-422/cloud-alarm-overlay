@@ -1,0 +1,21 @@
+<UserControl x:Class="CloudAlarmOverlay.App.Views.SoftwareUpdateView"
+ xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+ xmlns:controls="clr-namespace:CloudAlarmOverlay.App.Controls" xmlns:adaptive="clr-namespace:CloudAlarmOverlay.App.Styles">
+ <UserControl.Resources><ResourceDictionary><ResourceDictionary.MergedDictionaries><ResourceDictionary Source="../Styles/AdminWorkspaceStyles.xaml"/></ResourceDictionary.MergedDictionaries></ResourceDictionary></UserControl.Resources>
+ <Border Style="{StaticResource AdminCard}" MaxWidth="760" HorizontalAlignment="Stretch" Margin="0" Padding="0" BorderThickness="0">
+  <StackPanel>
+   <Grid><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+    <StackPanel Margin="0,0,16,0"><TextBlock Text="{Binding VersionLabel}" Style="{StaticResource WorkspaceMuted}" FontSize="13"/></StackPanel>
+    <Button Grid.Column="1" Content="檢查更新" Command="{Binding CheckUpdateCommand}" Margin="0"/>
+   </Grid>
+   <ProgressBar IsIndeterminate="True" Height="3" Margin="0,16,0,0" Visibility="{Binding Busy,Converter={StaticResource BoolVisibility}}"/>
+   <TextBlock x:Name="UpdateStatus" Text="{Binding UpdateMessage}" Style="{StaticResource AdminResult}" AutomationProperties.LiveSetting="Polite"/>
+   <StackPanel x:Name="ReleaseDetails" Visibility="{Binding HasRelease,Converter={StaticResource BoolVisibility}}">
+    <Border BorderBrush="{adaptive:AdaptiveBrush WorkspaceBorder}" BorderThickness="0,1,0,0" Margin="0,20,0,20"/>
+    <TextBlock Text="{Binding ReleaseHeading}" Style="{StaticResource WorkspaceSection}" FontSize="20" Margin="0,0,0,20"/>
+    <controls:MarkdownView x:Name="ReleaseNotes" Text="{Binding ReleaseNotes,Mode=OneWay}" EditableTasks="False" ReadingLayout="True" FontSize="14" MaxWidth="640" HorizontalAlignment="Left" Foreground="{adaptive:AdaptiveBrush WorkspaceText}" AutomationProperties.Name="版本更新內容"/>
+   </StackPanel>
+   <Button Content="{Binding DownloadLabel}" Command="{Binding OpenDownloadCommand}" IsEnabled="{Binding HasRelease}" Style="{StaticResource AdminPrimary}" HorizontalAlignment="Left" Margin="0,20,0,0"/>
+  </StackPanel>
+ </Border>
+</UserControl>

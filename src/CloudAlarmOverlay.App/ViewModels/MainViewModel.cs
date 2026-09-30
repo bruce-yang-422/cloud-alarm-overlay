@@ -1,4 +1,4 @@
-using System.Collections.ObjectModel;
+﻿using System.Collections.ObjectModel;
 using System.Globalization;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -9,9 +9,17 @@ using CloudAlarmOverlay.Core.Services;
 namespace CloudAlarmOverlay.App.ViewModels;
 public partial class MainViewModel(ITaskRepository tasks,ITaskService taskService,ITaskSchedulingService scheduling,
     IAckLogRepository history,ISyncLogRepository syncLogs,ISyncService sync,SyncConfiguration configuration,
-    IDeviceIdentityService identity,IAlarmPresenter presenter,IUserDialogs dialogs,ILunarCalendarRepository lunar,AdminViewModel admin,PreferencesViewModel preferences,PomodoroViewModel pomodoro,IAlarmHeartbeat heartbeat,CountdownsViewModel countdowns,ITaskHomePinRepository taskHomePins,ChangeSignal changes,IBrowserLauncher browser,HealthToolsViewModel healthTools):ObservableObject
+    IDeviceIdentityService identity,IAlarmPresenter presenter,IUserDialogs dialogs,ILunarCalendarRepository lunar,AdminViewModel admin,PreferencesViewModel preferences,PomodoroViewModel pomodoro,IAlarmHeartbeat heartbeat,CountdownsViewModel countdowns,ITaskHomePinRepository taskHomePins,ChangeSignal changes,IBrowserLauncher browser,HealthToolsViewModel healthTools,IGoogleWorkspace googleWorkspace,TaskCalendarViewModel calendar):ObservableObject
 {
     public HealthToolsViewModel HealthTools=>healthTools;
+    public TaskCalendarViewModel TaskCalendar {get;}=calendar;
+    [ObservableProperty,NotifyPropertyChangedFor(nameof(IsTaskList))] private bool isTaskCalendar;
+    public bool IsTaskList=>!IsTaskCalendar;
+    [RelayCommand] private void ShowTaskCalendar(){SetTaskSelection([]);IsTaskCalendar=true;_=TaskCalendar.SetTasksAsync(Tasks.Select(r=>r.Task));}
+    [RelayCommand] private void ShowTaskList()=>IsTaskCalendar=false;
+    [RelayCommand] private void NewActivity(DateTime? date)=>dialogs.EditActivity(date??TaskCalendar.SelectedDay);
+    [RelayCommand] private void EditCalendarEntry(CalendarEntry entry){if(entry.CanEdit)dialogs.Edit(entry.Task,false);}
+    [RelayCommand] private void CopyCalendarEntry(CalendarEntry entry)=>dialogs.Edit(entry.Task,true);
     public PomodoroViewModel Pomodoro=>pomodoro;
     public CountdownsViewModel Countdowns=>countdowns;
     public ObservableCollection<CountdownRow> HomePins {get;}=[];
@@ -61,11 +69,18 @@ public partial class MainViewModel(ITaskRepository tasks,ITaskService taskServic
         catch { Status="無法開啟氣象署預報，請確認預設瀏覽器設定。"; }
     }
     [RelayCommand] private void OpenPomodoro()=>PageIndex=3;
+    [RelayCommand] private void OpenHealthTools()=>PageIndex=7;
     [ObservableProperty] private int historyTabIndex;
     public AdminViewModel Admin=>admin;
     public PreferencesViewModel Preferences=>preferences;
-    partial void OnPageIndexChanged(int value)
+    public Func<bool>? CanLeaveSettings {get;set;}
+    public Func<bool>? CanLeaveAdministration {get;set;}
+    public event Action? AdminSettingsImported;
+    partial void OnPageIndexChanged(int oldValue,int newValue)
     {
+        var value=newValue;
+        if(oldValue==4 && value!=4 && CanLeaveSettings?.Invoke()==false){PageIndex=4;return;}
+        if(oldValue==5 && value!=5 && Admin.Session.IsAuthenticated && CanLeaveAdministration?.Invoke()==false){PageIndex=5;return;}
         if(value==7)HealthTools.SelectedTabIndex=0;
         if(value==5&&!Admin.Session.IsAuthenticated){PageIndex=0;return;}
         NavigationIndex=value;
@@ -102,6 +117,7 @@ public partial class MainViewModel(ITaskRepository tasks,ITaskService taskServic
     public void UpdateClock(DateTime now)
     {
         Preferences.Weather?.Tick();
+        HealthTools.Refresh();
         SolarDate=now.ToString("yyyy/MM/dd ddd",CultureInfo.GetCultureInfo("zh-TW"));
         CurrentClock=now.ToString("HH:mm:ss");
         LocalScheduleHealth=heartbeat.GetStatus(now);
@@ -140,10 +156,13 @@ public partial class MainViewModel(ITaskRepository tasks,ITaskService taskServic
     public bool HasTaskSelection=>SelectedTasks.Count>0;
     public bool HasMultipleTaskSelection=>SelectedTasks.Count>1;
     public string CompactSelectionSummary=>HasTaskSelection?$"已選 {SelectedTasks.Count} 筆 · 本機 {SelectedTasks.Count(t=>t.IsLocal)}／雲端 {SelectedTasks.Count(t=>!t.IsLocal)}":"勾選任務以操作";
-    public bool CanEditSelectedTask=>SelectedTasks.Count==1&&SelectedTasks[0].IsLocal;
+    public bool CanEditSelectedTask=>SelectedTasks.Count==1&&SelectedTasks[0].CanAdjustReminder;
+    public bool CanDeleteSelectedTask=>SelectedTasks.Count==1&&SelectedTasks[0].IsLocal;
+    public string EditTaskLabel=>SelectedTasks.Count==1&&SelectedTasks[0].Task.IsGoogleCalendar?"提醒設定":"編輯";
     public bool CanCopySelectedTask=>SelectedTasks.Count==1;
     public string SelectionHint=>!HasTaskSelection?"勾選任務以進行操作；名稱旁圖釘可釘選首頁，與倒數／正數共用名額，上限可於設定調整。":
-        SelectedTasks.All(t=>!t.IsLocal)?"🔒 已選取雲端唯讀任務：不可編輯、啟停或刪除；可複製成本機後修改。":
+        SelectedTasks.Count==1&&SelectedTasks[0].Task.IsGoogleCalendar?"Google 行程內容由雲端同步；可開關本機提醒，或選擇「提醒設定」修改時間及恢復 Google 設定。":
+        SelectedTasks.All(t=>!t.CanAdjustReminder)?"🔒 已選取雲端唯讀任務：不可編輯、啟停或刪除；可複製成本機後修改。":
         SelectedTasks.Any(t=>!t.IsLocal)?"🔒 混合選取：批次啟用、停用及刪除只處理本機任務，雲端設定保持不變。":
         SelectedTasks.Count>1?"已選取多筆本機任務，請使用批次操作；編輯請只選一筆。":"已選取本機任務，可編輯、複製、啟停或刪除。";
     public string SelectionSummary=>$"已選取 {SelectedTasks.Count} 筆（本機 {SelectedTasks.Count(t=>t.IsLocal)} 筆、雲端 {SelectedTasks.Count(t=>!t.IsLocal)} 筆）";
@@ -153,7 +172,7 @@ public partial class MainViewModel(ITaskRepository tasks,ITaskService taskServic
         var snapshot=rows.ToArray();
         SelectedTasks.Clear();SelectedTasks.AddRange(snapshot);OnPropertyChanged(nameof(SelectionSummary));OnPropertyChanged(nameof(HasTaskSelection));
         OnPropertyChanged(nameof(HasMultipleTaskSelection));OnPropertyChanged(nameof(CompactSelectionSummary));
-        OnPropertyChanged(nameof(CanEditSelectedTask));OnPropertyChanged(nameof(CanCopySelectedTask));OnPropertyChanged(nameof(SelectionHint));
+        OnPropertyChanged(nameof(CanEditSelectedTask));OnPropertyChanged(nameof(CanDeleteSelectedTask));OnPropertyChanged(nameof(EditTaskLabel));OnPropertyChanged(nameof(CanCopySelectedTask));OnPropertyChanged(nameof(SelectionHint));
         EditTaskCommand.NotifyCanExecuteChanged();CopyTaskCommand.NotifyCanExecuteChanged();
         DeleteTaskCommand.NotifyCanExecuteChanged();ToggleTaskCommand.NotifyCanExecuteChanged();BatchTasksCommand.NotifyCanExecuteChanged();
     }
@@ -226,8 +245,10 @@ public partial class MainViewModel(ITaskRepository tasks,ITaskService taskServic
             remaining.TotalHours>=1?$"{remaining.Hours}時{remaining.Minutes}分":
             remaining.TotalMinutes>=1?$"{remaining.Minutes}分{remaining.Seconds}秒":$"{remaining.Seconds}秒";
     }
-    [ObservableProperty] private int todayCount;
-    [ObservableProperty] private int acknowledgedCount;
+    [ObservableProperty,NotifyPropertyChangedFor(nameof(TodayProgress)),NotifyPropertyChangedFor(nameof(TodayProgressLabel))] private int todayCount;
+    [ObservableProperty,NotifyPropertyChangedFor(nameof(TodayProgress)),NotifyPropertyChangedFor(nameof(TodayProgressLabel))] private int acknowledgedCount;
+    public double TodayProgress=>TodayCount>0?Math.Clamp(100d*AcknowledgedCount/TodayCount,0,100):0;
+    public string TodayProgressLabel=>TodayCount>0?$"已確認 {AcknowledgedCount} / {TodayCount} 項":"今天尚無提醒";
     [ObservableProperty] private int overdueCount;
     [ObservableProperty] private string sheetAStatus="尚未設定";
     [ObservableProperty] private string sheetBStatus="尚未設定";
@@ -252,6 +273,7 @@ public partial class MainViewModel(ITaskRepository tasks,ITaskService taskServic
         await Admin.SessionChangedAsync();
         await Preferences.LoadAsync();
         await Pomodoro.LoadAsync();
+        await HealthTools.LoadAsync();
         var options=await configuration.LoadAsync();
         SheetAId=options.SheetAId;TasksAGid=options.TasksAGid;HolidaysGid=options.HolidaysGid;EmployeesGid=options.EmployeesGid;
         LunarGid=options.LunarGid;SheetBId=options.SheetBId;TasksBGid=options.TasksBGid;IntervalSeconds=options.IntervalSeconds;
@@ -308,35 +330,6 @@ public partial class MainViewModel(ITaskRepository tasks,ITaskService taskServic
         }
         catch(Exception ex){Status=ex.Message;}
     }
-    [ObservableProperty,NotifyPropertyChangedFor(nameof(OverallHealth))] private HealthStatus localScheduleHealth=new("等待啟動","尚未檢查","Pending");
-    [ObservableProperty,NotifyPropertyChangedFor(nameof(OverallHealth))] private HealthStatus sheetAHealth=new("未設定","尚未檢查","Pending");
-    [ObservableProperty,NotifyPropertyChangedFor(nameof(OverallHealth))] private HealthStatus sheetBHealth=new("未設定","尚未檢查","Pending");
-    public HealthStatus OverallHealth
-    {
-        get
-        {
-            var states=new[]{LocalScheduleHealth,SheetAHealth,SheetBHealth};
-            var severity=states.Any(s=>s.Severity=="Error")?"Error":states.Any(s=>s.Severity=="Stopped")?"Stopped":states.All(s=>s.Severity=="Healthy")?"Healthy":"Pending";
-            var label=severity switch {"Healthy"=>"全部正常","Error"=>"狀態異常","Stopped"=>"部分中斷",_=>"尚待就緒"};
-            return new(label,$"本機排程：{LocalScheduleHealth.Label}\nSheet A：{SheetAHealth.Label}\nSheet B：{SheetBHealth.Label}",severity);
-        }
-    }
-    public async Task RefreshHealthAsync()
-    {
-        var now=DateTime.Now;
-        LocalScheduleHealth=heartbeat.GetStatus(now);
-        try
-        {
-            var options=await configuration.LoadAsync();
-            var device=await identity.GetLocalAsync();
-            var states=await syncLogs.GetStatesAsync();
-            SheetAHealth=SyncHealth.ForSheet("SheetA",options,device,states,now);
-            SheetBHealth=SyncHealth.ForSheet("SheetB",options,device,states,now);
-        }
-        catch(Exception ex){SheetAHealth=SheetBHealth=new("異常","無法讀取同步狀態："+ex.Message,"Error");}
-        SheetAStatus=SheetAHealth.Label+" · "+SheetAHealth.Detail;
-        SheetBStatus=SheetBHealth.Label+" · "+SheetBHealth.Detail;
-    }
     private void FilterTasks()
     {
         var selectedIds=SelectedTasks.Select(t=>t.Task.Id).ToHashSet();
@@ -359,6 +352,7 @@ public partial class MainViewModel(ITaskRepository tasks,ITaskService taskServic
         SelectedTask=SelectedTasks.FirstOrDefault();
         TaskSelectionRestored?.Invoke();
         OnPropertyChanged(nameof(IsTasksEmpty));
+        _=TaskCalendar.SetTasksAsync(Tasks.Select(r=>r.Task));
     }
     [RelayCommand] private void OpenAdmin(string tab)
     {
@@ -367,9 +361,9 @@ public partial class MainViewModel(ITaskRepository tasks,ITaskService taskServic
     }
     [RelayCommand] private void OpenTasks()=>PageIndex=1;
     [RelayCommand] private void NewTask()=>dialogs.Edit(null,false);
-    [RelayCommand(CanExecute=nameof(CanEditSelectedTask))] private void EditTask(){if(SelectedTask is {IsLocal:true} row)dialogs.Edit(row.Task,false);else Status="請選取本機任務；雲端任務為唯讀。";}
+    [RelayCommand(CanExecute=nameof(CanEditSelectedTask))] private void EditTask(){if(SelectedTask is {CanAdjustReminder:true} row)dialogs.Edit(row.Task,false);else Status="請選取本機任務；雲端任務為唯讀。";}
     [RelayCommand(CanExecute=nameof(CanCopySelectedTask))] private void CopyTask(){if(SelectedTask is {} row)dialogs.Edit(row.Task,true);else Status="請先選取任務。";}
-    [RelayCommand(CanExecute=nameof(CanEditSelectedTask))] private async Task DeleteTaskAsync()
+    [RelayCommand(CanExecute=nameof(CanDeleteSelectedTask))] private async Task DeleteTaskAsync()
     {
         try
         {
@@ -378,13 +372,14 @@ public partial class MainViewModel(ITaskRepository tasks,ITaskService taskServic
         }
         catch(Exception ex){Status=ex.Message;}
     }
-    private bool CanToggleRow(TaskRow? row)=>row?.IsLocal==true;
+    private bool CanToggleRow(TaskRow? row)=>row?.CanAdjustReminder==true;
     [RelayCommand(CanExecute=nameof(CanToggleRow))] private async Task ToggleRowAsync(TaskRow row)
     {
-        if(!row.IsLocal)return;
+        if(!row.CanAdjustReminder)return;
         try
         {
-            await taskService.SaveLocalAsync(row.Task with {Enabled=!row.Task.Enabled});
+            if(row.Task.IsGoogleCalendar)await taskService.SaveCalendarReminderAsync(row.Task.Id,!row.Task.Enabled,null);
+            else await taskService.SaveLocalAsync(row.Task with {Enabled=!row.Task.Enabled});
             await RefreshAsync();
             Status=$"「{row.Title}」已{(row.Task.Enabled?"停用":"啟用")}。";
         }
@@ -394,8 +389,8 @@ public partial class MainViewModel(ITaskRepository tasks,ITaskService taskServic
     {
         try
         {
-            if(SelectedTask is not {IsLocal:true} row){Status="雲端任務的啟用狀態為唯讀。";return;}
-            await taskService.SaveLocalAsync(row.Task with{Enabled=!row.Task.Enabled});await RefreshAsync();
+            if(SelectedTask is not {CanAdjustReminder:true} row){Status="此雲端任務的啟用狀態為唯讀。";return;}
+            await ToggleRowAsync(row);
         }
         catch(Exception ex){Status=ex.Message;}
     }
@@ -438,6 +433,7 @@ public partial class MainViewModel(ITaskRepository tasks,ITaskService taskServic
             LunarGid=options.LunarGid;SheetBId=options.SheetBId;TasksBGid=options.TasksBGid;IntervalSeconds=options.IntervalSeconds;
             await Admin.LoadAsync();
             await Preferences.Maintenance.AdminSessionChangedAsync();
+            AdminSettingsImported?.Invoke();
             changes.Notify();
             Admin.Message="JSON 設定已匯入並儲存。可測試連線或按「立即同步」。";
         }
@@ -458,6 +454,13 @@ public partial class MainViewModel(ITaskRepository tasks,ITaskService taskServic
         }
         catch(Exception ex){SetSyncMessage("無法儲存同步設定："+ex.Message);}
     }
+    public async Task SaveAdminSourceDraftAsync()
+    {
+        Admin.Session.RequireAdmin();
+        await configuration.SaveAsync(CurrentOptions());
+        SetSyncMessage("同步設定已儲存，準備同步…");
+        await SyncAsync();
+    }
     [RelayCommand] private async Task PreviewAsync(string level)
     {
         try
@@ -477,12 +480,13 @@ public sealed partial class TaskRow(AlarmTask task,DateTime? nextAt=null):Observ
     public string UpcomingState=>"等待觸發";
     public string Title=>Task.Title;
     public string Source=>Task.Source.StartsWith("Google:",StringComparison.Ordinal)?"Google · "+Task.Note?.Split('\n')[0]:Task.Source;
-    public string Access=>IsLocal?"本機":"🔒 "+Source;
+    public string Access=>IsLocal?"本機":Task.IsGoogleCalendar?"可調整本機提醒":"🔒 "+Source;
     public string Level=>Task.Level;
     public string Time=>Task.ScheduledAt.ToString("MM/dd HH:mm:ss");
     public string NextTime=>NextAt?.ToString("MM/dd HH:mm")??"—";
     public string State=>Task.Enabled?"已啟用":"已停用";
-    public string StateOrigin=>IsLocal?"本機可調整":$"依 {Source} 設定";
+    public string StateOrigin=>IsLocal?"本機可調整":Task.IsGoogleCalendar?(Task.HasCalendarReminderOverride?"自訂日曆提醒":"依 Google 提醒"): $"依 {Source} 設定";
+    public bool CanAdjustReminder=>IsLocal||Task.IsGoogleCalendar;
     public string Recurrence=>CloudAlarmOverlay.Core.Recurrence.RecurrenceRule.Describe(Task.Recurrence);
     public bool IsLocal=>Task.Source==TaskSources.Local;
 }

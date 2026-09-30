@@ -14,6 +14,17 @@ public partial class AdminViewModel(AdminSession session,IAdminSettingsStore sto
 {
     public CalendarDataViewModel CalendarData=>calendarData;
     public AdminSession Session=>session;
+    public sealed record NavigationEntry(int Index,string Name,string Group,string Glyph);
+    public NavigationEntry[] Navigation {get;}=[
+        new(0,"總覽","","\uE80F"),new(1,"共用試算表","連線與資料","\uE8A5"),new(2,"農曆與假日","連線與資料","\uE787"),
+        new(3,"使用者政策","政策與安全","\uE713"),new(4,"安全與存取","政策與安全","\uE72E"),
+        new(5,"啟動與更新","維護與診斷","\uE777"),new(6,"備份與移轉","維護與診斷","\uE8B7"),
+        new(7,"紀錄查詢","維護與診斷","\uE9D9"),new(8,"清理與重置","維護與診斷","\uE74D")];
+    public int[] IntervalChoices {get;}=[30,35,40,45,50,55,60];
+    public Func<int,bool>? CanLeavePage {get;set;}
+    public event Action? ReloadStarting;
+    public event Action? ReloadFinished;
+    public bool ConfirmDiscardChanges()=>dialogs.ConfirmAdminAction("放棄尚未儲存的變更？","目前頁面的修改尚未儲存。放棄後會恢復已儲存設定。","放棄並離開");
     public bool IsCompanyMode=>!session.IsPersonal;
     public string AccessDescription=>session.IsPersonal?"個人使用 · 管理員功能直接開放，不需密碼。":"公司使用 · 管理員功能須登入，固定有效 10 分鐘。";
     [ObservableProperty] private string logRetentionDaysText="30";
@@ -50,6 +61,10 @@ public partial class AdminViewModel(AdminSession session,IAdminSettingsStore sto
         if(text is null)return false;
         var imported=AdminSettingsJson.Parse(text);
         session.RequireAdmin();
+        var labels=new Dictionary<string,string>{["SyncOptions"]="共用試算表來源與同步間隔",["UpdateManifestUrl"]="程式更新網址",["SyncLinksLocked"]="來源鎖定",["AllowUrgentSnooze"]="緊急提醒延後政策",["FlashMilliseconds"]="閃爍間隔與鎖定",["QuietPeriods"]="靜音時段與鎖定",["WeatherDefaultLocation"]="公司預設天氣地點",[LogRetentionPolicy.Key]="執行日誌保留天數"};
+        var preview=string.Join("\n",imported.Select(item=>"• "+labels.GetValueOrDefault(item.Key,item.Key)));
+        if(!dialogs.ConfirmAdminAction("預覽管理設定匯入","將套用下列項目：\n\n"+preview+"\n\n未列出的設定維持原值。確認後套用到此電腦。","套用設定"))return false;
+        session.RequireAdmin();
         await store.SaveAsync(imported);
         return true;
     }
@@ -60,8 +75,11 @@ public partial class AdminViewModel(AdminSession session,IAdminSettingsStore sto
     }
     public PreferencesViewModel Preferences=>preferences;
     [ObservableProperty] private bool isAuthenticated;
-    [ObservableProperty] private int selectedTab;
+    [ObservableProperty] private int selectedTab=1;
+    [ObservableProperty] private int selectedLogKind;
     [ObservableProperty] private string message="";
+    public string WorkspaceMessage=>!ShowsLogFilter&&Message.StartsWith("已載入 ",StringComparison.Ordinal)?"":Message;
+    partial void OnMessageChanged(string value)=>OnPropertyChanged(nameof(WorkspaceMessage));
     [ObservableProperty] private string adminUsername="";
     [ObservableProperty] private string sheetATestState="尚未測試";
     [ObservableProperty] private string sheetATestedAt="—";
@@ -83,8 +101,17 @@ public partial class AdminViewModel(AdminSession session,IAdminSettingsStore sto
     public string LinkState=>LinksLocked?"🔒 同步連結已鎖定":"同步連結可編輯";
     public string LinkToggleText=>LinksLocked?"解鎖連結":"鎖定連結";
     partial void OnLinksLockedChanged(bool value){OnPropertyChanged(nameof(LinkState));OnPropertyChanged(nameof(LinkToggleText));}
-    public bool ShowsLogFilter=>SelectedTab is 2 or 3;
-    partial void OnSelectedTabChanged(int value)=>OnPropertyChanged(nameof(ShowsLogFilter));
+    public bool ShowsLogFilter=>SelectedTab==7;
+    private bool revertingNavigation;
+    partial void OnSelectedTabChanged(int oldValue,int newValue)
+    {
+        if(!revertingNavigation && (newValue<0||newValue>=Navigation.Length||CanLeavePage?.Invoke(oldValue)==false))
+        {
+            revertingNavigation=true;SelectedTab=oldValue;revertingNavigation=false;
+        }
+        OnPropertyChanged(nameof(ShowsLogFilter));
+        OnPropertyChanged(nameof(WorkspaceMessage));
+    }
     [ObservableProperty] private int flashMilliseconds=500;
     [ObservableProperty] private DateTime from=DateTime.Today.AddDays(-29);
     [ObservableProperty] private DateTime to=DateTime.Today;
@@ -111,6 +138,7 @@ public partial class AdminViewModel(AdminSession session,IAdminSettingsStore sto
     }
     public async Task LoadAsync()
     {
+        ReloadStarting?.Invoke();
         try
         {
             session.RequireAdmin();
@@ -126,6 +154,7 @@ public partial class AdminViewModel(AdminSession session,IAdminSettingsStore sto
             await RefreshLogsAsync();
         }
         catch(Exception ex){Message=ex.Message;}
+        finally{ReloadFinished?.Invoke();}
     }
     [RelayCommand] private void Login()=>LoginRequested?.Invoke();
     [RelayCommand] private void Logout()=>session.SignOut();
@@ -174,15 +203,47 @@ public partial class AdminViewModel(AdminSession session,IAdminSettingsStore sto
     }
     [RelayCommand] private async Task SavePolicyAsync()
     {
-        try
-        {
-            await store.SaveAsync([
+        try {await SavePoliciesAsync();}
+        catch(Exception ex){Message=ex.Message;}
+    }
+    public async Task SavePoliciesAsync(bool includeWeather=false)
+    {
+            session.RequireAdmin();
+            if(FlashMilliseconds is <200 or >5000)throw new ArgumentException("閃爍間隔須為 200–5000 毫秒。");
+            List<Setting> values=[
                 new Setting{Key="AllowUrgentSnooze",Value=AllowUrgentSnooze?"true":"false",Locked=true},
                 new Setting{Key="FlashMilliseconds",Value=FlashMilliseconds.ToString(),Locked=LockFlash},
-                new Setting{Key="QuietPeriods",Value=(await settings.GetAsync("QuietPeriods"))?.Value??"[]",Locked=LockQuiet}]);
+                new Setting{Key="QuietPeriods",Value=(await settings.GetAsync("QuietPeriods"))?.Value??"[]",Locked=LockQuiet}];
+            if(includeWeather)
+            {
+                var location=preferences.Weather?.SelectedDistrict?.Location??throw new ArgumentException("請選擇公司預設天氣的縣市及鄉鎮市區。");
+                values.Add(new(){Key="WeatherDefaultLocation",Value=JsonSerializer.Serialize(location),Locked=true});
+            }
+            session.RequireAdmin();await store.SaveAsync(values);
             await preferences.LoadAsync();await RefreshLogsAsync();Message="本機鎖定設定已儲存。";
+    }
+    public async Task SaveWorkspaceSectionAsync(int page)
+    {
+        session.RequireAdmin();
+        switch(page)
+        {
+            case 4:
+                await exitProtection.SetRequiredAsync(ExitPasswordRequired);Message="結束程式保護設定已儲存。";break;
+            case 5:
+                var url=preferences.Maintenance.UpdateUrl.Trim();
+                if(url.Length>0)UpdateCheckService.ValidateUrl(url);
+                // Validate both inputs before changing the Windows startup setting.
+                session.RequireAdmin();var previousAutoStart=autoStart.IsEnabled();
+                autoStart.SetEnabled(AutoStartEnabled);
+                try{await store.SaveAsync([new(){Key="UpdateManifestUrl",Value=url}]);}
+                catch{autoStart.SetEnabled(previousAutoStart);throw;}
+                preferences.Maintenance.UpdateUrl=url;Message="啟動與更新設定已儲存。";break;
+            case 8:
+                var days=LogRetentionPolicy.Validate(LogRetentionDaysText.Trim());
+                await store.SaveAsync([new(){Key=LogRetentionPolicy.Key,Value=days.ToString(System.Globalization.CultureInfo.InvariantCulture)}]);
+                LogRetentionDaysText=days.ToString(System.Globalization.CultureInfo.InvariantCulture);Message="日誌保留設定已儲存，下次自動清理時套用。";break;
+            default:throw new ArgumentException("此頁沒有可儲存的設定。");
         }
-        catch(Exception ex){Message=ex.Message;}
     }
     [RelayCommand] private async Task ToggleLinksAsync()
     {
@@ -293,7 +354,7 @@ public partial class AdminViewModel(AdminSession session,IAdminSettingsStore sto
         try
         {
             session.RequireAdmin();
-            if(!dialogs.Confirm("清理 30 天前的舊版成功輪詢紀錄？舊版未記錄異動明細，建議先匯出備查。失敗紀錄、新版異動事件及任務確認紀錄會保留。"))return;
+            if(!dialogs.ConfirmAdminAction("清理舊成功紀錄？","只清理 30 天前的舊版成功輪詢紀錄。舊版未記錄異動明細，建議先匯出備查。失敗紀錄、新版異動事件及任務確認紀錄會保留。","清理舊紀錄",true))return;
             session.RequireAdmin();
             var count=await syncLogs.PruneLegacySuccessAsync(DateTime.Now.AddDays(-30));
             await RefreshLogsAsync();

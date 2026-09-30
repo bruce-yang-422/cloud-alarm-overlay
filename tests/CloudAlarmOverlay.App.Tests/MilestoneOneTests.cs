@@ -97,7 +97,7 @@ public sealed class MilestoneOneTests
                 {
                     // Keep the app information screenshot alongside the release UI captures.
                     var preferencesView = FindVisual<PreferencesView>(window)!;
-                    ((System.Windows.Controls.TabControl)preferencesView.FindName("SettingsTabs")).SelectedIndex = 3;
+                    ((System.Windows.Controls.TabControl)preferencesView.FindName("SettingsTabs")).SelectedValue = SettingsPage.Appearance;
                     await Dispatcher.Yield(DispatcherPriority.ApplicationIdle); window.UpdateLayout();
                     var content = (FrameworkElement)window.Content;
                     var bitmap = new RenderTargetBitmap((int)Math.Ceiling(content.ActualWidth), (int)Math.Ceiling(content.ActualHeight), 96, 96, PixelFormats.Pbgra32);

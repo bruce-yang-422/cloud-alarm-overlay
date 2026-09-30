@@ -18,7 +18,7 @@
    <Image x:Name="SharePreview" Source="{Binding PreviewImage}" Stretch="Uniform" RenderOptions.BitmapScalingMode="HighQuality" AutomationProperties.Name="分享圖片預覽"/>
   </Border>
   <StackPanel Grid.Row="2">
-   <TextBlock Text="只分享事件名稱、日期與天數，不包含備註。程式名稱的預設值可在「設定 → 分享圖片」調整。" Style="{StaticResource Muted}" TextWrapping="Wrap"/>
+   <TextBlock Text="只分享事件名稱、日期與天數，不包含備註。程式名稱的預設值可在「設定 → 編輯與分享 → 分享圖片」調整。" Style="{StaticResource Muted}" TextWrapping="Wrap"/>
    <TextBlock Text="{Binding Message}" TextWrapping="Wrap" Margin="0,6"/>
    <WrapPanel HorizontalAlignment="Right"><Button Content="複製到剪貼簿" Click="CopyImage" Padding="16,9"/><Button Content="另存 PNG" Click="SaveImage" Style="{StaticResource Primary}" Padding="20,9" Margin="10,0,0,0"/></WrapPanel>
   </StackPanel>

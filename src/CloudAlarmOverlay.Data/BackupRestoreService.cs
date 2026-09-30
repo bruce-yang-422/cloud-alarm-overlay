@@ -1,4 +1,4 @@
-using System.Globalization;
+﻿using System.Globalization;
 using System.IO.Compression;
 using System.Text;
 using System.Text.Json;
@@ -14,7 +14,7 @@ namespace CloudAlarmOverlay.Data;
 public sealed class BackupRestoreService(Database db, IAuthenticationService authentication, AdminSession session, ChangeSignal changes) : IBackupRestoreService
 {
     private const long MaxArchiveBytes = 64 * 1024 * 1024;
-    private static readonly HashSet<string> AllowedSettings = [CountdownShareSnapshot.BrandingSettingKey, "WeatherOptions", HomePinOptions.SettingKey, "KeepWindowAspectRatio", "FlashMilliseconds", "QuietPeriods", "EmojiLibrary", "ThemeMode", "ThemeColorStyle", "NotificationColorMode", "NotificationColorScheme", .. new[] { AlarmLevels.Low, AlarmLevels.Mid, AlarmLevels.High, AlarmLevels.Max, "低級", "中級", "高級", "最高級" }.Select(x => "Sound:" + x)];
+    private static readonly HashSet<string> AllowedSettings = ["TaskCalendarWeekStart", CountdownShareSnapshot.BrandingSettingKey, "WeatherOptions", HomePinOptions.SettingKey, "KeepWindowAspectRatio", "FlashMilliseconds", "QuietPeriods", "EmojiLibrary", "ThemeMode", "ThemeColorStyle", "NotificationColorMode", "NotificationColorScheme", .. new[] { AlarmLevels.Low, AlarmLevels.Mid, AlarmLevels.High, AlarmLevels.Max, "低級", "中級", "高級", "最高級" }.Select(x => "Sound:" + x)];
     public Task CreateBackupAsync(string path, CancellationToken cancellationToken = default) => CreateBackupAsync(path, null, cancellationToken);
     public async Task RestoreAsync(string path, CancellationToken cancellationToken = default) => await RestoreAsync(path, false, null, cancellationToken);
     private async Task VerifyAsync(BackupCredentials? credentials, CancellationToken ct)
@@ -48,7 +48,7 @@ public sealed class BackupRestoreService(Database db, IAuthenticationService aut
             await using(var stream = new FileStream(temporary, FileMode.CreateNew, FileAccess.Write))
             using(var zip = new ZipArchive(stream, ZipArchiveMode.Create))
             {
-                await Write(zip,"manifest.json",JsonSerializer.Serialize(new { Format="CloudAlarmOverlay", Version=3 }),cancellationToken);
+                await Write(zip,"manifest.json",JsonSerializer.Serialize(new { Format="CloudAlarmOverlay", Version=4 }),cancellationToken);
                 await Write(zip,"task-pins.json",JsonSerializer.Serialize(taskPins),cancellationToken);
                 await Write(zip,"countdowns.json",JsonSerializer.Serialize(countdowns),cancellationToken);
                 await Write(zip,"identity.json",JsonSerializer.Serialize(identity),cancellationToken);
@@ -107,7 +107,7 @@ public sealed class BackupRestoreService(Database db, IAuthenticationService aut
         T Parse<T>(string json)=>JsonSerializer.Deserialize<T>(json)??throw new InvalidDataException("備份資料不可為空。");
         using var manifest=JsonDocument.Parse(await Read("manifest.json"));
         var formatVersion = manifest.RootElement.GetProperty("Version").GetInt32();
-        if(manifest.RootElement.GetProperty("Format").GetString()!="CloudAlarmOverlay" || formatVersion is not (1 or 2 or 3))
+        if(manifest.RootElement.GetProperty("Format").GetString()!="CloudAlarmOverlay" || formatVersion is not (1 or 2 or 3 or 4))
             throw new InvalidDataException("不支援的備份格式版本。");
         var countdowns = formatVersion == 1 && zip.GetEntry("countdowns.json") is null
             ? new List<CountdownItem>() : Parse<List<CountdownItem>>(await Read("countdowns.json"));
@@ -127,6 +127,7 @@ public sealed class BackupRestoreService(Database db, IAuthenticationService aut
         {
             if(!AllowedSettings.Contains(setting.Key)||setting.Locked)throw new InvalidDataException("備份不能包含政策或同步來源。");
             NotificationPreferences.Validate(setting);
+            if(setting.Key=="TaskCalendarWeekStart" && (!int.TryParse(setting.Value,out var weekStart)||weekStart is <0 or >6))throw new InvalidDataException("月曆起始日無效。");
             if(setting.Key=="KeepWindowAspectRatio" && !bool.TryParse(setting.Value,out _))throw new InvalidDataException("視窗設定無效。");
             if(setting.Key=="ThemeMode" && setting.Value is not ("淺色" or "深色" or "暗色" or "粉紅色" or "若竹色" or "淺粉色" or "暗粉色" or "淺若竹色" or "暗若竹色" or "跟隨系統"))throw new InvalidDataException("主題設定無效。");
             if(setting.Key=="ThemeColorStyle" && setting.Value is not ("預設" or "粉紅色" or "若竹色" or "櫻花粉" or "若竹綠" or "薰衣草紫" or "夕陽橘" or "極簡銀白"))throw new InvalidDataException("色彩風格設定無效。");
@@ -141,6 +142,7 @@ public sealed class BackupRestoreService(Database db, IAuthenticationService aut
         {
             if(task.Source!=TaskSources.Local || string.IsNullOrWhiteSpace(task.Id)||string.IsNullOrWhiteSpace(task.Title)||task.Title.Length>50 || !new[] { AlarmLevels.Low, AlarmLevels.Mid, AlarmLevels.High, AlarmLevels.Max }.Contains(AlarmLevels.Normalize(task.Level)))throw new InvalidDataException("備份含無效本機任務。");
             RecurrenceRule.Validate(task.Recurrence);
+            ActivityPeriod.Validate(task);
         }
         foreach(var log in package.Logs)
             if(log.SnoozeCount is <0 or >3 || string.IsNullOrWhiteSpace(log.Id)||string.IsNullOrWhiteSpace(log.TaskId)||string.IsNullOrWhiteSpace(log.DeviceId)||log.Result is not ("Snoozed" or "Pending" or "Acknowledged" or "Overdue_Acknowledged" or "Overdue_Unacked" or "NotLaunched"))throw new InvalidDataException("歷史紀錄格式無效。");

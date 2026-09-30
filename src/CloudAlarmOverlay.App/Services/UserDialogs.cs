@@ -10,7 +10,9 @@ namespace CloudAlarmOverlay.App.Services;
 public interface IUserDialogs
 {
     bool Confirm(string message);
+    bool ConfirmAdminAction(string title,string message,string action,bool destructive=false)=>Confirm(message);
     void Edit(AlarmTask? task,bool copy);
+    void EditActivity(DateTime date)=>Edit(null,false);
     void Export(string contents);
     Task ImportTasksAsync()=>Task.CompletedTask;
     Task ShareCountdownAsync(string id)=>Task.CompletedTask;
@@ -21,6 +23,8 @@ public interface IUserDialogs
 }
 public sealed class UserDialogs(ITaskService tasks,EmojiLibrary emojis,ITaskSchedulingService scheduling,LocalTaskCsvService csv,CountdownShareService shares):IUserDialogs
 {
+    public bool ConfirmAdminAction(string title,string message,string action,bool destructive=false)
+        =>new GoogleActionDialog(title,"",message,action,destructive){Owner=Application.Current?.MainWindow}.ShowDialog()==true;
     public bool ExportSettingsJson(string contents, Action authorize)
     {
         authorize();
@@ -57,10 +61,16 @@ public sealed class UserDialogs(ITaskService tasks,EmojiLibrary emojis,ITaskSche
         new TaskImportWindow{Owner=Application.Current.MainWindow,DataContext=new TaskImportViewModel(csv,rows)}.ShowDialog();
     }
     public bool Confirm(string message)=>MessageBox.Show(message,"Cloud Alarm Overlay",MessageBoxButton.YesNo,MessageBoxImage.Question)==MessageBoxResult.Yes;
-    public async void Edit(AlarmTask? task,bool copy)
+    public void Edit(AlarmTask? task,bool copy)=>OpenEditor(task,copy,null);
+    public void EditActivity(DateTime date)=>OpenEditor(null,false,date);
+    private async void OpenEditor(AlarmTask? task,bool copy,DateTime? activityDate)
     {
+        if(!copy && task?.IsGoogleCalendar==true)
+        {
+            new CalendarReminderWindow(tasks,task){Owner=Application.Current.MainWindow}.ShowDialog();return;
+        }
         try { await emojis.LoadAsync(); } catch(Exception ex) { MessageBox.Show(ex.Message,"無法讀取常用 emoji"); return; }
-        var vm=new TaskEditorViewModel(tasks,task,copy,scheduling) { Emojis = emojis.Items };
+        var vm=new TaskEditorViewModel(tasks,task,copy,scheduling,activityDate) { Emojis = emojis.Items };
         var window=new TaskEditorWindow{DataContext=vm,Owner=Application.Current.MainWindow};
         vm.Saved+=()=>window.DialogResult=true;
         window.ShowDialog();

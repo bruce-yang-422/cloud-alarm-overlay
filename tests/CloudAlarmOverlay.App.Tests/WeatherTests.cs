@@ -131,7 +131,7 @@ public sealed class WeatherTests
     {
         using var handler=new Handler();using var http=new HttpClient(handler);var settings=new Settings();var clock=new Clock();
         using var weather=new WeatherService(settings,new(http),clock);var vm=new WeatherViewModel(weather,settings,clock);
-        await vm.LoadAsync();Assert.Equal("請至設定 → 天氣選擇地點",vm.Current);Assert.Equal("https://www.cwa.gov.tw/V8/C/W/Town/Town.html",vm.ForecastUri.AbsoluteUri);
+        await vm.LoadAsync();Assert.Equal("請至設定 → 首頁與天氣選擇地點",vm.Current);Assert.Equal("https://www.cwa.gov.tw/V8/C/W/Town/Town.html",vm.ForecastUri.AbsoluteUri);
         await weather.SaveAsync(new(true,Taipei));await weather.RefreshAsync();
         Assert.Contains("29.4",vm.Current);Assert.Contains("0.2 mm",vm.Current);Assert.Contains("60%",vm.Tomorrow);
         clock.Now=clock.Now.AddHours(6);vm.Tick();

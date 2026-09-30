@@ -7,5 +7,7 @@ public interface ITaskService
 {
     Task SaveLocalAsync(AlarmTask task, CancellationToken cancellationToken = default);
     Task DeleteLocalAsync(string id, CancellationToken cancellationToken = default);
+    Task SaveCalendarReminderAsync(string id, bool enabled, DateTime? scheduledAt, CancellationToken cancellationToken = default);
+    Task ResetCalendarReminderAsync(string id, CancellationToken cancellationToken = default);
 }
 

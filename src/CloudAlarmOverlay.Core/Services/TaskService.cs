@@ -12,7 +12,8 @@ internal sealed class TaskService(ITaskRepository tasks,ChangeSignal changes) : 
         if(task.Description?.Length>1000||task.Note?.Length>500) throw new ArgumentException("詳細內容限 1,000 字，補充說明及備註限 500 字（含 Markdown 語法）。");
         if(task.Level is not (AlarmLevels.Low or AlarmLevels.Mid or AlarmLevels.High or AlarmLevels.Max)) throw new ArgumentException("提醒等級無效。");
         RecurrenceRule.Validate(task.Recurrence);
-        if(task.Recurrence=="None" && await tasks.GetByIdAsync(task.Id,cancellationToken) is null && task.ScheduledAt<DateTime.Now)
+        ActivityPeriod.Validate(task);
+        if(task.Recurrence=="None" && (task.Enabled || task.ActivityStartAt is null) && await tasks.GetByIdAsync(task.Id,cancellationToken) is null && task.ScheduledAt<DateTime.Now)
             throw new ArgumentException("新增任務時間不可早於現在。");
         await tasks.SaveLocalAsync(task with { RequireAcknowledgement=task.Level!=AlarmLevels.Low,UpdatedAt=DateTime.Now },cancellationToken);
         changes.Notify();
@@ -20,6 +21,17 @@ internal sealed class TaskService(ITaskRepository tasks,ChangeSignal changes) : 
     public async Task DeleteLocalAsync(string id,CancellationToken cancellationToken=default)
     {
         await tasks.DeleteLocalAsync(id,cancellationToken);
+        changes.Notify();
+    }
+    public async Task SaveCalendarReminderAsync(string id,bool enabled,DateTime? scheduledAt,CancellationToken cancellationToken=default)
+    {
+        if(scheduledAt is {} at && (at.Year<1900||at.Year>9998))throw new ArgumentException("提醒日期超出可用範圍。");
+        await tasks.SaveCalendarReminderAsync(id,enabled,scheduledAt,cancellationToken);
+        changes.Notify();
+    }
+    public async Task ResetCalendarReminderAsync(string id,CancellationToken cancellationToken=default)
+    {
+        await tasks.ResetCalendarReminderAsync(id,cancellationToken);
         changes.Notify();
     }
 }

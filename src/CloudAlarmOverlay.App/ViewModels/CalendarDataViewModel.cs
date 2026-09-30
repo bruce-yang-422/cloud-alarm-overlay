@@ -7,8 +7,16 @@ namespace CloudAlarmOverlay.App.ViewModels;
 
 public partial class CalendarDataViewModel(CalendarDataService calendar):ObservableObject
 {
+    public event Action? SettingsLoaded;
+    public Func<bool>? HasPendingChanges { get; set; }
+    public async Task OpenAsync()
+    {
+        // Reopening after session expiry must not silently replace a user's draft.
+        UrlsLocked=true;
+        if(HasPendingChanges?.Invoke()!=true)await LoadAsync();
+    }
     [ObservableProperty] private bool enabled;
-    [ObservableProperty] private string frequency="每天";
+    [ObservableProperty] [NotifyPropertyChangedFor(nameof(FrequencyDescription))] private string frequency="每天";
     [ObservableProperty] private string holidaysUrl="";
     [ObservableProperty] private string lunarUrl="";
     [ObservableProperty]
@@ -27,6 +35,13 @@ public partial class CalendarDataViewModel(CalendarDataService calendar):Observa
     public bool CanEditSourceSettings=>!Busy;
     public string UrlLockDescription=>UrlsLocked?"網址已鎖定，仍可選取與複製；先關閉鎖定才能編輯。":"網址可編輯；儲存設定或重新開啟此頁後會自動鎖定。";
     public string[] Frequencies { get; }=["每天","每週","每月","手動更新"];
+    public string FrequencyDescription=>Frequency switch
+    {
+        "每週"=>"每週一後首次執行時更新；程式持續開啟時也會檢查。",
+        "每月"=>"每月 1 日後首次執行時更新；程式持續開啟時也會檢查。",
+        "手動更新"=>"只在按下「立即更新」時連線，不會定期更新。",
+        _=>"每天首次執行時更新；程式持續開啟時也會檢查。"
+    };
     public async Task LoadAsync()
     {
         try
@@ -34,6 +49,7 @@ public partial class CalendarDataViewModel(CalendarDataService calendar):Observa
             await calendar.InitializeAsync();var state=await calendar.GetAsync();
             Enabled=state.Options.Enabled;Frequency=state.Options.Frequency switch{"Weekly"=>"每週","Monthly"=>"每月","Manual"=>"手動更新",_=>"每天"};
             HolidaysUrl=state.Options.HolidaysUrl;LunarUrl=state.Options.LunarUrl;UrlsLocked=true;Render(state);
+            SettingsLoaded?.Invoke();
         }
         catch(Exception ex){Message="載入失敗："+ex.Message;}
     }
@@ -55,6 +71,13 @@ public partial class CalendarDataViewModel(CalendarDataService calendar):Observa
         if(Busy)return;Busy=true;
         try{await calendar.SaveOptionsAsync(Draft());await LoadAsync();Message="日曆更新設定已儲存。";}
         catch(Exception ex){Message=ex.Message;}finally{Busy=false;}
+    }
+    public async Task SaveDraftAsync()
+    {
+        if(Busy)throw new InvalidOperationException("請等待目前的日曆操作完成。");
+        Busy=true;
+        try{await calendar.SaveOptionsAsync(Draft());await LoadAsync();Message="日曆更新設定已儲存。";}
+        finally{Busy=false;}
     }
     [RelayCommand] private async Task UpdateAsync()
     {

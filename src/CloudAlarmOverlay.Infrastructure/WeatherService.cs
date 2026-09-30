@@ -4,16 +4,19 @@ using CloudAlarmOverlay.Core.Repositories;
 using CloudAlarmOverlay.Core.Services;
 namespace CloudAlarmOverlay.Infrastructure;
 
-public sealed class WeatherService(ISettingsRepository settings, OpenMeteoWeatherClient client, TimeProvider clock) : IWeatherService, IDisposable
+public sealed class WeatherService(ISettingsRepository settings, OpenMeteoWeatherClient client, TimeProvider clock, CwaAlertClient? alertClient = null) : IWeatherService, IDisposable
 {
     private readonly SemaphoreSlim gate = new(1, 1);
     private CancellationTokenSource requests = new();
     private DateTimeOffset nextUpdate;
+    private DateTimeOffset nextAlertUpdate;
     private bool loaded;
     public WeatherOptions Options { get; private set; } = new();
     public WeatherLocation? EffectiveLocation { get; private set; }
     public WeatherSnapshot? Snapshot { get; private set; }
     public bool IsStale { get; private set; } = true;
+    public WeatherAlertSnapshot? Alerts { get; private set; }
+    public bool AlertsStale { get; private set; } = true;
     private static T? Read<T>(string? json)
     {
         try { return json is null ? default : JsonSerializer.Deserialize<T>(json); }
@@ -47,6 +50,8 @@ public sealed class WeatherService(ISettingsRepository settings, OpenMeteoWeathe
             EffectiveLocation = options.Location ?? Read<WeatherLocation>((await settings.GetAsync("WeatherDefaultLocation", ct))?.Value);
             if (Snapshot?.Location != EffectiveLocation) Snapshot = null;
             nextUpdate = default; IsStale = true; loaded = true;
+            nextAlertUpdate = default;
+            if (!options.Enabled) { Alerts = null; AlertsStale = true; }
         }
         finally { gate.Release(); }
     }
@@ -63,9 +68,23 @@ public sealed class WeatherService(ISettingsRepository settings, OpenMeteoWeathe
         await gate.WaitAsync(ct);
         try
         {
-            if (!Options.Enabled || EffectiveLocation is not {} location || (!force && clock.GetUtcNow() < nextUpdate)) return;
-            nextUpdate = clock.GetUtcNow().AddMinutes(30);
+            if (!Options.Enabled || EffectiveLocation is not {} location) return;
             using var linked = CancellationTokenSource.CreateLinkedTokenSource(ct, requests.Token);
+            // Warning announcements have their own cadence and never change forecast/sync health.
+            if (alertClient is not null && (force || clock.GetUtcNow() >= nextAlertUpdate))
+            {
+                nextAlertUpdate = clock.GetUtcNow().AddMinutes(5);
+                try
+                {
+                    var alerts = await alertClient.FetchAsync(clock.GetUtcNow(), linked.Token);
+                    linked.Token.ThrowIfCancellationRequested();
+                    Alerts = alerts; AlertsStale = false;
+                }
+                catch (OperationCanceledException) when (ct.IsCancellationRequested) { throw; }
+                catch { AlertsStale = true; }
+            }
+            if (linked.IsCancellationRequested || (!force && clock.GetUtcNow() < nextUpdate)) return;
+            nextUpdate = clock.GetUtcNow().AddMinutes(30);
             try
             {
                 var snapshot = await client.FetchAsync(location, clock.GetUtcNow(), linked.Token);

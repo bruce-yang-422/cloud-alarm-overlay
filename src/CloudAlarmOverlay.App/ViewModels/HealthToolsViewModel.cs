@@ -31,6 +31,8 @@ public partial class HealthToolsViewModel : ObservableObject
     public string[] NotificationPositions { get; } = ["左邊", "置中", "右邊"];
     [ObservableProperty] private bool showAllHistory;
     public int EnabledCount => health.Snapshot.Tools.Count(t => t.Options.Enabled);
+    public bool HasEnabledTools => EnabledCount > 0;
+    public string HomeSummary => health.IsPaused ? "今日已暫停" : $"已啟用 {EnabledCount} 項 · 下次提醒：{NextReminder}";
     public int PendingCount => health.Snapshot.Tools.Count(t => t.Pending is not null);
     public int TodayNotifications => health.Snapshot.Events.Where(e => e.TriggeredAt?.Date == health.Now.Date).Select(e => e.BatchId).Distinct().Count();
     public int TodayItems => health.Snapshot.Events.Count(e => e.TriggeredAt?.Date == health.Now.Date);
@@ -79,6 +81,7 @@ public partial class HealthToolsViewModel : ObservableObject
         OnPropertyChanged(nameof(EnabledCount)); OnPropertyChanged(nameof(PendingCount)); OnPropertyChanged(nameof(TodayNotifications));
         OnPropertyChanged(nameof(TodayItems)); OnPropertyChanged(nameof(PauseLabel)); OnPropertyChanged(nameof(BannerTitle));
         OnPropertyChanged(nameof(BannerDetail)); OnPropertyChanged(nameof(NextReminder));
+        OnPropertyChanged(nameof(HasEnabledTools)); OnPropertyChanged(nameof(HomeSummary));
         if (ReferenceEquals(rendered, health.Snapshot) && renderedDate == health.Now.Date) return;
         rendered = health.Snapshot; renderedDate = health.Now.Date;
         RebuildHistory();
@@ -145,18 +148,25 @@ public partial class HealthToolCard(HealthToolsService health, string kind, Acti
     public int WeekCount => health.Snapshot.Events.Count(e => e.Kind == kind && e.TriggeredAt is not null);
     public string Name => HealthTools.Name(kind);
     public string Icon => kind switch { "Water" => "💧", "Sitting" => "🪑", "Screen" => "👁", _ => "🙆" };
+    public string HomeIcon => kind switch
+    {
+        "Water" => "M12,2 C10,6 5,10 5,15 A7,7 0 0 0 19,15 C19,10 14,6 12,2 Z M8,15 C8,18 10,19 12,19",
+        "Sitting" => "M6,3 L6,13 18,13 18,18 5,18 M7,18 L7,22 M17,18 L17,22 M6,7 L17,7 17,13",
+        "Screen" => "M2,12 C7,3 17,3 22,12 C17,21 7,21 2,12 Z M15,12 A3,3 0 1 1 9,12 A3,3 0 1 1 15,12",
+        _ => "M14,5 A2,2 0 1 1 10,5 A2,2 0 1 1 14,5 M12,9 L12,16 M4,8 L12,11 20,8 M12,16 L7,22 M12,16 L17,22"
+    };
     public string Accent => kind switch { "Water" => "#309EDE", "Sitting" => "#39A67F", "Screen" => "#8C70D4", _ => "#D89231" };
     public bool Enabled => State.Options.Enabled;
     public double CardOpacity => Enabled ? 1 : .65;
     public string ToggleLabel => Enabled ? "停用" : "啟用";
-    public string Status => !Enabled ? "尚未啟用" : paused ? "今日暫停" : State.Pending is not null ? "等待提醒" : AwaitingAlignment ? "等待對齊" : State.Options.IsActive(health.Now) ? "排程中" : "時段外";
+    public string Status => !Enabled ? "尚未啟用" : paused ? "今日暫停" : State.Pending is not null ? "等待提醒" : AwaitingAlignment ? "等待對齊" : health.IsActive(State.Options) ? "排程中" : "時段外";
     public string Countdown => !Enabled ? "—" : paused ? "已暫停" : State.Pending is not null ? "待提醒" : AwaitingAlignment ? "待對齊" : State.NextAt is { } at ? $"{Math.Max(0, Math.Ceiling((at - health.Now).TotalMinutes)):0}" : "—";
     public string CountdownUnit => Enabled && !paused && !AwaitingAlignment && State.Pending is null ? "分鐘後提醒" : "";
     public string Schedule => AwaitingAlignment ? "首次休息結束後重新起算週期" : State.Pending is { } pending ? $"原訂 {pending.ScheduledAt:HH:mm}" + (health.Snapshot.EffectiveMode == "Delay" ? $" · 專注最多延後至 {pending.ScheduledAt.AddMinutes(30):HH:mm}" : "")
         : State.NextAt is { } at ? $"每 {State.Options.IntervalMinutes} 分鐘 · 下次 {at:MM/dd HH:mm}" : $"每 {State.Options.IntervalMinutes} 分鐘";
-    public string Window => $"{State.Options.Start:HH:mm}–{State.Options.End:HH:mm} · " + (State.Options.Days == 62 ? "週一至週五" : State.Options.Days == 127 ? "每天" : "自訂星期");
+    public string Window => $"{State.Options.Start:HH:mm}–{State.Options.End:HH:mm} · " + (State.Options.DayMode == "Workdays" ? "工作日（依假日與補班）" : State.Options.DayMode == "Everyday" || State.Options.Days == 127 ? "每天" : State.Options.Days == 62 ? "週一至週五" : "自訂星期");
     public string Today => $"今日已提醒 {health.Snapshot.Events.Count(e => e.Kind == kind && e.TriggeredAt?.Date == health.Now.Date)} 個項目";
-    public double Progress => !Enabled || paused ? 0 : State.Pending is not null ? 100 : State.NextAt is { } at && State.Options.IsActive(health.Now)
+    public double Progress => !Enabled || paused ? 0 : State.Pending is not null ? 100 : State.NextAt is { } at && health.IsActive(State.Options)
         ? Math.Clamp(100 * (1 - (at - health.Now).TotalMinutes / State.Options.IntervalMinutes), 0, 100) : 0;
     [ObservableProperty] private string error = "";
     public void InitializeEditor()
@@ -210,11 +220,16 @@ public partial class HealthToolEditor : ObservableObject
     [ObservableProperty] private string interval = "60";
     [ObservableProperty] private string start = "08:30";
     [ObservableProperty] private string end = "18:00";
+    public string[] DayModes { get; } = ["每天", "工作日", "自訂星期"];
+    [ObservableProperty, NotifyPropertyChangedFor(nameof(IsCustomDays)), NotifyPropertyChangedFor(nameof(DayModeHint))] private string dayMode = "自訂星期";
+    public bool IsCustomDays => DayMode == "自訂星期";
+    public string DayModeHint => DayMode == "工作日" ? "週一至週五，略過已載入的假日，補班日照常提醒。" : DayMode == "每天" ? "每天提醒，包含週末與假日。" : "依勾選的星期提醒，不隨假日或補班日調整。";
     public HealthDayChoice[] Days { get; }
     public HealthToolEditor(HealthToolOptions options)
     {
         kind = options.Kind; Enabled = options.Enabled; Interval = options.IntervalMinutes.ToString(CultureInfo.InvariantCulture);
         Start = options.Start.ToString("HH:mm"); End = options.End.ToString("HH:mm");
+        DayMode = options.DayMode switch { "Workdays" => "工作日", "Everyday" => "每天", _ => "自訂星期" };
         Days = Enumerable.Range(0, 7).Select(i => (i + 1) % 7).Select(i => new HealthDayChoice(i, (options.Days & (1 << i)) != 0)).ToArray();
     }
     public HealthToolOptions Build()
@@ -222,7 +237,9 @@ public partial class HealthToolEditor : ObservableObject
         if (!int.TryParse(Interval, out var minutes) || !TimeOnly.TryParseExact(Start, "HH:mm", CultureInfo.InvariantCulture, DateTimeStyles.None, out var startAt)
             || !TimeOnly.TryParseExact(End, "HH:mm", CultureInfo.InvariantCulture, DateTimeStyles.None, out var endAt))
             throw new ArgumentException("請輸入整數分鐘與 HH:mm 格式時間，例如 08:30。");
-        var result = new HealthToolOptions { Kind = kind, Enabled = Enabled, IntervalMinutes = minutes, Start = startAt, End = endAt, Days = Days.Where(d => d.Selected).Sum(d => 1 << d.Day) };
+        var mode = DayMode switch { "每天" => "Everyday", "工作日" => "Workdays", "自訂星期" => "Custom", _ => throw new ArgumentException("請選擇提醒日期模式。") };
+        var days = Days.Where(d => d.Selected).Sum(d => 1 << d.Day);
+        var result = new HealthToolOptions { Kind = kind, Enabled = Enabled, IntervalMinutes = minutes, Start = startAt, End = endAt, DayMode = mode, Days = mode != "Custom" && days == 0 ? 62 : days };
         result.Validate(); return result;
     }
 }

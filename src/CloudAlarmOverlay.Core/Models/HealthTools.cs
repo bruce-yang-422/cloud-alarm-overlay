@@ -16,20 +16,29 @@ public sealed record HealthToolOptions
     public TimeOnly Start { get; init; } = new(8, 30);
     public TimeOnly End { get; init; } = new(18, 0);
     public int Days { get; init; } = 62; // Sunday = bit 0; Monday through Friday.
-    public bool IsActive(DateTime at) => Enabled && (Days & (1 << (int)at.DayOfWeek)) != 0 && TimeOnly.FromDateTime(at) >= Start && TimeOnly.FromDateTime(at) < End;
+    public string DayMode { get; init; } = "Custom"; // Preserve the weekday choices in existing settings.
+    public bool IsScheduledDay(DateTime date, IReadOnlyList<Holiday>? holidays = null)
+    {
+        if (DayMode == "Everyday") return true;
+        if (DayMode != "Workdays") return (Days & (1 << (int)date.DayOfWeek)) != 0;
+        var special = holidays?.Where(h => h.Date == DateOnly.FromDateTime(date)).ToArray() ?? [];
+        if (special.Any(h => h.Type == "補班日")) return true;
+        return special.Length == 0 && date.DayOfWeek is not (DayOfWeek.Saturday or DayOfWeek.Sunday);
+    }
+    public bool IsActive(DateTime at, IReadOnlyList<Holiday>? holidays = null) => Enabled && IsScheduledDay(at, holidays) && TimeOnly.FromDateTime(at) >= Start && TimeOnly.FromDateTime(at) < End;
     public void Validate()
     {
-        if (!HealthTools.Kinds.Contains(Kind) || IntervalMinutes is < 5 or > 240 || Days is < 1 or > 127 || Start >= End)
+        if (!HealthTools.Kinds.Contains(Kind) || IntervalMinutes is < 5 or > 240 || Days is < 1 or > 127 || Start >= End || DayMode is not ("Custom" or "Everyday" or "Workdays"))
             throw new ArgumentException("請設定 5–240 分鐘、同一天內的有效時段，並至少選擇一天。");
         if ((End - Start).TotalMinutes <= IntervalMinutes) throw new ArgumentException("有效時段需長於提醒間隔，才能排入至少一次提醒。");
     }
-    public DateTime? NextAfter(DateTime now, DateTime? anchor = null)
+    public DateTime? NextAfter(DateTime now, DateTime? anchor = null, IReadOnlyList<Holiday>? holidays = null)
     {
         if (!Enabled) return null;
-        for (var d = 0; d <= 7; d++)
+        for (var d = 0; d <= (DayMode == "Workdays" ? 366 : 7); d++)
         {
             var date = now.Date.AddDays(d);
-            if ((Days & (1 << (int)date.DayOfWeek)) == 0) continue;
+            if (!IsScheduledDay(date, holidays)) continue;
             var start = anchor is { } aligned && aligned.Date == date ? aligned : date + Start.ToTimeSpan();
             var step = Math.Max(1, (int)Math.Floor((now - start).TotalMinutes / IntervalMinutes) + 1);
             var next = start.AddMinutes(step * IntervalMinutes);

@@ -18,6 +18,8 @@ public sealed class TaskPreviewViewModel
         Note=string.IsNullOrWhiteSpace(task?.Note)?"（未填寫補充說明）":task.Note;
         Summary=task is null?$"來源：{entry?.Source??"未知"}":$"{task.Level} · {task.Source} · {RecurrenceRule.Describe(task.Recurrence)}\n{(task.Recurrence=="None"?"排定時間":"起始時間")}：{task.ScheduledAt:yyyy/MM/dd HH:mm}";
         Notice=entry is null?"唯讀預覽":task is null?"此筆舊紀錄沒有完整內容快照，無法取得當時的詳細訊息。":"顯示當次提醒保存的內容";
+        if(task?.ActivityStartAt is {} start && task.ActivityEndAt is {} end)
+            Summary="活動期間："+new CalendarEntry(task,start,end,task.ActivityAllDay).Period+"\n"+Summary+(!task.Enabled?"（提醒已關閉）":"");
         if(entry is not null)
         {
             var row=new HistoryRow(entry);

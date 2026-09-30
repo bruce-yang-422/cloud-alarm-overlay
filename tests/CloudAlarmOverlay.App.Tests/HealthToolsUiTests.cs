@@ -70,6 +70,12 @@ public sealed class HealthToolsUiTests
                 {
                     vm.Cards[i].EditCommand.Execute(null); window.UpdateLayout(); await Dispatcher.Yield(DispatcherPriority.ApplicationIdle);
                     Assert.Same(vm.Cards[i], Find<HealthToolView>(window)!.DataContext);
+                    var mode=Find<ComboBox>(Find<HealthToolView>(window)!)!;
+                    Assert.Equal(new[]{"每天","工作日","自訂星期"},mode.Items.Cast<string>());
+                    mode.SelectedItem="工作日";Assert.False(vm.Cards[i].Editor!.IsCustomDays);
+                    await vm.Cards[i].SaveCommand.ExecuteAsync(null);Assert.Empty(vm.Cards[i].Error);
+                    Assert.Equal("Workdays",health.Snapshot.Tools[i].Options.DayMode);Assert.Contains("工作日",vm.Cards[i].Window);
+                    vm.Cards[i].ResetDraftCommand.Execute(null);Assert.Equal("工作日",vm.Cards[i].Editor!.DayMode);
                     Assert.All(vm.Cards[i].History, row => Assert.Equal(vm.Cards[i].Name, row.Name));
                     await Task.Delay(180); Screenshot(window, "health-tools-tab-" + i);
                 }
@@ -168,6 +174,15 @@ public sealed class HealthToolsUiTests
         for (var i = 0; i < VisualTreeHelper.GetChildrenCount(parent); i++)
             if (Find<T>(VisualTreeHelper.GetChild(parent, i)) is { } child) return child;
         return null;
+    }
+    [Fact] public void Day_mode_switch_preserves_custom_selection_and_builds_everyday_independently()
+    {
+        var editor=new HealthToolEditor(new(){Days=10});Assert.Equal("自訂星期",editor.DayMode);Assert.True(editor.IsCustomDays);
+        editor.DayMode="工作日";Assert.Equal("Workdays",editor.Build().DayMode);
+        editor.DayMode="每天";Assert.Equal("Everyday",editor.Build().DayMode);
+        editor.DayMode="自訂星期";Assert.Equal(10,editor.Build().Days);
+        foreach(var day in editor.Days)day.Selected=false;
+        Assert.Throws<ArgumentException>(()=>editor.Build());editor.DayMode="工作日";Assert.Equal("Workdays",editor.Build().DayMode);
     }
     [Fact] public async Task Pending_health_items_merge_into_existing_pomodoro_notice_and_acknowledge_only_on_click()
     {

@@ -176,13 +176,18 @@ public sealed class MaintenanceUiTests
                 Assert.True(((SolidColorBrush)toggle.Foreground).Color.R>200);
                 Assert.True(((SolidColorBrush)label.Foreground).Color.R>200);
                 var input=Assert.IsType<System.Windows.Controls.TextBox>(combo.Template.FindName("PART_EditableTextBox",combo));
+                var arrowButton=Assert.IsType<System.Windows.Controls.Primitives.ToggleButton>(combo.Template.FindName("DropDownToggle",combo));
+                var arrow=Assert.IsType<System.Windows.Shapes.Path>(arrowButton.Template.FindName("Chevron",arrowButton));
+                Assert.InRange(arrow.StrokeThickness,1.5,2.5);
                 Assert.Equal(Visibility.Visible,input.Visibility);
                 combo.Text="1000";await Dispatcher.Yield(DispatcherPriority.ApplicationIdle);
                 Assert.Equal("1000",input.Text);
                 combo.IsDropDownOpen=true;await Dispatcher.Yield(DispatcherPriority.ApplicationIdle);
+                Assert.True(arrowButton.IsChecked);Assert.Equal(180,Assert.IsType<RotateTransform>(arrow.RenderTransform).Angle);
                 var item=Assert.IsType<System.Windows.Controls.ComboBoxItem>(combo.ItemContainerGenerator.ContainerFromIndex(0));
                 Assert.True(((SolidColorBrush)item.Foreground).Color.R>200);
                 combo.IsDropDownOpen=false;
+                Assert.False(arrowButton.IsChecked);Assert.Equal("1000",combo.Text);
                 AdaptiveBrushExtension.Apply(false);await Dispatcher.Yield(DispatcherPriority.ApplicationIdle);
                 Assert.Equal(light,((SolidColorBrush)password.Background).Color);
             }

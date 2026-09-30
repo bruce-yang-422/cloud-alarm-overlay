@@ -215,10 +215,10 @@ public sealed class Version110UiTests
         var vm = fixture.Get<MaintenanceViewModel>();
         await vm.OpenDownloadCommand.ExecuteAsync(null);
         Assert.Equal(new Uri("https://example.test/current.exe"), browser.Opened);
-        Assert.Contains("已交由瀏覽器下載安裝檔", vm.Message); Assert.False(vm.Busy);
+        Assert.Contains("已交由瀏覽器下載安裝檔", vm.UpdateMessage); Assert.False(vm.Busy);
         updates.Failure = true;
         await vm.OpenDownloadCommand.ExecuteAsync(null);
-        Assert.Contains("無法啟動安裝檔下載", vm.Message); Assert.False(vm.Busy);
+        Assert.Contains("無法啟動安裝檔下載", vm.UpdateMessage); Assert.False(vm.Busy);
     }
 
     [Fact]

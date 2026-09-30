@@ -25,6 +25,7 @@ public sealed class PlannedFeaturesUiTests
         {
             await host.Services.GetRequiredService<IDatabaseInitializer>().InitializeAsync();
             var vm=host.Services.GetRequiredService<MainViewModel>();await vm.InitializeAsync();
+            vm.HasSheetASource=vm.HasSheetBSource=true;
             var notified=false;vm.PropertyChanged+=(_,e)=>{if(e.PropertyName==nameof(vm.OverallHealth))notified=true;};
             window=host.Services.GetRequiredService<MainWindow>();window.Width=1050;window.Height=780;window.ShowInTaskbar=false;window.ShowActivated=false;window.Show();
             foreach(var dark in new[]{false,true})
@@ -281,9 +282,16 @@ public sealed class PlannedFeaturesUiTests
                 main=host.Services.GetRequiredService<MainWindow>();main.Width=1050;main.Height=780;main.ShowInTaskbar=false;main.ShowActivated=false;main.Show();
                 await Dispatcher.Yield(DispatcherPriority.ApplicationIdle);main.UpdateLayout();
                 var card=(Button)main.FindName("WeatherCard");Assert.True(card.IsVisible);Assert.Contains("29",vm.Preferences.Weather!.Current);
-                var panel=Assert.IsType<WrapPanel>(card.Parent);
+                var weatherSection=Assert.IsType<StackPanel>(card.Parent);
+                var panel=Assert.IsType<WrapPanel>(weatherSection.Parent);
+                Assert.Single(vm.Preferences.Weather.AlertBadges);
+                Assert.IsType<WeatherAlertsView>(weatherSection.Children[1]);
+                vm.Preferences.Weather.OpenAlertCommand.Execute(vm.Preferences.Weather.AlertBadges[0]);
+                Assert.Equal(vm.Preferences.Weather.AlertBadges[0].OfficialUri,browser.Opened);
                 Capture(main,"home-weather");
-                Assert.True(card.TranslatePoint(new Point(),panel).Y>0,$"WeatherY={card.TranslatePoint(new Point(),panel).Y}, PanelWidth={panel.ActualWidth}, MainWidth={main.ActualWidth}, WeatherWidth={card.ActualWidth}");
+                // The compact header may fit on one line; it must stay inside the available width.
+                var weatherPosition=card.TranslatePoint(new Point(),panel);
+                Assert.True(weatherPosition.X>=0 && weatherPosition.X+card.ActualWidth<=panel.ActualWidth+1);
                 foreach(var style in Enum.GetValues<ThemeColorStyle>())
                 foreach(var dark in new[]{false,true})
                 {
@@ -296,7 +304,7 @@ public sealed class PlannedFeaturesUiTests
                 vm.OpenWeatherCommand.Execute(null);await Dispatcher.Yield(DispatcherPriority.ApplicationIdle);main.UpdateLayout();
                 Assert.Equal(0,vm.PageIndex);Assert.Equal(vm.Preferences.Weather!.ForecastUri,browser.Opened);
                 browser.Fail=true;vm.OpenWeatherCommand.Execute(null);Assert.Contains("無法開啟氣象署",vm.Status);
-                vm.Preferences.SelectedSettingsTab=6;vm.PageIndex=4;await Dispatcher.Yield(DispatcherPriority.ApplicationIdle);main.UpdateLayout();Capture(main,"weather-settings");
+                vm.Preferences.SelectedPage=SettingsPage.Home;vm.PageIndex=4;await Dispatcher.Yield(DispatcherPriority.ApplicationIdle);main.UpdateLayout();Capture(main,"weather-settings");
                 var csv=host.Services.GetRequiredService<LocalTaskCsvService>();
                 var rows=await csv.PreviewAsync(LocalTaskCsvService.Template(DateTime.Now));
                 import=new TaskImportWindow{DataContext=new TaskImportViewModel(csv,rows),ShowInTaskbar=false,ShowActivated=false};import.Show();await Dispatcher.Yield(DispatcherPriority.ApplicationIdle);import.UpdateLayout();Capture(import,"csv-import");import.Close();
@@ -323,9 +331,36 @@ public sealed class PlannedFeaturesUiTests
     }
     private sealed class Handler:HttpMessageHandler
     {
-        protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request,CancellationToken ct)=>Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK){Content=new StringContent("""
+        protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request,CancellationToken ct)
+        {
+            if(request.RequestUri!.Host=="alerts.ncdr.nat.gov.tw")
+            {
+                var now=DateTimeOffset.UtcNow;
+                if(request.RequestUri.AbsolutePath.StartsWith("/Capstorage/",StringComparison.Ordinal))
+                {
+                    var cap=$"""
+                    <alert xmlns="urn:oasis:names:tc:emergency:cap:1.2"><identifier>ui-weather-warning</identifier>
+                    <status>Actual</status><msgType>Alert</msgType><scope>Public</scope><info><language>zh-TW</language>
+                    <headline>颱風</headline><description>介面測試示意，非實際警報。</description>
+                    <effective>{now.AddMinutes(-5):O}</effective><expires>{now.AddHours(1):O}</expires>
+                    <area><areaDesc>臺北市</areaDesc><geocode><valueName>Taiwan_Geocode_103</valueName><value>63</value></geocode></area>
+                    </info></alert>
+                    """;
+                    return Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK){Content=new StringContent(cap)});
+                }
+                var feed=$"""
+                <feed xmlns="http://www.w3.org/2005/Atom" xmlns:cap="urn:oasis:names:tc:emergency:cap:1.1"><entry>
+                <id>ui-weather-warning</id><title>颱風</title><updated>{now.AddMinutes(-5):O}</updated><author><name>中央氣象署</name></author>
+                <summary>介面測試示意，非實際警報。</summary><cap:status>Actual</cap:status><cap:msgType>Alert</cap:msgType>
+                <link rel="alternate" href="https://alerts.ncdr.nat.gov.tw/Capstorage/Tests/ui-weather-warning.cap"/>
+                <cap:effective>{now.AddMinutes(-5):O}</cap:effective><cap:expires>{now.AddHours(1):O}</cap:expires></entry></feed>
+                """;
+                return Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK){Content=new StringContent(feed)});
+            }
+            return Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK){Content=new StringContent("""
         {"current":{"time":"2026-09-24T14:00","temperature_2m":29,"apparent_temperature":32,"precipitation":0.2,"weather_code":2},"daily":{"time":["2026-09-24","2026-09-25"],"weather_code":[2,61],"temperature_2m_min":[25,24],"temperature_2m_max":[32,31],"precipitation_probability_max":[20,60]}}
         """)});
+        }
     }
     private sealed class Paths:IAppPaths
     {

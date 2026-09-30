@@ -37,10 +37,11 @@ public sealed class CalendarDataUiTests
             try
             {
                 await main.InitializeAsync();window.ShowActivated=false;window.ShowInTaskbar=false;window.Width=1200;window.Height=920;window.Show();
-                main.PageIndex=5;main.Admin.SelectedTab=5;window.UpdateLayout();await Dispatcher.Yield(DispatcherPriority.ApplicationIdle);
+                main.PageIndex=5;main.Admin.SelectedTab=2;window.UpdateLayout();await Dispatcher.Yield(DispatcherPriority.ApplicationIdle);
                 var vm=main.Admin.CalendarData;await vm.LoadAsync();Assert.False(vm.Enabled);
                 Assert.Contains("bruce-yang-422/cloud-alarm-overlay/main/data/calendar",vm.HolidaysUrl);
-                var view=Find<CalendarDataView>(window)!;var frequencies=(SlidingSegmentedControl)view.FindName("UpdateFrequency");
+                var view=Find<CalendarDataView>(window)!;var frequencies=(ComboBox)view.FindName("UpdateFrequency");
+                ((Expander)view.FindName("AdvancedSources")).IsExpanded=true;
                 var urlLock=(CheckBox)view.FindName("SourceUrlsLock");
                 var holidays=(TextBox)view.FindName("HolidaysSource");var lunar=(TextBox)view.FindName("LunarSource");
                 var restore=(Button)view.FindName("RestoreSourceUrls");
@@ -63,6 +64,7 @@ public sealed class CalendarDataUiTests
                 Assert.Equal(new CalendarUpdateOptions().LunarUrl,lunar.Text);
                 Assert.True(urlLock.IsChecked);Assert.True(holidays.IsReadOnly);Assert.True(lunar.IsReadOnly);
                 Assert.True(vm.Enabled);Assert.Equal("手動更新",vm.Frequency);
+                Assert.Contains("不會定期更新",vm.FrequencyDescription);
                 Assert.Equal(customOptions,(await calendar.GetAsync()).Options);Assert.Equal(0,fixture.Source.Calls);
                 await vm.SaveCommand.ExecuteAsync(null);
                 Assert.True((await calendar.GetAsync()).Options.Enabled);Assert.Equal("Manual",(await calendar.GetAsync()).Options.Frequency);
@@ -74,7 +76,25 @@ public sealed class CalendarDataUiTests
                 {
                     AdaptiveBrushExtension.Apply(mode);window.UpdateLayout();Find<ScrollViewer>(view)!.ScrollToBottom();await Task.Delay(180);await Dispatcher.Yield(DispatcherPriority.ApplicationIdle);Capture(window,mode?"calendar-data-dark":"calendar-data-light");
                 }
-                window.Width=1050;window.Height=700;window.UpdateLayout();Capture(window,"calendar-data-small");
+                var settingsScroll=(ScrollViewer)view.FindName("CalendarSettingsScroll");
+                var save=(Button)Find<AdminView>(window)!.FindName("SaveDraftButton");
+                foreach(var size in new[]{new Size(1050,680),new Size(1440,1000)})
+                {
+                    window.Width=size.Width;window.Height=size.Height;AdaptiveBrushExtension.Apply(false);
+                    settingsScroll.ScrollToTop();window.UpdateLayout();await Dispatcher.Yield(DispatcherPriority.ApplicationIdle);
+                    Assert.True(frequencies.ActualWidth<view.ActualWidth/2,"Frequency choices should not stretch across the page.");
+                    Assert.True(settingsScroll.ActualHeight>=160);
+                    var footerPosition=save.TransformToAncestor(window).Transform(new Point());
+                    settingsScroll.ScrollToEnd();await Dispatcher.Yield(DispatcherPriority.ApplicationIdle);
+                    Assert.Equal(footerPosition,save.TransformToAncestor(window).Transform(new Point()));
+                    settingsScroll.ScrollToTop();await Dispatcher.Yield(DispatcherPriority.ApplicationIdle);
+                    foreach(var frequency in vm.Frequencies)
+                    {
+                        frequencies.SelectedItem=frequency;window.UpdateLayout();await Task.Delay(180);
+                        Assert.Equal(frequency,vm.Frequency);
+                    }
+                    Capture(window,$"calendar-spacing-{size.Width}x{size.Height}");
+                }
             }
             finally{AdaptiveBrushExtension.Apply(false);window.ForceClose();}
         });

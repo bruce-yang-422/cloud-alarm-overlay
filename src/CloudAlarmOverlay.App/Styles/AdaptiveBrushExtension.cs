@@ -1,4 +1,4 @@
-using System.Windows;
+﻿using System.Windows;
 using System.Windows.Markup;
 using System.Windows.Media;
 using System.Windows.Data;
@@ -40,10 +40,24 @@ public sealed class AdaptiveBrushExtension(string color) : MarkupExtension
     }
     private static Color Resolve(string value)
     {
+        // Neutral workspace surfaces keep navigation, content and semantic accents distinct.
+        string? workspaceColor=value switch
+        {
+            "WorkspaceSidebar" => dark ? "#202226" : "#F4F5F7",
+            "WorkspaceSurface" => dark ? "#292C31" : "#FFFFFF",
+            "WorkspaceHover" => dark ? "#33373D" : "#E9EBEF",
+            "WorkspaceSelected" => dark ? "#3B4048" : "#FFFFFF",
+            "WorkspaceBorder" => dark ? "#444951" : "#E1E4E8",
+            "WorkspaceText" => dark ? "#F1F3F5" : "#20242B",
+            "WorkspaceMuted" => dark ? "#B6BDC8" : "#626B78",
+            _ => null
+        };
+        if(workspaceColor is not null)return (Color)ColorConverter.ConvertFromString(workspaceColor);
         // Countdown state colors retain their meaning in every color style.
         // Explicit dark surfaces avoid flattening every pale tint into the same navy.
         string? countdownColor = value switch
         {
+            "CalendarHolidayText" => dark ? "#FF9FA8" : "#C43C45",
             "CountdownCalmSurface" => dark ? "#20364F" : "#EFF6FF",
             "CountdownCalmAccent" => dark ? "#90C4FF" : "#205AB0",
             "CountdownSoonSurface" => dark ? "#403326" : "#FFF5E8",

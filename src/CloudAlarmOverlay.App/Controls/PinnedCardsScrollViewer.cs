@@ -19,8 +19,8 @@ public sealed class PinnedCardHeightConverter : IMultiValueConverter
     public object Convert(object[] values, Type targetType, object parameter, CultureInfo culture)
     {
         var viewport = values[0] is double height && double.IsFinite(height) ? height : 0;
-        var count = values[1] is int total ? total : 0;
-        return Math.Max(PinnedCardsScrollViewer.MinimumCardHeight, viewport / Math.Clamp(count, 1, 2));
+        // Keep a single pinned item at the same scale as a pair.
+        return Math.Max(PinnedCardsScrollViewer.MinimumCardHeight, viewport / 2);
     }
     public object[] ConvertBack(object value, Type[] targetTypes, object parameter, CultureInfo culture)
         => throw new NotSupportedException();
