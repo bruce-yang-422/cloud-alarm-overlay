@@ -11,7 +11,7 @@
 
 Cloud Alarm Overlay 是常駐 Windows 系統匣的桌面提醒程式，將個人任務、團隊通知、專注計時與歷史紀錄放在同一個地方。你可以安排本機任務，也可以從公開的 Google Sheets CSV 同步公司或團隊任務；提醒、確認與操作紀錄儲存在這台電腦。
 
-**[下載 v1.4.0 Windows 版](https://github.com/bruce-yang-422/cloud-alarm-overlay/releases/download/v1.4.0/CloudAlarmOverlay-v1.4.0-Setup-x64.exe)** · [程式介紹](https://remind.stack-base.com/) · [v1.4.0 改版說明](https://github.com/bruce-yang-422/cloud-alarm-overlay/releases/tag/v1.4.0)
+**[下載 v1.4.1 Windows 版](https://github.com/bruce-yang-422/cloud-alarm-overlay/releases/download/v1.4.1/CloudAlarmOverlay-v1.4.1-Setup-x64.exe)** · [程式介紹](https://remind.stack-base.com/) · [v1.4.1 改版說明](https://github.com/bruce-yang-422/cloud-alarm-overlay/releases/tag/v1.4.1)
 
 ## 主要功能
 
@@ -27,9 +27,13 @@ Cloud Alarm Overlay 是常駐 Windows 系統匣的桌面提醒程式，將個人
 - **管理者專區**：設定同步來源、通知政策、開機啟動與結束程式密碼保護，查看系統／稽核紀錄，執行備份與還原。
 - **系統匣常駐**：關閉主視窗後仍持續執行提醒；從系統匣選單可重新開啟或結束程式。
 
+### v1.4.1 修正
+
+**v1.4.1 已於 2026-10-02 發布。** 修正在全新電腦首次啟動時，「設定這台電腦」畫面跳出「啟動失敗：Index was outside the bounds of the array.」而無法開啟程式的問題。v1.4.0 首次設定失敗的電腦直接安裝本版即可，無須清除資料。完整說明見 [v1.4.1 發布說明](docs/v1.4.1發布說明.md)。
+
 ### v1.4.0 更新重點
 
-**v1.4.0 已於 2026-09-30 發布。** 完整變更見 [v1.4.0 發布說明](docs/v1.4.0發布說明.md) 或 [GitHub 改版說明](https://github.com/bruce-yang-422/cloud-alarm-overlay/releases/tag/v1.4.0)。
+**v1.4.0 已於 2026-09-30 發布。** 完整變更見 [GitHub 改版說明](https://github.com/bruce-yang-422/cloud-alarm-overlay/releases/tag/v1.4.0)。
 
 - **任務月曆與跨日活動**：「我的任務」可切換清單／月曆，日期格顯示農曆、假日與節氣，可在設定選擇每週起始日。活動期間與提醒時間分開設定，跨日活動以橫條跨越多天；每天或每個工作日的固定任務集中在右側「當日工作」。選取日期以圓角淡色框標示，按「今天」會自動捲動；右側只列當日項目，雙擊活動即開啟詳細資料，可直接編輯或複製為本機活動。
 - **氣象署發布資訊**：首頁依儲存的天氣地點篩選生效中的地震報告、颱風及其他氣象警特報，以小型圖示呈現；滑過查看符合範圍與警戒等級，點擊前往官方網站。每五分鐘更新，無須 API 金鑰；地震資訊是已發布報告。詳見[氣象署警特報](docs/氣象署警特報.md)。
@@ -129,15 +133,15 @@ Cloud Alarm Overlay 是常駐 Windows 系統匣的桌面提醒程式，將個人
 
 ## 下載、安裝與升級
 
-目前版本為 **v1.4.0**：[下載 CloudAlarmOverlay-v1.4.0-Setup-x64.exe](https://github.com/bruce-yang-422/cloud-alarm-overlay/releases/download/v1.4.0/CloudAlarmOverlay-v1.4.0-Setup-x64.exe) · [改版說明](https://github.com/bruce-yang-422/cloud-alarm-overlay/releases/tag/v1.4.0)。安裝檔大小為 61,705,527 bytes，SHA-256：
+目前版本為 **v1.4.1**：[下載 CloudAlarmOverlay-v1.4.1-Setup-x64.exe](https://github.com/bruce-yang-422/cloud-alarm-overlay/releases/download/v1.4.1/CloudAlarmOverlay-v1.4.1-Setup-x64.exe) · [改版說明](https://github.com/bruce-yang-422/cloud-alarm-overlay/releases/tag/v1.4.1)。安裝檔大小為 61,704,497 bytes，SHA-256：
 
 ```text
-d35f24ec2faa57d70adedc6f99e6b2231ece5a5957cfdb1ffa926e743cd36152
+dde5070d4b210c17b44cde75b991cf9a9af4510056cc68ac789fa38c44899ec3
 ```
 
 執行安裝檔，依繁體中文安裝精靈完成設定，再從開始功能表啟動程式。
 
-已安裝 **v1.0.0～v1.3.0** 時，皆可直接覆蓋升級至 v1.4.0，**不必先移除或逐版安裝**；首次啟動會遷移本機資料庫，保留既有任務、設定與歷史資料。建議先建立本機備份並儲存正在編輯的內容。
+已安裝 **v1.0.0～v1.4.0** 時，皆可直接覆蓋升級至 v1.4.1，**不必先移除或逐版安裝**；首次啟動會遷移本機資料庫，保留既有任務、設定與歷史資料。建議先建立本機備份並儲存正在編輯的內容。
 
 自 v1.2.0 起，安裝器會自動關閉舊程式：按下「安裝」後，直接強制結束本次安裝目錄的舊版，不需要結束密碼。請先儲存編輯內容；無法關閉時會停止安裝並顯示原因。
 
@@ -219,10 +223,10 @@ dotnet test CloudAlarmOverlay.sln --no-build
 
 ### 製作下一版安裝包
 
-目前已發布版本為 **1.4.0**。下一版請先增加版本號並同步更新 [Directory.Build.props](Directory.Build.props)，例如：
+目前已發布版本為 **1.4.1**。下一版請先增加版本號並同步更新 [Directory.Build.props](Directory.Build.props)，例如：
 
 ```powershell
-.\installer\build-installer.ps1 -Version 1.4.1
+.\installer\build-installer.ps1 -Version 1.4.2
 ```
 
 此指令會先執行 self-contained 發布，再以 Inno Setup 封裝。需要指定編譯器時可加上 `-Iscc '完整的 ISCC.exe 路徑'`。後續更新須增加版本號，請勿覆蓋已發布的安裝檔；完成上傳並核對 SHA-256 後，再更新 `version.json`。
