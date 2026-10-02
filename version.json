@@ -1,6 +1,6 @@
 {
-  "latestVersion": "1.4.0",
-  "downloadUrl": "https://github.com/bruce-yang-422/cloud-alarm-overlay/releases/download/v1.4.0/CloudAlarmOverlay-v1.4.0-Setup-x64.exe",
-  "sha256": "d35f24ec2faa57d70adedc6f99e6b2231ece5a5957cfdb1ffa926e743cd36152",
-  "releaseNote": "## 任務月曆與跨日活動\n\n- 「我的任務」可切換**清單／月曆**，日期格顯示農曆、假日與節氣，每週起始日可在設定調整。\n- 活動可設定**開始與結束日期**，跨週、跨月接續顯示；活動期間與提醒時間分開設定。\n- 右側「當日工作」列出當天活動與日常任務，雙擊即可查看詳細資料、編輯或複製為本機活動。\n\n## 健康提醒與氣象資訊\n\n- **喝水、久坐、螢幕休息、伸展**四項提醒，預設關閉，可設定間隔、時段與工作日，並配合番茄鐘休息。\n- 首頁依所在地顯示生效中的**氣象署警特報與地震報告**，點擊查看官方資訊。\n\n## 介面改善\n\n- 首頁重新規劃為下一個提醒、今日進度、重要追蹤與需要處理的問題。\n- 個人設定與管理者專區重新分類；軟體更新說明支援 Markdown，更容易閱讀。\n\n## 升級須知\n\nv1.3.0 可直接覆蓋升級，保留既有任務、設定與歷史。**升級前請先備份，並儲存正在編輯的內容。** 新版備份格式為第 4 版，請以 v1.4.0 還原。Google 帳號整合尚未對所有使用者開放。\n\n[查看完整改版說明](https://github.com/bruce-yang-422/cloud-alarm-overlay/releases/tag/v1.4.0)"
+  "latestVersion": "1.4.1",
+  "downloadUrl": "https://github.com/bruce-yang-422/cloud-alarm-overlay/releases/download/v1.4.1/CloudAlarmOverlay-v1.4.1-Setup-x64.exe",
+  "sha256": "dde5070d4b210c17b44cde75b991cf9a9af4510056cc68ac789fa38c44899ec3",
+  "releaseNote": "## 問題修正\n\n- 修正在**全新電腦首次啟動**時，「設定這台電腦」畫面跳出「啟動失敗：Index was outside the bounds of the array.」而無法開啟程式的問題。\n\n## 升級須知\n\nv1.4.0 或更早版本可直接覆蓋升級，保留既有任務、設定與歷史。v1.4.0 首次設定失敗的電腦，直接安裝本版即可，無須清除資料。\n\n[查看完整改版說明](https://github.com/bruce-yang-422/cloud-alarm-overlay/releases/tag/v1.4.1)"
 }

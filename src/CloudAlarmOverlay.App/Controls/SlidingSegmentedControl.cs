@@ -25,7 +25,8 @@ public sealed class SlidingSegmentedControl : ListBox
     private void PositionIndicator(bool animate)
     {
         if (rail is null || indicator is null) return;
-        if (ItemContainerGenerator.ContainerFromIndex(SelectedIndex) is not ListBoxItem item || item.ActualWidth <= 0)
+        // ContainerFromIndex(-1) throws IndexOutOfRangeException once containers are realized, so guard "no selection".
+        if (SelectedIndex < 0 || ItemContainerGenerator.ContainerFromIndex(SelectedIndex) is not ListBoxItem item || item.ActualWidth <= 0)
         { indicator.Visibility = Visibility.Hidden; return; }
         indicator.Visibility = Visibility.Visible;
         var point = item.TransformToAncestor(rail.TemplatedParent as FrameworkElement ?? this).Transform(new Point());

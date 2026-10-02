@@ -64,6 +64,30 @@ public sealed class UsageModeUiTests
             finally{window.ForceClose();}
         });
     }
+    [Fact]
+    public async Task First_setup_stays_open_without_selection_while_resizing()
+    {
+        await MilestoneOneTests.RunSta(async()=>
+        {
+            using var fixture=new Fixture();await fixture.Get<IDatabaseInitializer>().InitializeAsync();
+            var setup=new IdentityWindow(fixture.Get<IDeviceIdentityService>()){ShowActivated=false,ShowInTaskbar=false};
+            var selector=(SlidingSegmentedControl)setup.FindName("UsageModeSelector");
+            Exception? error=null;
+            setup.Loaded+=async(_,_)=>
+            {
+                try
+                {
+                    await Dispatcher.Yield(DispatcherPriority.ApplicationIdle);
+                    setup.Width-=60;setup.UpdateLayout();
+                    await Dispatcher.Yield(DispatcherPriority.ApplicationIdle);
+                    Assert.Equal(-1,selector.SelectedIndex);Assert.True(setup.IsVisible);
+                }
+                catch(Exception ex){error=ex;}
+                finally{setup.Close();}
+            };
+            setup.ShowDialog();if(error is not null)throw error;
+        });
+    }
     private static void Capture(Window window,string name)
     {
         var folder=Path.GetFullPath(Path.Combine(AppContext.BaseDirectory,"../../../../../artifacts/screenshots"));Directory.CreateDirectory(folder);

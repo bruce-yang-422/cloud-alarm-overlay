@@ -20,7 +20,7 @@ public partial class CountdownEditorWindow : Window
             choice.PropertyChanged += OnDraftChanged;
         Loaded += (_, _) =>
         {
-            if (DirectionSelector.ItemContainerGenerator.ContainerFromIndex(DirectionSelector.SelectedIndex) is UIElement selectedDirection)
+            if (DirectionSelector.SelectedIndex >= 0 && DirectionSelector.ItemContainerGenerator.ContainerFromIndex(DirectionSelector.SelectedIndex) is UIElement selectedDirection)
                 selectedDirection.Focus();
             else DirectionSelector.Focus();
             RefreshPreview(); ResizePreview();

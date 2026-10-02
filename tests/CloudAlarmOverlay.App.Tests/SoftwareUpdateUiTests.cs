@@ -38,11 +38,12 @@ public sealed class SoftwareUpdateUiTests
             window.Show();await vm.CheckUpdateAsync();window.UpdateLayout();
             var markdown=(CloudAlarmOverlay.App.Controls.MarkdownView)view.FindName("ReleaseNotes");
             Assert.Equal(23,markdown.Document.LineHeight);
-            Assert.True(markdown.Document.Blocks.OfType<Paragraph>().Count(p=>p.FontWeight==FontWeights.SemiBold)>=3);
-            Assert.True(markdown.Document.Blocks.OfType<System.Windows.Documents.List>().Count()>=3);
+            var headings=updates.Note.Split('\n').Count(line=>line.StartsWith("## "));Assert.True(headings>0);
+            Assert.True(markdown.Document.Blocks.OfType<Paragraph>().Count(p=>p.FontWeight==FontWeights.SemiBold)>=headings);
+            Assert.NotEmpty(markdown.Document.Blocks.OfType<System.Windows.Documents.List>());
             var link=markdown.Document.Blocks.OfType<Paragraph>().SelectMany(p=>p.Inlines.OfType<Hyperlink>()).Single();
             Assert.Equal("查看完整改版說明",new TextRange(link.ContentStart,link.ContentEnd).Text);
-            Assert.EndsWith("/releases/tag/v1.3.0",link.NavigateUri.AbsoluteUri);
+            Assert.EndsWith("/releases/tag/v"+manifest.RootElement.GetProperty("latestVersion").GetString(),link.NavigateUri.AbsoluteUri);
             Assert.InRange(markdown.ActualWidth,400,640);
             foreach(var dark in new[]{false,true})
             {
