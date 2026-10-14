@@ -61,7 +61,7 @@ public partial class AdminViewModel(AdminSession session,IAdminSettingsStore sto
         if(text is null)return false;
         var imported=AdminSettingsJson.Parse(text);
         session.RequireAdmin();
-        var labels=new Dictionary<string,string>{["SyncOptions"]="共用試算表來源與同步間隔",["UpdateManifestUrl"]="程式更新網址",["SyncLinksLocked"]="來源鎖定",["AllowUrgentSnooze"]="緊急提醒延後政策",["FlashMilliseconds"]="閃爍間隔與鎖定",["QuietPeriods"]="靜音時段與鎖定",["WeatherDefaultLocation"]="公司預設天氣地點",[LogRetentionPolicy.Key]="執行日誌保留天數"};
+        var labels=new Dictionary<string,string>{["SyncOptions"]="共用試算表來源與同步間隔",["UpdateManifestUrl"]="程式更新網址",["SyncLinksLocked"]="來源鎖定",["AllowUrgentSnooze"]="緊急提醒延後政策",["FlashMilliseconds"]="閃爍間隔與鎖定",["QuietPeriods"]="靜音時段與鎖定",[LogRetentionPolicy.Key]="執行日誌保留天數"};
         var preview=string.Join("\n",imported.Select(item=>"• "+labels.GetValueOrDefault(item.Key,item.Key)));
         if(!dialogs.ConfirmAdminAction("預覽管理設定匯入","將套用下列項目：\n\n"+preview+"\n\n未列出的設定維持原值。確認後套用到此電腦。","套用設定"))return false;
         session.RequireAdmin();
@@ -206,7 +206,7 @@ public partial class AdminViewModel(AdminSession session,IAdminSettingsStore sto
         try {await SavePoliciesAsync();}
         catch(Exception ex){Message=ex.Message;}
     }
-    public async Task SavePoliciesAsync(bool includeWeather=false)
+    public async Task SavePoliciesAsync()
     {
             session.RequireAdmin();
             if(FlashMilliseconds is <200 or >5000)throw new ArgumentException("閃爍間隔須為 200–5000 毫秒。");
@@ -214,11 +214,6 @@ public partial class AdminViewModel(AdminSession session,IAdminSettingsStore sto
                 new Setting{Key="AllowUrgentSnooze",Value=AllowUrgentSnooze?"true":"false",Locked=true},
                 new Setting{Key="FlashMilliseconds",Value=FlashMilliseconds.ToString(),Locked=LockFlash},
                 new Setting{Key="QuietPeriods",Value=(await settings.GetAsync("QuietPeriods"))?.Value??"[]",Locked=LockQuiet}];
-            if(includeWeather)
-            {
-                var location=preferences.Weather?.SelectedDistrict?.Location??throw new ArgumentException("請選擇公司預設天氣的縣市及鄉鎮市區。");
-                values.Add(new(){Key="WeatherDefaultLocation",Value=JsonSerializer.Serialize(location),Locked=true});
-            }
             session.RequireAdmin();await store.SaveAsync(values);
             await preferences.LoadAsync();await RefreshLogsAsync();Message="本機鎖定設定已儲存。";
     }

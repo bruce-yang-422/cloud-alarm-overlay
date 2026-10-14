@@ -4,7 +4,7 @@ using CommunityToolkit.Mvvm.Input;
 using CloudAlarmOverlay.Core.Models;
 using CloudAlarmOverlay.Core.Services;
 namespace CloudAlarmOverlay.App.ViewModels;
-public partial class WeatherViewModel(IWeatherService weather, CloudAlarmOverlay.Core.Repositories.IAdminSettingsStore admin,TimeProvider clock,CloudAlarmOverlay.App.Services.IBrowserLauncher? browser=null) : ObservableObject
+public partial class WeatherViewModel(IWeatherService weather, TimeProvider clock,CloudAlarmOverlay.App.Services.IBrowserLauncher? browser=null) : ObservableObject
 {
     public const string Attribution = "天氣資料來源：Open-Meteo.com（CC BY 4.0）";
     [ObservableProperty] private bool enabled = true;
@@ -55,7 +55,7 @@ public partial class WeatherViewModel(IWeatherService weather, CloudAlarmOverlay
     [ObservableProperty] private WeatherLocation? selectedLocation;
     [ObservableProperty] private string message = "";
     public bool Visible => weather.Options.Enabled;
-    public string LocationLabel => weather.EffectiveLocation is {} l ? "目前地點："+l.Name+(weather.Options.Location is null ? "（公司預設）" : "") : "尚未設定天氣地點";
+    public string LocationLabel => weather.EffectiveLocation is {} l ? "目前地點："+l.Name : "尚未設定天氣地點";
     public string Heading => weather.EffectiveLocation is {} l ? "區域天氣（" + l.Name + "）" : "區域天氣";
     public Uri ForecastUri => new(TaiwanWeatherLocations.All.FirstOrDefault(d => d.Location == weather.EffectiveLocation) is {} district
         ? "https://www.cwa.gov.tw/V8/C/W/Town/Town.html?TID=" + district.CwaTownId
@@ -146,16 +146,6 @@ public partial class WeatherViewModel(IWeatherService weather, CloudAlarmOverlay
     {
         try { if (SelectedCounty is not null && SelectedDistrict is null) throw new InvalidOperationException("請選擇鄉鎮市區。"); await weather.SaveAsync(new(Enabled, SelectedLocation)); Tick(); Message = "天氣設定已儲存。"; }
         catch (Exception ex) { Message = ex.Message; }
-    }
-    [RelayCommand] private async Task SaveCompanyDefaultAsync()
-    {
-        try
-        {
-            if(SelectedDistrict is null)throw new InvalidOperationException("請先選擇公司所在縣市及鄉鎮市區。");
-            await admin.SaveAsync([new Setting{Key="WeatherDefaultLocation",Value=System.Text.Json.JsonSerializer.Serialize(SelectedLocation),Locked=true}]);
-            await weather.SaveAsync(weather.Options); Tick(); Message="公司預設地點已儲存，個人地點仍優先。";
-        }
-        catch(Exception ex){Message=ex.Message;}
     }
     [RelayCommand] private async Task UseDefaultAsync()
     {

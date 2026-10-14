@@ -26,7 +26,6 @@ public partial class AdminView:UserControl
             drafts.Track(1,vm,nameof(vm.SheetAId),nameof(vm.TasksAGid),nameof(vm.HolidaysGid),nameof(vm.EmployeesGid),nameof(vm.LunarGid),nameof(vm.SheetBId),nameof(vm.TasksBGid),nameof(vm.IntervalSeconds));
             drafts.Track(2,vm.Admin.CalendarData,"Enabled","Frequency","HolidaysUrl","LunarUrl");
             drafts.Track(3,vm.Admin,"LockFlash","LockQuiet","AllowUrgentSnooze","FlashMilliseconds");
-            if(vm.Preferences.Weather is {} weather)drafts.Track(3,weather,"SelectedCounty","SelectedDistrict");
             drafts.Track(4,vm.Admin,"ExitPasswordRequired");
             drafts.Track(5,vm.Admin,"AutoStartEnabled");drafts.Track(5,vm.Preferences.Maintenance,"UpdateUrl");
             drafts.Track(8,vm.Admin,"LogRetentionDaysText");
@@ -116,7 +115,7 @@ public partial class AdminView:UserControl
             {
                 case 1:await vm.SaveAdminSourceDraftAsync();break;
                 case 2:await vm.Admin.CalendarData.SaveDraftAsync();break;
-                case 3:await vm.Admin.SavePoliciesAsync(vm.Preferences.Weather is {} weather&&drafts.IsDirty(3,weather));break;
+                case 3:await vm.Admin.SavePoliciesAsync();break;
                 default:await vm.Admin.SaveWorkspaceSectionAsync(page);break;
             }
             drafts.Accept(page);

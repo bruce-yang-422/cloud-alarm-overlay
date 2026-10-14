@@ -166,8 +166,9 @@
                     <TextBlock Text="{Binding LocationLabel}" Margin="0,0,0,8" />
                     <weatherViews:WeatherLocationPicker />
                     <WrapPanel>
-                      <Button Content="使用預設地點" Command="{Binding SelectDefaultCommand}" />
+                      <Button Content="清除地點" Command="{Binding SelectDefaultCommand}" />
                     </WrapPanel>
+                    <TextBlock Text="地點由這台電腦的使用者自行設定，按儲存變更後套用。清除地點後，首頁會提示選擇地點。" Style="{StaticResource WorkspaceMuted}" />
                     <TextBlock Text="天氣：Open-Meteo.com（CC BY 4.0）；行政區：內政部國土測繪中心" Style="{StaticResource WorkspaceMuted}" />
                     <Expander Header="資料來源與使用說明" Margin="0,12,0,0">
                       <StackPanel Margin="0,10,0,0">

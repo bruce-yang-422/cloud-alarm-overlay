@@ -40,8 +40,9 @@ public partial class MainWindow:Window
             if (Width == defaultWidth && Height == defaultHeight && WindowState == WindowState.Normal)
             {
                 var size = MainWindowSizing.ForWindow(handle);
-                MinWidth = Math.Min(MinWidth, size.Width);
-                MinHeight = Math.Min(MinHeight, size.Height);
+                // Leave room for native pixel rounding at fractional DPI scales.
+                MinWidth = Math.Min(MinWidth, Math.Floor(size.Width));
+                MinHeight = Math.Min(MinHeight, Math.Floor(size.Height));
                 Width = size.Width;
                 Height = size.Height;
             }

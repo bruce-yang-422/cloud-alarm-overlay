@@ -12,9 +12,10 @@ public static class MainWindowSizing
     {
         var preferredHeight = monitorHeightPixels switch
         {
-            // Cap only the startup preset at QHD size; manual resizing is unrestricted.
-            >= 1440 => 1280d,
-            >= 1200 => 1100d,
+            // A compact startup preset also suits ultrawide QHD monitors.
+            // Manual resizing is unrestricted.
+            >= 1440 => 1000d,
+            >= 1200 => 960d,
             _ => 960d
         };
         var height = Math.Min(preferredHeight, Math.Min(workAreaPixels.Height, workAreaPixels.Width / AspectRatio));

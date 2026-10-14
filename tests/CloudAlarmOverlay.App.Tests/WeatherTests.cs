@@ -20,7 +20,7 @@ public sealed class WeatherTests
     [Fact] public async Task Forecast_link_uses_effective_saved_location_and_falls_back_for_legacy_locations()
     {
         var settings=new Settings();var clock=new Clock();using var http=new HttpClient(new Handler());
-        using var weather=new WeatherService(settings,new(http),clock);var vm=new WeatherViewModel(weather,settings,clock);
+        using var weather=new WeatherService(settings,new(http),clock);var vm=new WeatherViewModel(weather,clock);
         var wugu=TaiwanWeatherLocations.All.Single(d=>d.Code=="65000150");
         await settings.SaveAsync(new Setting{Key="WeatherDefaultLocation",Value=System.Text.Json.JsonSerializer.Serialize(wugu.Location)});
         await vm.LoadAsync();Assert.EndsWith("TID=6501500",vm.ForecastUri.AbsoluteUri);
@@ -119,18 +119,23 @@ public sealed class WeatherTests
         await Assert.ThrowsAnyAsync<OperationCanceledException>(()=>client.FetchAsync(Taipei,DateTimeOffset.UtcNow,default));
         Assert.InRange(watch.Elapsed.TotalSeconds,9,15);
     }
-    [Fact] public async Task Company_default_is_used_until_a_personal_location_is_saved()
+    [Fact] public async Task Legacy_company_location_migrates_once_and_clearing_survives_restart()
     {
         using var handler=new Handler();using var http=new HttpClient(handler);var settings=new Settings();
         await settings.SaveAsync(new Setting{Key="WeatherDefaultLocation",Value=JsonSerializer.Serialize(Taipei)});
         using var weather=new WeatherService(settings,new(http),new Clock());await weather.LoadAsync();Assert.Equal(Taipei,weather.EffectiveLocation);
+        Assert.Equal(Taipei,weather.Options.Location);
+        await settings.SaveAsync(new Setting{Key="WeatherDefaultLocation",Value=JsonSerializer.Serialize(new WeatherLocation("台中",24.1,120.7))});
+        await weather.LoadAsync();Assert.Equal(Taipei,weather.EffectiveLocation);
         var personal=new WeatherLocation("高雄",22.6,120.3);await weather.SaveAsync(new(true,personal));Assert.Equal(personal,weather.EffectiveLocation);
-        await weather.SaveAsync(new(true));Assert.Equal(Taipei,weather.EffectiveLocation);
+        await weather.SaveAsync(new(true));Assert.Null(weather.EffectiveLocation);
+        using var restarted=new WeatherService(settings,new(http),new Clock());
+        await restarted.LoadAsync();Assert.Null(restarted.EffectiveLocation);Assert.Null(restarted.Options.Location);
     }
     [Fact] public async Task Expired_cache_is_hidden_and_unconfigured_weather_explains_location_settings()
     {
         using var handler=new Handler();using var http=new HttpClient(handler);var settings=new Settings();var clock=new Clock();
-        using var weather=new WeatherService(settings,new(http),clock);var vm=new WeatherViewModel(weather,settings,clock);
+        using var weather=new WeatherService(settings,new(http),clock);var vm=new WeatherViewModel(weather,clock);
         await vm.LoadAsync();Assert.Equal("請至設定 → 首頁與天氣選擇地點",vm.Current);Assert.Equal("https://www.cwa.gov.tw/V8/C/W/Town/Town.html",vm.ForecastUri.AbsoluteUri);
         await weather.SaveAsync(new(true,Taipei));await weather.RefreshAsync();
         Assert.Contains("29.4",vm.Current);Assert.Contains("0.2 mm",vm.Current);Assert.Contains("60%",vm.Tomorrow);
@@ -158,7 +163,7 @@ public sealed class WeatherTests
     [Fact] public async Task County_district_selection_saves_offline_and_clears_previous_county_district()
     {
         using var handler=new Handler();using var http=new HttpClient(handler);var settings=new Settings();var clock=new Clock();
-        using var weather=new WeatherService(settings,new(http),clock);var vm=new WeatherViewModel(weather,settings,clock);
+        using var weather=new WeatherService(settings,new(http),clock);var vm=new WeatherViewModel(weather,clock);
         await vm.LoadAsync();vm.SelectedCounty="新北市";
         vm.SelectedDistrict=vm.Districts.Single(d=>d.District=="板橋區");
         await vm.SaveCommand.ExecuteAsync(null);
@@ -169,17 +174,17 @@ public sealed class WeatherTests
         await vm.SaveCommand.ExecuteAsync(null);Assert.Contains("請選擇鄉鎮市區",vm.Message);
         Assert.Equal("新北市／板橋區",weather.Options.Location.Name);
         vm.SelectedDistrict=vm.Districts.Single(d=>d.District=="中正區");
-        await vm.SaveCompanyDefaultCommand.ExecuteAsync(null);
+        await vm.SaveCommand.ExecuteAsync(null);
         await vm.UseDefaultCommand.ExecuteAsync(null);
         Assert.Null(weather.Options.Location);Assert.Null(vm.SelectedCounty);
-        Assert.Equal("臺北市／中正區",weather.EffectiveLocation!.Name);Assert.Equal(0,handler.Calls);
+        Assert.Null(weather.EffectiveLocation);Assert.Equal(0,handler.Calls);
     }
     [Fact] public async Task Legacy_location_is_preserved_until_a_district_is_selected()
     {
         using var handler=new Handler();using var http=new HttpClient(handler);var settings=new Settings();var clock=new Clock();
         using var weather=new WeatherService(settings,new(http),clock);
         var old=new WeatherLocation("新北市 · 臺北市 · 台灣",25.01,121.46);
-        await weather.SaveAsync(new(true,old));var vm=new WeatherViewModel(weather,settings,clock);
+        await weather.SaveAsync(new(true,old));var vm=new WeatherViewModel(weather,clock);
         await vm.LoadAsync();Assert.Null(vm.SelectedCounty);Assert.Equal(old,vm.SelectedLocation);
         vm.Enabled=false;await vm.SaveCommand.ExecuteAsync(null);Assert.Equal(old,weather.Options.Location);
         Assert.False(weather.Options.Enabled);Assert.Equal(0,handler.Calls);
@@ -204,7 +209,7 @@ public sealed class WeatherTests
     [Fact] public async Task Shared_postal_codes_and_duplicate_names_require_explicit_selection_without_network()
     {
         using var handler=new Handler();using var http=new HttpClient(handler);var settings=new Settings();var clock=new Clock();
-        using var weather=new WeatherService(settings,new(http),clock);var vm=new WeatherViewModel(weather,settings,clock);
+        using var weather=new WeatherService(settings,new(http),clock);var vm=new WeatherViewModel(weather,clock);
         await vm.LoadAsync();vm.LocationQuery="300";
         Assert.Equal(3,vm.SearchResults.Count);Assert.All(vm.SearchResults,d=>Assert.Equal("新竹市",d.County));
         vm.ChooseUniqueLocationCommand.Execute(null);Assert.Null(vm.SelectedDistrict);
@@ -222,7 +227,7 @@ public sealed class WeatherTests
     [Fact] public Task Picker_bindings_keep_search_and_two_level_selection_in_sync()=>MilestoneOneTests.RunSta(async()=>
     {
         using var handler=new Handler();using var http=new HttpClient(handler);var settings=new Settings();var clock=new Clock();
-        using var weather=new WeatherService(settings,new(http),clock);var vm=new WeatherViewModel(weather,settings,clock);await vm.LoadAsync();
+        using var weather=new WeatherService(settings,new(http),clock);var vm=new WeatherViewModel(weather,clock);await vm.LoadAsync();
         var picker=new CloudAlarmOverlay.App.Views.WeatherLocationPicker{DataContext=vm};
         var window=new System.Windows.Window{Content=picker,Width=620,Height=620,ShowInTaskbar=false,ShowActivated=false};
         window.Resources.MergedDictionaries.Add(new System.Windows.ResourceDictionary{Source=new Uri("/CloudAlarmOverlay.App;component/Styles/LightTheme.xaml",UriKind.Relative)});
@@ -280,7 +285,7 @@ public sealed class WeatherTests
         using var handler=new Handler();using var http=new HttpClient(handler);var settings=new Settings();var clock=new Clock();
         using var weather=new WeatherService(settings,new(http),clock);
         var old=new WeatherLocation("新北市／烏來區",24.783433,121.520235);await weather.SaveAsync(new(true,old));
-        var vm=new WeatherViewModel(weather,settings,clock);await vm.LoadAsync();
+        var vm=new WeatherViewModel(weather,clock);await vm.LoadAsync();
         Assert.Equal("烏來區",vm.SelectedDistrict!.District);Assert.Equal(old,weather.Options.Location);
         await vm.SaveCommand.ExecuteAsync(null);Assert.Equal(vm.SelectedDistrict.Location,weather.Options.Location);
         Assert.NotEqual(old,weather.Options.Location);Assert.Equal(0,handler.Calls);

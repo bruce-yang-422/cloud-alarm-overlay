@@ -320,13 +320,6 @@
                         </StackPanel>
                       </Border>
                       <TextBlock Text="音效開關仍由使用者自行調整。" Style="{StaticResource AdminDescription}" />
-                      <Border Style="{StaticResource AdminCard}">
-                        <StackPanel DataContext="{Binding Preferences.Weather}">
-                          <TextBlock Text="公司預設天氣地點" Style="{StaticResource WorkspaceSection}" />
-                          <views:WeatherLocationPicker />
-                          <TextBlock Text="選擇地點後，按下方儲存變更套用。" Style="{StaticResource AdminResult}" />
-                        </StackPanel>
-                      </Border>
                     </StackPanel>
                   </StackPanel>
                 </ScrollViewer>
@@ -442,7 +435,7 @@
                     <Border Style="{StaticResource AdminCard}">
                       <StackPanel>
                         <TextBlock Text="管理設定 JSON" FontWeight="SemiBold" />
-                        <TextBlock Text="共用來源、通知政策、更新網址、日誌保留與公司預設天氣。匯入會先驗證並預覽，再確認套用。" Style="{StaticResource AdminResult}" />
+                        <TextBlock Text="共用來源、通知政策、更新網址與日誌保留。匯入會先驗證並預覽，再確認套用。天氣地點由使用者於設定頁調整。" Style="{StaticResource AdminResult}" />
                         <WrapPanel Margin="0,16,0,0">
                           <Button Content="匯入並預覽…" Command="{Binding ImportAdminSettingsCommand}" />
                           <Button Content="匯出已儲存設定" Command="{Binding Admin.ExportCurrentSettingsCommand}" />

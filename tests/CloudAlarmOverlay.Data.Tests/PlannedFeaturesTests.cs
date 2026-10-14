@@ -239,7 +239,7 @@ public sealed class PlannedFeaturesTests : IDisposable, IAppPaths
         await store.SaveAsync(imported);
         var settings=Get<ISettingsRepository>();
         Assert.Equal("false",(await settings.GetAsync("SyncLinksLocked"))!.Value);
-        Assert.Contains("板橋",System.Text.Json.JsonSerializer.Deserialize<WeatherLocation>((await settings.GetAsync("WeatherDefaultLocation"))!.Value!)!.Name);
+        Assert.Null(await settings.GetAsync("WeatherDefaultLocation"));
         var before=(await settings.GetAsync("SyncOptions"))!.Value;
         var audit=await Get<Database>().QueryAsync<string>("SELECT NewValue FROM AuditLogs WHERE Action='SyncOptions'");
         Assert.Equal("已設定",Assert.Single(audit));
@@ -271,7 +271,7 @@ public sealed class PlannedFeaturesTests : IDisposable, IAppPaths
             new(){Key="AllowUrgentSnooze",Value="false"},
             new(){Key="SyncLinksLocked",Value="true"}]);
         var json=await AdminSettingsJson.ExportAsync(settings);
-        Assert.Contains("WeatherDefaultDistrictCode",json);
+        Assert.DoesNotContain("WeatherDefault",json);
         Assert.DoesNotContain("StartTime",json);Assert.DoesNotContain("Password",json);Assert.DoesNotContain("12345",json);
         var roundtrip=AdminSettingsJson.Parse(json);
         Assert.Equal("true",roundtrip.Single(s=>s.Key=="SyncLinksLocked").Value);
@@ -279,9 +279,9 @@ public sealed class PlannedFeaturesTests : IDisposable, IAppPaths
         Assert.True(roundtrip.Single(s=>s.Key=="QuietPeriods").Locked);
         Assert.Equal(await settings.GetAsync("FlashMilliseconds"),roundtrip.Single(s=>s.Key=="FlashMilliseconds"));
         var legacy=new WeatherLocation("自訂舊地點",25.01,121.01);
-        await Get<IAdminSettingsStore>().SaveAsync([new(){Key="WeatherDefaultLocation",Value=System.Text.Json.JsonSerializer.Serialize(legacy)}]);
-        var legacyExport=AdminSettingsJson.Parse(await AdminSettingsJson.ExportAsync(settings));
-        Assert.Equal(legacy,System.Text.Json.JsonSerializer.Deserialize<WeatherLocation>(legacyExport.Single(s=>s.Key=="WeatherDefaultLocation").Value!));
+        await Assert.ThrowsAsync<ArgumentException>(()=>Get<IAdminSettingsStore>().SaveAsync([new(){Key="WeatherDefaultLocation",Value=System.Text.Json.JsonSerializer.Serialize(legacy)}]));
+        var oldFile="{\"FormatVersion\":1,\"AllowUrgentSnooze\":false,\"WeatherDefaultDistrictCode\":\"65000010\"}";
+        Assert.DoesNotContain(AdminSettingsJson.Parse(oldFile),s=>s.Key=="WeatherDefaultLocation");
     }
     public void Dispose(){services.Dispose();Microsoft.Data.Sqlite.SqliteConnection.ClearAllPools();if(Directory.Exists(DataDirectory))Directory.Delete(DataDirectory,true);}
 }

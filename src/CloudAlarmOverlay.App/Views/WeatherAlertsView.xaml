@@ -25,8 +25,10 @@
     </DataTemplate></ItemsControl.ItemTemplate>
    </ItemsControl>
   </StackPanel>
-  <Button Content="{Binding AlertStatus}" Command="{Binding OpenAlertOverviewCommand}" ToolTip="{Binding AlertStatusDetails}"
+  <Button AutomationProperties.Name="{Binding AlertStatus}" Command="{Binding OpenAlertOverviewCommand}" ToolTip="{Binding AlertStatusDetails}"
    FontSize="11" Margin="8,2,0,4" Padding="0,2" MinHeight="0" MinWidth="0" BorderThickness="0" Background="Transparent"
-   HorizontalAlignment="Left" Foreground="{adaptive:AdaptiveBrush WorkspaceMuted}" Visibility="{Binding HasAlertStatus,Converter={StaticResource VisibleIf}}"/>
+   HorizontalAlignment="Left" Foreground="{adaptive:AdaptiveBrush WorkspaceMuted}" Visibility="{Binding HasAlertStatus,Converter={StaticResource VisibleIf}}">
+   <TextBlock Text="{Binding AlertStatus}" TextWrapping="Wrap" Foreground="{Binding Foreground,RelativeSource={RelativeSource AncestorType=Button}}"/>
+  </Button>
  </StackPanel>
 </UserControl>

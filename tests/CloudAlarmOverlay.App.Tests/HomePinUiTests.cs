@@ -29,6 +29,20 @@ public sealed class HomePinUiTests
         try
         {
             window.Show();
+            await fixture.Get<IWeatherService>().SaveAsync(new(true,TaiwanWeatherLocations.All.Single(d=>d.Code=="65000150").Location));
+            main.Preferences.Weather!.Tick();
+            window.Width=1400;await Dispatcher.Yield(DispatcherPriority.ApplicationIdle);window.UpdateLayout();
+            var forecast=(Button)window.FindName("WeatherCard");
+            var alerts=(WeatherAlertsView)window.FindName("HomeWeatherAlerts");
+            Assert.True(alerts.IsVisible);Assert.True(alerts.ActualWidth>0);
+            var alertButton=Assert.Single(Descendants(alerts).OfType<Button>(),b=>b.IsVisible);
+            Assert.Equal(main.Preferences.Weather.AlertStatus,((TextBlock)alertButton.Content).Text);
+            Assert.True(alertButton.ActualWidth>0 && alertButton.ActualHeight>0,$"alerts={alerts.ActualWidth}x{alerts.ActualHeight}, desired={alerts.DesiredSize}; button={alertButton.ActualWidth}x{alertButton.ActualHeight}, desired={alertButton.DesiredSize}, content={alertButton.Content}");
+            var forecastPosition=forecast.TranslatePoint(new Point(),window);
+            var alertPosition=alerts.TranslatePoint(new Point(),window);
+            Assert.True(alertPosition.X>=forecastPosition.X+forecast.ActualWidth);
+            Assert.InRange(Math.Abs(alertPosition.Y-forecastPosition.Y),0,1);
+            Capture(window,"home-weather-alerts-right");
             main.ConnectionGroups=[];main.LocalScheduleHealth=new("正常","執行中","Healthy");
             var attention=(Border)window.FindName("HomeAttentionCard");
             var healthCard=(Border)window.FindName("HomeHealthCard");
@@ -54,6 +68,8 @@ public sealed class HomePinUiTests
             {
                 window.Width=width;AdaptiveBrushExtension.Apply(dark,ThemeColorStyle.Default);
                 await Dispatcher.Yield(DispatcherPriority.ApplicationIdle);window.UpdateLayout();
+                alertPosition=alerts.TranslatePoint(new Point(),window);
+                Assert.True(alertPosition.X+alerts.ActualWidth<=window.ActualWidth);
                 scroll.ScrollToEnd();await Dispatcher.Yield(DispatcherPriority.ApplicationIdle);window.UpdateLayout();
                 foreach(var card in new[]{healthCard,attention})foreach(var element in Descendants(card).OfType<FrameworkElement>().Where(e=>e is Button or TextBlock && e.IsVisible))
                 {
@@ -182,7 +198,13 @@ public sealed class HomePinUiTests
             await main.ToggleTaskPinCommand.ExecuteAsync(third);await Dispatcher.Yield(DispatcherPriority.ApplicationIdle);
             Assert.False(third.IsPinned);Assert.Contains("最多釘選 2",main.Status);
             Assert.Equal("釘選首頁",FindButton(third).ToolTip);
-            await main.ToggleTaskPinCommand.ExecuteAsync(row);await Dispatcher.Yield(DispatcherPriority.ApplicationIdle);await Task.Delay(260);
+            await main.ToggleTaskPinCommand.ExecuteAsync(row);await Dispatcher.Yield(DispatcherPriority.ApplicationIdle);
+            // Rendering can start the animation after the command completes.
+            // Wait for the final state instead of assuming a fixed frame schedule.
+            for(var attempt=0;attempt<40 && Math.Abs(((RotateTransform)glyph.RenderTransform).Angle)>0.01;attempt++)
+            {
+                await Task.Delay(50);await Dispatcher.Yield(DispatcherPriority.ApplicationIdle);
+            }
             Assert.Equal("釘選首頁",button.ToolTip);Assert.Equal(0,((RotateTransform)glyph.RenderTransform).Angle,1);
         }
         finally{window.ForceClose();AdaptiveBrushExtension.Apply(false,ThemeColorStyle.Default);}

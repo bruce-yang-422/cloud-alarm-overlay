@@ -75,7 +75,7 @@ public sealed class WeatherAlertTests
         using var handler = new Handler(); using var http = new HttpClient(handler);
         var clock = new Clock(); var settings = new Settings();
         using var weather = new WeatherService(settings, new(http), clock, new(http));
-        var browser = new Browser(); var vm = new WeatherViewModel(weather, settings, clock, browser);
+        var browser = new Browser(); var vm = new WeatherViewModel(weather, clock, browser);
         await weather.RefreshAsync(); Assert.Equal(0, handler.AlertCalls);
         await weather.SaveAsync(new(true, new("新北市／五股區", 25.08, 121.43)));
         await weather.RefreshAsync(); vm.Tick();
@@ -125,7 +125,7 @@ public sealed class WeatherAlertTests
         using var http = new HttpClient(handler); var settings = new Settings(); var clock = new Clock();
         using var weather = new WeatherService(settings, new(http), clock, new(http));
         await weather.SaveAsync(new(true, new("新北市", 25, 121))); await weather.RefreshAsync();
-        var vm = new WeatherViewModel(weather, settings, clock); vm.Tick();
+        var vm = new WeatherViewModel(weather, clock); vm.Tick();
         var view = new WeatherAlertsView { DataContext = vm, Width = 260 };
         var window = new Window { Content = view, Width = 300, Height = 210, ShowInTaskbar = false, ShowActivated = false };
         window.Resources.MergedDictionaries.Add(new ResourceDictionary { Source = new Uri("/CloudAlarmOverlay.App;component/Styles/LightTheme.xaml", UriKind.Relative) });
@@ -238,7 +238,7 @@ public sealed class WeatherAlertTests
         var settings = new Settings(); var clock = new Clock();
         using var weather = new WeatherService(settings, new(http), clock, new(http));
         await weather.SaveAsync(new(true, Wugu)); await weather.RefreshAsync();
-        var vm = new WeatherViewModel(weather, settings, clock); await vm.LoadAsync();
+        var vm = new WeatherViewModel(weather, clock); await vm.LoadAsync();
         Assert.Empty(vm.AlertBadges); Assert.Empty(vm.AlertStatus); Assert.Contains("五股區", vm.AlertHeading);
         vm.SelectedCounty = "新北市"; vm.SelectedDistrict = vm.Districts.Single(d => d.District == "新店區"); vm.Tick();
         Assert.Empty(vm.AlertBadges); // Merely editing the form must not change the home location.

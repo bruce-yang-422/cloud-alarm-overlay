@@ -1,6 +1,6 @@
 {
-  "latestVersion": "1.4.1",
-  "downloadUrl": "https://github.com/bruce-yang-422/cloud-alarm-overlay/releases/download/v1.4.1/CloudAlarmOverlay-v1.4.1-Setup-x64.exe",
-  "sha256": "dde5070d4b210c17b44cde75b991cf9a9af4510056cc68ac789fa38c44899ec3",
-  "releaseNote": "## 問題修正\n\n- 修正在**全新電腦首次啟動**時，「設定這台電腦」畫面跳出「啟動失敗：Index was outside the bounds of the array.」而無法開啟程式的問題。\n\n## 升級須知\n\nv1.4.0 或更早版本可直接覆蓋升級，保留既有任務、設定與歷史。v1.4.0 首次設定失敗的電腦，直接安裝本版即可，無須清除資料。\n\n[查看完整改版說明](https://github.com/bruce-yang-422/cloud-alarm-overlay/releases/tag/v1.4.1)"
+  "latestVersion": "1.4.2",
+  "downloadUrl": "https://github.com/bruce-yang-422/cloud-alarm-overlay/releases/download/v1.4.2/CloudAlarmOverlay-v1.4.2-Setup-x64.exe",
+  "sha256": "e68109a4958804ec2600b1fb19f15dfbc0020c95de6512b21b35aa1670f5def9",
+  "releaseNote": "相較 v1.4.1，本版調整視窗與首頁版面，並統一天氣地點設定。\n\n## 介面調整\n\n- **2K／21:9 螢幕預設視窗縮小**：由 1792×1280 改為 1400×1000 實體像素。\n- 1920×1200 螢幕預設改為 1344×960；1920×1080 維持 1344×960。\n- 縮小首頁卡片內距、元件間隔與側邊導覽間距，減少大片留白。\n- **天氣地點統一由使用者設定**：移除管理員的公司預設地點及天氣匯入／匯出項目，改由「設定 → 首頁與天氣」調整。\n- **天氣警特報移到右側**：與目前天氣並排，窄視窗自動換行，關閉天氣時一併隱藏。\n- 「使用預設地點」改為「清除地點」，儲存後首頁提示選擇地點。\n\n## 問題修正\n\n- 修正顯示縮放取整後，最小視窗尺寸可能略大於實際預設尺寸的問題。\n- 修正管理員與使用者天氣表單共用選取狀態造成的互相干擾。\n- 修正「警特報暫不可用」文字可能被壓成零寬度而無法顯示的問題。\n\n## 升級須知\n\nv1.4.1 可直接覆蓋升級，保留既有任務、設定與歷史。原先生效的公司預設天氣地點會保留為本機地點，既有個人地點優先保留；清除並儲存後，重新啟動不會恢復公司預設。視窗仍可手動放大或最大化。\n\n[查看完整改版說明](https://github.com/bruce-yang-422/cloud-alarm-overlay/releases/tag/v1.4.2)"
 }

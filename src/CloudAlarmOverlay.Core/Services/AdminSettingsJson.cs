@@ -11,7 +11,7 @@ public static class AdminSettingsJson
     public static async Task<string> ExportAsync(ISettingsRepository settings)
     {
         var values = new Dictionary<string, Setting?>();
-        foreach (var key in new[] { LogRetentionPolicy.Key, "SyncOptions", "UpdateManifestUrl", "SyncLinksLocked", "AllowUrgentSnooze", "FlashMilliseconds", "QuietPeriods", "WeatherDefaultLocation" })
+        foreach (var key in new[] { LogRetentionPolicy.Key, "SyncOptions", "UpdateManifestUrl", "SyncLinksLocked", "AllowUrgentSnooze", "FlashMilliseconds", "QuietPeriods" })
             values[key] = await settings.GetAsync(key);
         string? Value(string key) => values[key]?.Value;
         var quiet = JsonSerializer.Deserialize<QuietPeriod[]>(Value("QuietPeriods") ?? "[]") ?? [];
@@ -28,16 +28,6 @@ public static class AdminSettingsJson
             ["QuietPeriods"] = quiet.Select(p => new { p.Start, p.End }).ToArray(),
             ["LockQuiet"] = values["QuietPeriods"]?.Locked ?? false
         };
-        if (Value("WeatherDefaultLocation") is { } weatherJson)
-        {
-            var location = JsonSerializer.Deserialize<WeatherLocation>(weatherJson);
-            if (location is not null)
-            {
-                var district = TaiwanWeatherLocations.All.FirstOrDefault(d => d.Location == location);
-                if (district is not null) output["WeatherDefaultDistrictCode"] = district.Code;
-                else output["WeatherDefaultLocation"] = location;
-            }
-        }
         var json = JsonSerializer.Serialize(output, new JsonSerializerOptions { WriteIndented = true, Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping });
         Parse(json); // Export only files that the importer can read, including the size limit.
         return json;
@@ -68,8 +58,7 @@ public static class AdminSettingsJson
           "FlashMilliseconds": 500,
           "LockFlash": false,
           "QuietPeriods": [],
-          "LockQuiet": false,
-          "WeatherDefaultDistrictCode": "65000010"
+          "LockQuiet": false
         }
         """;
 
@@ -106,18 +95,7 @@ public static class AdminSettingsJson
             if (input.FlashMilliseconds is { } flash) Add("FlashMilliseconds", flash.ToString(System.Globalization.CultureInfo.InvariantCulture), input.LockFlash ?? false);
             if ((input.LockQuiet is null) != (input.QuietPeriods is null)) throw new ArgumentException("LockQuiet 需與 QuietPeriods 一起提供。");
             if (input.QuietPeriods is { } quiet) Add("QuietPeriods", JsonSerializer.Serialize(quiet), input.LockQuiet ?? false);
-            if (input.WeatherDefaultDistrictCode is { } code)
-            {
-                if (input.WeatherDefaultLocation is not null) throw new ArgumentException("公司天氣地點只能提供行政區代碼或座標其中一種。");
-                var district = TaiwanWeatherLocations.All.SingleOrDefault(d => d.Code == code)
-                    ?? throw new ArgumentException("WeatherDefaultDistrictCode 必須是內建鄉鎮市區代碼。");
-                Add("WeatherDefaultLocation", JsonSerializer.Serialize(district.Location));
-            }
-            else if (input.WeatherDefaultLocation is { } location)
-            {
-                location.Validate();
-                Add("WeatherDefaultLocation", JsonSerializer.Serialize(location));
-            }
+            // Older settings files may contain weather fields; accept but do not apply them.
             if (result.Count == 0) throw new ArgumentException("設定檔未提供任何可匯入項目。");
             foreach (var setting in result) NotificationPreferences.Validate(setting);
             return result;

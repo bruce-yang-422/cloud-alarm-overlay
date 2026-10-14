@@ -30,7 +30,15 @@ public sealed class WeatherService(ISettingsRepository settings, OpenMeteoWeathe
         {
             if (loaded) return;
             Options = Read<WeatherOptions>((await settings.GetAsync("WeatherOptions", ct))?.Value) ?? new();
-            EffectiveLocation = Options.Location ?? Read<WeatherLocation>((await settings.GetAsync("WeatherDefaultLocation", ct))?.Value);
+            // Preserve the previously displayed location once when upgrading.
+            // Afterwards only the user's WeatherOptions controls the location.
+            if ((await settings.GetAsync("WeatherLocationMigrated", ct))?.Value != "true")
+            {
+                Options = Options with { Location = Options.Location ?? Read<WeatherLocation>((await settings.GetAsync("WeatherDefaultLocation", ct))?.Value) };
+                await settings.SaveAsync(new() { Key = "WeatherOptions", Value = JsonSerializer.Serialize(Options) }, ct);
+                await settings.SaveAsync(new() { Key = "WeatherLocationMigrated", Value = "true" }, ct);
+            }
+            EffectiveLocation = Options.Location;
             var cached = Read<WeatherSnapshot>((await settings.GetAsync("WeatherCache", ct))?.Value);
             Snapshot = cached?.Location == EffectiveLocation ? cached : null;
             loaded = true;
@@ -39,6 +47,7 @@ public sealed class WeatherService(ISettingsRepository settings, OpenMeteoWeathe
     }
     public async Task SaveAsync(WeatherOptions options, CancellationToken ct = default)
     {
+        await LoadAsync(ct);
         options.Location?.Validate();
         await settings.SaveAsync(new() { Key = "WeatherOptions", Value = JsonSerializer.Serialize(options) }, ct);
         // Cancel outstanding HTTP before waiting for the refresh lock.
@@ -47,7 +56,7 @@ public sealed class WeatherService(ISettingsRepository settings, OpenMeteoWeathe
         try
         {
             requests.Dispose(); requests = new(); Options = options;
-            EffectiveLocation = options.Location ?? Read<WeatherLocation>((await settings.GetAsync("WeatherDefaultLocation", ct))?.Value);
+            EffectiveLocation = options.Location;
             if (Snapshot?.Location != EffectiveLocation) Snapshot = null;
             nextUpdate = default; IsStale = true; loaded = true;
             nextAlertUpdate = default;

@@ -285,7 +285,10 @@ public sealed class PlannedFeaturesUiTests
                 var weatherSection=Assert.IsType<StackPanel>(card.Parent);
                 var panel=Assert.IsType<WrapPanel>(weatherSection.Parent);
                 Assert.Single(vm.Preferences.Weather.AlertBadges);
-                Assert.IsType<WeatherAlertsView>(weatherSection.Children[1]);
+                var alerts=Assert.IsType<WeatherAlertsView>(main.FindName("HomeWeatherAlerts"));
+                Assert.Same(panel,alerts.Parent);Assert.True(alerts.IsVisible);
+                var alertPosition=alerts.TranslatePoint(new Point(),panel);
+                Assert.True(alertPosition.X>=0 && alertPosition.X+alerts.ActualWidth<=panel.ActualWidth+1);
                 vm.Preferences.Weather.OpenAlertCommand.Execute(vm.Preferences.Weather.AlertBadges[0]);
                 Assert.Equal(vm.Preferences.Weather.AlertBadges[0].OfficialUri,browser.Opened);
                 Capture(main,"home-weather");
