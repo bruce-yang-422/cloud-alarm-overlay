@@ -9,8 +9,9 @@ namespace CloudAlarmOverlay.App.ViewModels;
 
 public sealed record CalendarEntry(AlarmTask Task,DateTime Start,DateTime End,bool AllDay)
 {
+    public DateTime? CompletedAt {get;init;}
     public DateTime LastDay=>End>Start?End.AddTicks(-1).Date:Start.Date;
-    public string Title=>Task.Title;
+    public string Title=>(CompletedAt.HasValue?"✓ ":"")+Task.Title;
     public string TimeLabel=>AllDay?"全天":Start.ToString("HH:mm");
     public string RoutineHint=>Task.Enabled?CloudAlarmOverlay.Core.Recurrence.RecurrenceRule.Describe(Task.Recurrence):"提醒已關閉";
     public string Period=>AllDay?$"{Start:yyyy/MM/dd} ～ {LastDay:yyyy/MM/dd}（全天，含結束日）":End>Start?$"{Start:yyyy/MM/dd HH:mm} ～ {End:yyyy/MM/dd HH:mm}":$"{Start:yyyy/MM/dd HH:mm}";
@@ -80,6 +81,8 @@ public partial class TaskCalendarViewModel(ITaskSchedulingService scheduling,ISe
         finally{preferenceGate.Release();}
     }
     private AlarmTask[] tasks=[];
+    private IReadOnlyList<TaskCompletion> completions=[];
+    private string progressSection="全部";
     private int revision;
     private CancellationTokenSource? rebuildCancellation;
     public Task PendingBuild {get;private set;}=Task.CompletedTask;
@@ -99,6 +102,8 @@ public partial class TaskCalendarViewModel(ITaskSchedulingService scheduling,ISe
     public string DayAlmanac=>Weeks.SelectMany(w=>w.Days).FirstOrDefault(d=>d.Date==SelectedDay)?.Almanac??"農曆 "+MainViewModel.LocalLunarDate(SelectedDay);
     partial void OnMonthChanged(DateTime value){SelectedDay=value;Selected=null;PendingBuild=BuildAsync();}
     public Task SetTasksAsync(IEnumerable<AlarmTask> source){tasks=source.ToArray();return PendingBuild=BuildAsync();}
+    public Task SetProgressTasksAsync(IEnumerable<AlarmTask> source,IReadOnlyList<TaskCompletion> records,string section)
+    {completions=records;progressSection=section;return SetTasksAsync(source);}
     [RelayCommand] private void PreviousMonth(){if(Month>new DateTime(1900,1,1))Month=Month.AddMonths(-1);}
     [RelayCommand] private void NextMonth(){if(Month<new DateTime(9998,12,1))Month=Month.AddMonths(1);}
     [RelayCommand] private void Today(){Month=new(DateTime.Today.Year,DateTime.Today.Month,1);SelectDay(DateTime.Today);}
@@ -145,16 +150,23 @@ public partial class TaskCalendarViewModel(ITaskSchedulingService scheduling,ISe
                 var after=start.AddTicks(-1);
                 for(var i=0;i<100;i++)
                 {
-                    var next=holidays is not null && ReferenceEquals(target,routines)
-                        ? CloudAlarmOverlay.Core.Recurrence.RecurrenceCalendar.Next(task.Recurrence,task.ScheduledAt,after,false,null,holidayRows,task.SkipOnHoliday,cancellation.Token)
-                        : await scheduling.GetNextOccurrenceAsync(task with{Enabled=true},after,cancellation.Token);
+                    var next=progressSection=="全部"&&completions.Count==0&&!(holidays is not null&&ReferenceEquals(target,routines))
+                        ?await scheduling.GetNextOccurrenceAsync(task with{Enabled=true},after,cancellation.Token)
+                        :CloudAlarmOverlay.Core.Recurrence.RecurrenceCalendar.Next(task.Recurrence,task.ScheduledAt,after,false,null,holidayRows,task.SkipOnHoliday,cancellation.Token);
                     if(next is not {} at || at>=end || at<=after)break;
                     target.Add(new(task,at,at,false));after=at;
                 }
             }
             if(current!=revision)return;
-            entries=result.OrderBy(e=>e.Start).ThenByDescending(e=>e.End).ThenBy(e=>e.Task.Id).ToArray();
-            routineEntries=routines;
+            bool Include(CalendarEntry entry)
+            {
+                var done=entry.CompletedAt.HasValue;
+                var ended=(entry.Task.ActivityEndAt??entry.Task.CalendarStartAt) is {} endAt&&endAt<=DateTime.Now;
+                return progressSection=="全部"||progressSection=="已完成"&&done||progressSection=="已結束"&&!done&&ended||progressSection=="待處理"&&!done&&!ended;
+            }
+            CalendarEntry WithProgress(CalendarEntry entry)=>entry with{CompletedAt=completions.FirstOrDefault(c=>c.Matches(entry.Task,entry.Task.Recurrence=="None"?entry.Task.ScheduledAt:entry.Start))?.CompletedAt};
+            entries=result.Select(WithProgress).Where(Include).OrderBy(e=>e.Start).ThenByDescending(e=>e.End).ThenBy(e=>e.Task.Id).ToArray();
+            routineEntries=routines.Select(WithProgress).Where(Include).ToArray();
             Weeks=Enumerable.Range(0,count).Select(w=>BuildWeek(start.AddDays(w*7),first.Month,entries,holidayDates,solarTerms)).ToArray();
             if(Selected is {} old)Selected=entries.Concat(routineEntries).FirstOrDefault(e=>e.Task.Id==old.Task.Id && e.Start==old.Start);
             UpdateDay();Message=entries.Count==0?routineEntries.Count>0?"日常任務顯示於右側「當日工作」，請選擇日期查看。":"本月沒有符合條件的活動或提醒。":"跨日活動接續至下一週；日常任務請於右側查看。";

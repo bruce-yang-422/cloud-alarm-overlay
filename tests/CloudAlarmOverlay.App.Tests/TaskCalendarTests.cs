@@ -108,7 +108,7 @@ public sealed class TaskCalendarTests
         var reopened=new TaskEditorViewModel(f.Get<ITaskService>(),task,false);Assert.Equal(new DateTime(2026,10,10),reopened.ActivityEndDate);
         await f.Get<ITaskRepository>().SaveLocalAsync(Activity("寵物展",new(2026,10,2,10,0,0),new(2026,10,5,20,0,0)));
         await f.Get<ITaskRepository>().SaveLocalAsync(new(){Id="routine",Title="午休",ScheduledAt=new(2026,10,1,13,0,0),Recurrence="Weekly:1,2,3,4,5",Enabled=true,CreatedAt=DateTime.Now,UpdatedAt=DateTime.Now});
-        var main=f.Get<MainViewModel>();await main.InitializeAsync();main.PageIndex=1;main.TaskCalendar.Month=new(2026,10,1);main.ShowTaskCalendarCommand.Execute(null);await main.TaskCalendar.PendingBuild;
+        var main=f.Get<MainViewModel>();await main.InitializeAsync();main.PageIndex=1;main.TaskSection="全部";main.TaskCalendar.Month=new(2026,10,1);main.ShowTaskCalendarCommand.Execute(null);await main.TaskCalendar.PendingBuild;
         var window=f.Get<MainWindow>();window.Height=900;
         try
         {

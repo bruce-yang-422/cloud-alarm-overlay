@@ -1,4 +1,4 @@
-<UserControl xmlns:adaptive="clr-namespace:CloudAlarmOverlay.App.Styles" xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" x:Class="CloudAlarmOverlay.App.Views.GoogleWorkspaceView" FontSize="13">
+<UserControl xmlns:avatar="clr-namespace:CloudAlarmOverlay.App.Controls" xmlns:adaptive="clr-namespace:CloudAlarmOverlay.App.Styles" xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" x:Class="CloudAlarmOverlay.App.Views.GoogleWorkspaceView" FontSize="13">
   <UserControl.Resources>
     <ResourceDictionary>
       <ResourceDictionary.MergedDictionaries>
@@ -74,7 +74,7 @@
                         <ColumnDefinition Width="Auto" />
                       </Grid.ColumnDefinitions>
                       <Border Width="38" Height="38" CornerRadius="10" Background="{adaptive:AdaptiveBrush WorkspaceSidebar}" Margin="0,0,12,0" VerticalAlignment="Top">
-                        <TextBlock Text="" FontFamily="Segoe MDL2 Assets" FontSize="18" VerticalAlignment="Center" HorizontalAlignment="Center" Foreground="{adaptive:AdaptiveBrush WorkspaceMuted}" />
+                        <avatar:GoogleAccountAvatar PictureUrl="{Binding PictureUrl}" Foreground="{adaptive:AdaptiveBrush WorkspaceMuted}" AutomationProperties.Name="Google 帳號大頭貼"/>
                       </Border>
                       <StackPanel Grid.Column="1">
                         <TextBlock Text="{Binding Label}" Foreground="{adaptive:AdaptiveBrush WorkspaceText}" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" ToolTip="{Binding Label}" Margin="0,0,0,6" />
@@ -84,10 +84,16 @@
                         </DockPanel>
                       </StackPanel>
                       <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center" Margin="12,0,0,0">
-                        <Button Content="新增來源" Click="AddAccountSource" Margin="0,0,6,0" VerticalAlignment="Center" />
+                        <Button Content="重新登入" Click="Reauthenticate" Margin="0,0,6,0" VerticalAlignment="Center" ToolTip="重新授權並保留帳號名稱與同步來源">
+                          <Button.Style><Style TargetType="Button" BasedOn="{StaticResource {x:Type Button}}"><Setter Property="Visibility" Value="Collapsed"/><Style.Triggers><DataTrigger Binding="{Binding Status}" Value="需要重新登入"><Setter Property="Visibility" Value="Visible"/></DataTrigger></Style.Triggers></Style></Button.Style>
+                        </Button>
+                        <Button Content="新增來源" Click="AddAccountSource" Margin="0,0,6,0" VerticalAlignment="Center">
+                          <Button.Style><Style TargetType="Button" BasedOn="{StaticResource {x:Type Button}}"><Style.Triggers><DataTrigger Binding="{Binding Status}" Value="需要重新登入"><Setter Property="Visibility" Value="Collapsed"/></DataTrigger></Style.Triggers></Style></Button.Style>
+                        </Button>
                         <Button Content="•••" Click="AccountMenu" Width="32" MinHeight="28" Padding="0" Margin="0" VerticalAlignment="Center" ToolTip="管理此帳號" AutomationProperties.Name="管理此 Google 帳號">
                           <Button.ContextMenu>
                             <ContextMenu Style="{StaticResource GoogleAccountMenu}" Background="{adaptive:AdaptiveBrush #FFFFFF}" Foreground="{adaptive:AdaptiveBrush WorkspaceText}" FontSize="13">
+                              <MenuItem Header="重新登入…" Click="Reauthenticate" />
                               <MenuItem Header="重新命名…" Click="RenameAccount" />
                               <Separator />
                               <MenuItem Header="登出此帳號…" Click="SignOut" />
@@ -102,9 +108,11 @@
                 </DataTemplate>
               </ItemsControl.ItemTemplate>
             </ItemsControl>
-            <TextBlock Text="帳號憑證有效時會自動續用，無需每次登入。" Style="{StaticResource WorkspaceMuted}" FontSize="12" Margin="2,4,0,22" />
+            <TextBlock Text="帳號憑證有效時會自動續用。需要重新授權時，按「重新登入」即可保留帳號與同步來源。" Style="{StaticResource WorkspaceMuted}" FontSize="12" Margin="2,4,0,22" />
             <DockPanel Margin="0,0,0,12">
-              <ComboBox DockPanel.Dock="Right" Width="160" ItemsSource="{Binding SourceAccountFilters}" DisplayMemberPath="Label" SelectedValuePath="Id" SelectedValue="{Binding SourceAccountFilter}" AutomationProperties.Name="篩選來源帳號" />
+              <ComboBox DockPanel.Dock="Right" Width="160" ItemsSource="{Binding SourceAccountFilters}" SelectedValuePath="Id" SelectedValue="{Binding SourceAccountFilter}" AutomationProperties.Name="篩選來源帳號">
+                <ComboBox.ItemTemplate><DataTemplate><TextBlock Text="{Binding Label}" TextTrimming="CharacterEllipsis"/></DataTemplate></ComboBox.ItemTemplate>
+              </ComboBox>
               <TextBlock Text="同步來源" Style="{StaticResource WorkspaceSection}" />
             </DockPanel>
             <TextBlock x:Name="EmptySources" Text="還沒有同步來源。從帳號卡片新增試算表或日曆。" FontSize="12" Margin="2,0,0,12">

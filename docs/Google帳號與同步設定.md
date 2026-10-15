@@ -62,16 +62,32 @@ GitHub Pages 作為產品網站，對應專案根目錄的 `index.html`、`priva
 
 Google 的外部 Testing 專案在使用 Sheets／日曆權限時，更新憑證通常 **7 天到期**；正式使用前需完成適用的發布設定與驗證。使用者撤銷授權、長期未使用、限時授權到期或公司政策限制也會影響續用，不能視為永久授權。[Google 憑證期限規則](https://developers.google.com/identity/protocols/oauth2#expiration)
 
+### 重新登入與排查授權到期
+
+帳號顯示「需要重新登入」時，直接按帳號卡片的「重新登入」，或開啟右側「••• → 重新登入…」，在瀏覽器選擇**原本的 Google 帳號**並完成授權。不需刪除帳號或重新建立來源，也不需登入本機管理員。
+
+重新登入保留帳號名稱、同步來源、來源 ID 與啟用狀態；成功後清除該帳號來源的失敗重試等待，讓已啟用來源繼續依排程同步。可按「同步全部來源」立即同步。其他 Google 帳號不受影響。選錯帳號、取消登入或未授予原來源所需的完整權限時，不會覆蓋原連線。
+
+若大約每七天失效，請由 OAuth 專案管理者檢查 Google Cloud 的 Google Auth Platform → Audience 發布狀態是否仍為 Testing；應依 Google 規則設定正式使用狀態與完成所需驗證。桌面程式無法自行延長 Google 限制的更新憑證期限。僅憑「需要重新登入」狀態無法確定失效原因，也應確認是否撤銷授權或受到 Workspace 登入政策限制。
+
+網路錯誤、流量限制與 OAuth 用戶端錯誤不應視為使用者撤銷授權；程式會保留可重試的憑證。Google 明確回覆 `invalid_grant` 時，才將續期憑證視為失效並提示重新登入。錯誤回應中的憑證與私人內容不會顯示在介面。
+
 授權需求如下；這些權限範圍由 Google 定義，程式內選定來源不會把 OAuth scope 自動縮小成單一檔案。
 
 | 用途 | 權限 |
 | --- | --- |
-| 識別登入帳號 | `openid email` |
+| 識別登入帳號與大頭貼 | `openid email profile` |
 | 讀取試算表 | `spreadsheets.readonly` |
 | 選擇開啟試算表寫回 | `spreadsheets`，取代唯讀權限 |
 | 列出日曆與讀取自有行程 | `calendar.calendarlist.readonly`、`calendar.events.owned.readonly` |
 
 Google 帳號本身仍須具有檔案存取／編輯權限；程式也會遵守工作表保護範圍。帳號標籤不會變更本機個人／公司使用模式。[Sheets scopes](https://developers.google.com/workspace/sheets/api/scopes)、[Calendar scopes](https://developers.google.com/workspace/calendar/api/auth)
+
+### 帳號大頭貼
+
+登入或重新登入時，程式會要求 `profile` 個人資料權限，取得 Google 提供的大頭貼網址並顯示於帳號卡片；憑證續期時會更新照片網址。既有帳號若尚未授予此權限，可從「••• → 重新登入…」完成授權，保留原帳號與同步來源。
+
+沒有照片、未提供個人資料、離線或照片下載失敗時，使用預設人像圖示，不影響任務同步。照片網址與帳號資料一同加密儲存在目前 Windows 使用者的 Google 憑證檔；照片下載不附帶 OAuth 憑證，不寫入一般匯出或備份。[Google 個人資料欄位說明](https://developers.google.com/identity/openid-connect/reference)
 
 ## 新增私人 Sheet 任務來源
 

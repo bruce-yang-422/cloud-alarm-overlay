@@ -351,7 +351,7 @@ public sealed class HomePinUiTests
         var overdue=new PinnedTaskRow(task,null);overdue.Update(now);
         Assert.Equal("已到期",overdue.HomeSummary);Assert.True(overdue.IsExpired);
         var completed=new PinnedTaskRow(task,null,now);completed.Update(now);
-        Assert.Equal("已確認完成",completed.HomeSummary);Assert.False(completed.IsExpired);
+        Assert.Equal("已完成",completed.HomeSummary);Assert.False(completed.IsExpired);
         Assert.Equal(-1,completed.Item.ReminderDays);
     }
 

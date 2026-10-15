@@ -1,6 +1,17 @@
 namespace CloudAlarmOverlay.Core.Models;
 
-public sealed record GoogleAccount(string Id,string Email,string Label,string Status);
+public sealed record GoogleAccount(string Id,string Email,string Label,string Status)
+{
+    public string PictureUrl {get;init;}="";
+}
+public static class GoogleProfilePicture
+{
+    public static string NormalizeUrl(string? value)
+        =>value is {Length:>0 and <=2048}&&Uri.TryCreate(value,UriKind.Absolute,out var uri)&&
+          uri.Scheme==Uri.UriSchemeHttps&&uri.IsDefaultPort&&uri.UserInfo.Length==0&&
+          (uri.Host=="googleusercontent.com"||uri.Host.EndsWith(".googleusercontent.com",StringComparison.OrdinalIgnoreCase))
+            ?uri.AbsoluteUri:"";
+}
 public sealed record GoogleResource(string Id,string Name,string TimeZone="")
 {
     public override string ToString()=>Name;

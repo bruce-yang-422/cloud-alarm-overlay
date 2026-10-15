@@ -56,7 +56,7 @@ Cloud Alarm Overlay 是常駐 Windows 系統匣的桌面提醒程式，把個人
 
 - **作業系統**：Windows x64。安裝包已包含執行所需的 .NET 元件，不需另外安裝。
 - **網路**：Google 同步、天氣、警特報與更新檢查需要網路。沒有網路時本機任務照常提醒，任務產生器也能離線使用。
-- **開發**：[.NET SDK 10.0.401](https://dotnet.microsoft.com/download/dotnet/10.0)（由 [global.json](global.json) 固定）；製作安裝包另需 Inno Setup 6 或 7。
+- **開發**：[.NET SDK 10.0.402](https://dotnet.microsoft.com/download/dotnet/10.0)（由 [global.json](global.json) 固定）；製作安裝包另需 Inno Setup 6 或 7。
 
 ## 下載、安裝與升級
 

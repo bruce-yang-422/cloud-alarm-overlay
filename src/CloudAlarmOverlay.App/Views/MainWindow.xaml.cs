@@ -56,7 +56,8 @@ public partial class MainWindow:Window
     {
         if(e.ClickCount!=2 || (sender as FrameworkElement)?.DataContext is not TaskRow row)return;
         e.Handled=true;
-        new TaskPreviewWindow(new(row.Task)){Owner=this}.ShowDialog();
+        var preview=row.Task.Recurrence!="None"?row.Task with{ScheduledAt=row.OccurrenceAt}:row.Task;
+        new TaskPreviewWindow(new(preview)){Owner=this}.ShowDialog();
     }
     private void PreviewNextReminder(object sender,RoutedEventArgs e)
     {

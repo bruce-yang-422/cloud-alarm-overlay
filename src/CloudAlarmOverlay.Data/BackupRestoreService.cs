@@ -40,6 +40,7 @@ public sealed class BackupRestoreService(Database db, IAuthenticationService aut
         var pomodoroLogs = await Read<PomodoroLogEntry>("SELECT * FROM PomodoroLog;");
         var countdowns = await Read<CountdownItem>("SELECT * FROM Countdowns;");
         var taskPins = await Read<string>("SELECT TaskId FROM TaskHomePins WHERE TaskId IN (SELECT Id FROM Tasks WHERE Source='本機') ORDER BY TaskId;");
+        var taskCompletions=await Read<TaskCompletion>("SELECT * FROM TaskCompletions WHERE Source='本機' AND TaskId IN (SELECT Id FROM Tasks WHERE Source='本機');");
         tx.Commit();
         var target = Path.GetFullPath(path);
         var temporary = target + "." + Guid.NewGuid().ToString("N") + ".tmp";
@@ -48,7 +49,8 @@ public sealed class BackupRestoreService(Database db, IAuthenticationService aut
             await using(var stream = new FileStream(temporary, FileMode.CreateNew, FileAccess.Write))
             using(var zip = new ZipArchive(stream, ZipArchiveMode.Create))
             {
-                await Write(zip,"manifest.json",JsonSerializer.Serialize(new { Format="CloudAlarmOverlay", Version=4 }),cancellationToken);
+                await Write(zip,"manifest.json",JsonSerializer.Serialize(new { Format="CloudAlarmOverlay", Version=5 }),cancellationToken);
+                await Write(zip,"task-completions.json",JsonSerializer.Serialize(taskCompletions),cancellationToken);
                 await Write(zip,"task-pins.json",JsonSerializer.Serialize(taskPins),cancellationToken);
                 await Write(zip,"countdowns.json",JsonSerializer.Serialize(countdowns),cancellationToken);
                 await Write(zip,"identity.json",JsonSerializer.Serialize(identity),cancellationToken);
@@ -88,16 +90,16 @@ public sealed class BackupRestoreService(Database db, IAuthenticationService aut
         }
         return csv.GetRecords<T>().ToList();
     }
-    private sealed record Package(Device Identity,List<Setting> Settings,List<AlarmTask> Tasks,List<AcknowledgementLog> Logs,List<User>? Users,List<SavedOccurrence> Occurrences,List<PomodoroSetting> PomodoroSettings,List<PomodoroLogEntry> PomodoroLogs,List<CountdownItem> Countdowns,List<string> TaskPins);
+    private sealed record Package(Device Identity,List<Setting> Settings,List<AlarmTask> Tasks,List<AcknowledgementLog> Logs,List<User>? Users,List<SavedOccurrence> Occurrences,List<PomodoroSetting> PomodoroSettings,List<PomodoroLogEntry> PomodoroLogs,List<CountdownItem> Countdowns,List<string> TaskPins,List<TaskCompletion> TaskCompletions);
     public sealed record SavedOccurrence(string Id,string TaskId,DateTime ScheduledAt,string State,DateTime? TriggeredAt) { public SavedOccurrence():this("","",default,"",null) {} }
     private static async Task<Package> ReadPackage(string path,CancellationToken ct)
     {
         await using var stream = File.OpenRead(path);
         if(stream.Length>MaxArchiveBytes)throw new InvalidDataException("備份檔過大（上限 64 MB）。");
         using var zip = new ZipArchive(stream,ZipArchiveMode.Read);
-        if(zip.Entries.Count>11 || zip.Entries.Sum(e=>e.Length)>MaxArchiveBytes || zip.Entries.Select(e=>e.FullName).Distinct().Count()!=zip.Entries.Count)
+        if(zip.Entries.Count>12 || zip.Entries.Sum(e=>e.Length)>MaxArchiveBytes || zip.Entries.Select(e=>e.FullName).Distinct().Count()!=zip.Entries.Count)
             throw new InvalidDataException("備份檔項目重複或解壓縮後超過 64 MB。");
-        string[] allowed = ["manifest.json","identity.json","settings.json","tasks.csv","acklog.csv","admin.key","occurrences.json","pomodoro-settings.json","pomodoro.csv","countdowns.json","task-pins.json"];
+        string[] allowed = ["manifest.json","identity.json","settings.json","tasks.csv","acklog.csv","admin.key","occurrences.json","pomodoro-settings.json","pomodoro.csv","countdowns.json","task-pins.json","task-completions.json"];
         if(zip.Entries.Any(e=>!allowed.Contains(e.FullName)))throw new InvalidDataException("備份檔含有不支援的項目。");
         async Task<string> Read(string name)
         {
@@ -107,14 +109,22 @@ public sealed class BackupRestoreService(Database db, IAuthenticationService aut
         T Parse<T>(string json)=>JsonSerializer.Deserialize<T>(json)??throw new InvalidDataException("備份資料不可為空。");
         using var manifest=JsonDocument.Parse(await Read("manifest.json"));
         var formatVersion = manifest.RootElement.GetProperty("Version").GetInt32();
-        if(manifest.RootElement.GetProperty("Format").GetString()!="CloudAlarmOverlay" || formatVersion is not (1 or 2 or 3 or 4))
+        if(manifest.RootElement.GetProperty("Format").GetString()!="CloudAlarmOverlay" || formatVersion is not (1 or 2 or 3 or 4 or 5))
             throw new InvalidDataException("不支援的備份格式版本。");
         var countdowns = formatVersion == 1 && zip.GetEntry("countdowns.json") is null
             ? new List<CountdownItem>() : Parse<List<CountdownItem>>(await Read("countdowns.json"));
         var taskPins = formatVersion < 3 && zip.GetEntry("task-pins.json") is null ? new List<string>() : Parse<List<string>>(await Read("task-pins.json"));
-        var package=new Package(Parse<Device>(await Read("identity.json")),Parse<List<Setting>>(await Read("settings.json")),ReadCsv<AlarmTask>(await Read("tasks.csv")),ReadCsv<AcknowledgementLog>(await Read("acklog.csv")),zip.GetEntry("admin.key") is null?null:Parse<List<User>>(await Read("admin.key")),zip.GetEntry("occurrences.json") is null?[]:Parse<List<SavedOccurrence>>(await Read("occurrences.json")),zip.GetEntry("pomodoro-settings.json") is null?[]:Parse<List<PomodoroSetting>>(await Read("pomodoro-settings.json")),zip.GetEntry("pomodoro.csv") is null?[]:ReadCsv<PomodoroLogEntry>(await Read("pomodoro.csv")),countdowns,taskPins);
+        var taskCompletions=formatVersion<5?new List<TaskCompletion>():Parse<List<TaskCompletion>>(await Read("task-completions.json"));
+        var package=new Package(Parse<Device>(await Read("identity.json")),Parse<List<Setting>>(await Read("settings.json")),ReadCsv<AlarmTask>(await Read("tasks.csv")),ReadCsv<AcknowledgementLog>(await Read("acklog.csv")),zip.GetEntry("admin.key") is null?null:Parse<List<User>>(await Read("admin.key")),zip.GetEntry("occurrences.json") is null?[]:Parse<List<SavedOccurrence>>(await Read("occurrences.json")),zip.GetEntry("pomodoro-settings.json") is null?[]:Parse<List<PomodoroSetting>>(await Read("pomodoro-settings.json")),zip.GetEntry("pomodoro.csv") is null?[]:ReadCsv<PomodoroLogEntry>(await Read("pomodoro.csv")),countdowns,taskPins,taskCompletions);
         if (taskPins.Any(id => string.IsNullOrWhiteSpace(id) || !package.Tasks.Any(t => t.Id == id)) || taskPins.Distinct().Count() != taskPins.Count)
             throw new InvalidDataException("備份任務釘選包含重複或不存在的任務。");
+        foreach(var completion in taskCompletions)
+        {
+            if(completion is null||completion.Source!=TaskSources.Local||!package.Tasks.Any(t=>t.Id==completion.TaskId)||completion.CompletedAt==default||completion.OccurrenceAt==default)
+                throw new InvalidDataException("備份完成紀錄不符本機任務。");
+            var snapshot=Parse<AlarmTask>(completion.SnapshotJson);
+            if(snapshot.Id!=completion.TaskId||snapshot.Source!=TaskSources.Local)throw new InvalidDataException("備份完成快照不符本機任務。");
+        }
         foreach (var item in package.Countdowns)
         {
             if (item is null) throw new InvalidDataException("倒數資料不可為空。");
@@ -178,7 +188,7 @@ public sealed class BackupRestoreService(Database db, IAuthenticationService aut
         if(await c.ExecuteScalarAsync<long>("SELECT COUNT(*) FROM Occurrences WHERE State IN ('Claimed','Displayed','Snoozed');",transaction:tx)>0)throw new InvalidOperationException("請先完成目前通知，再還原備份。");
         if(await c.ExecuteScalarAsync<long>("SELECT COUNT(*) FROM PomodoroLog WHERE IsActive=1;",transaction:tx)>0)throw new InvalidOperationException("請先結束番茄鐘，再還原備份。");
         var oldIdentity=await c.QuerySingleOrDefaultAsync<Device>("SELECT * FROM Devices LIMIT 1;",transaction:tx);
-        if(oldIdentity?.DeviceId!=p.Identity.DeviceId || oldIdentity?.DisplayName!=p.Identity.DisplayName)await Run("DELETE FROM Tasks WHERE Source<>'本機';");
+        if(oldIdentity?.DeviceId!=p.Identity.DeviceId || oldIdentity?.DisplayName!=p.Identity.DisplayName)await Run("DELETE FROM Tasks WHERE Source<>'本機'; DELETE FROM TaskCompletions WHERE Source<>'本機';");
         await Run("DELETE FROM Devices;");
         await Insert(c,tx,"Devices",p.Identity with{Id=1},cancellationToken);
         foreach(var setting in p.Settings)
@@ -197,6 +207,8 @@ public sealed class BackupRestoreService(Database db, IAuthenticationService aut
         int tasks=0,logs=0,countdowns=0;
         var imported=new HashSet<string>();
         foreach(var task in p.Tasks)if(await Insert(c,tx,"Tasks",task with {Level=AlarmLevels.Normalize(task.Level)},cancellationToken)>0){tasks++;imported.Add(task.Id);}
+        foreach(var completion in p.TaskCompletions.Where(c=>imported.Contains(c.TaskId)))
+            await Insert(c,tx,"TaskCompletions",completion,cancellationToken);
         foreach(var occurrence in p.Occurrences.Where(o=>imported.Contains(o.TaskId)))
             await Insert(c,tx,"Occurrences",occurrence with { State=occurrence.State is "Claimed" or "Displayed" or "Snoozed"?"Completed":occurrence.State },cancellationToken);
         foreach(var log in p.Logs)

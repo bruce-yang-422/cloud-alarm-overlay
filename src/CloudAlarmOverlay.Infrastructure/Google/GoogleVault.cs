@@ -11,6 +11,7 @@ internal sealed record GoogleCredential
     public string Id {get;init;}="";
     public string Email {get;init;}="";
     public string Label {get;init;}="";
+    public string PictureUrl {get;init;}="";
     public string AccessToken {get;init;}="";
     public string RefreshToken {get;init;}="";
     public string Scope {get;init;}="";

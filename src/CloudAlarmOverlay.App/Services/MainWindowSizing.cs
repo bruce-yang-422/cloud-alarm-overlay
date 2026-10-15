@@ -3,14 +3,14 @@ using System.Windows;
 
 namespace CloudAlarmOverlay.App.Services;
 
-/// <summary>Converts the requested physical-pixel presets to WPF layout units.</summary>
+/// <summary>Keeps enough WPF layout space at high DPI while fitting the monitor work area.</summary>
 public static class MainWindowSizing
 {
     public const double AspectRatio = 7d / 5;
 
     public static Size Calculate(double monitorHeightPixels, Size workAreaPixels, double dpiScale)
     {
-        var preferredHeight = monitorHeightPixels switch
+        var compactHeight = monitorHeightPixels switch
         {
             // A compact startup preset also suits ultrawide QHD monitors.
             // Manual resizing is unrestricted.
@@ -18,6 +18,9 @@ public static class MainWindowSizing
             >= 1200 => 960d,
             _ => 960d
         };
+        // Physical-pixel caps alone shrink the usable layout at 150–200% scaling.
+        // Preserve a readable 1344 x 960 DIP baseline when the work area permits it.
+        var preferredHeight = Math.Max(compactHeight, 960d * dpiScale);
         var height = Math.Min(preferredHeight, Math.Min(workAreaPixels.Height, workAreaPixels.Width / AspectRatio));
         return new Size(height * AspectRatio / dpiScale, height / dpiScale);
     }

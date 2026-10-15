@@ -19,6 +19,45 @@ namespace CloudAlarmOverlay.App.Tests;
 public sealed class CountdownUiTests
 {
     [Fact]
+    public Task High_dpi_default_fits_home_and_countdown_text_stays_inside_ring() => MilestoneOneTests.RunSta(async () =>
+    {
+        using var fixture=new Fixture();await fixture.Initialize();
+        var vm=fixture.Get<MainViewModel>();await vm.InitializeAsync();
+        var window=fixture.Get<MainWindow>();window.Height=961;window.ShowInTaskbar=false;window.ShowActivated=false;
+        try
+        {
+            window.Show();
+            var size=MainWindowSizing.Calculate(2160,new Size(3840,2064),2);
+            Assert.True(size.Width>=1344);Assert.True(size.Height>=960);
+            window.Width=size.Width;window.Height=size.Height;
+            await Dispatcher.Yield(DispatcherPriority.ApplicationIdle);window.UpdateLayout();
+            var card=(Border)window.FindName("NextReminderCard");
+            DependencyObject? parent=card;
+            while(parent is not null && parent is not ScrollViewer)parent=VisualTreeHelper.GetParent(parent);
+            Assert.NotNull(parent);Assert.Equal(0,((ScrollViewer)parent).ScrollableHeight);
+            var ring=(Grid)window.FindName("NextCountdownRing");
+            var label=(TextBlock)window.FindName("NextCountdownLabel");
+            foreach(var width in new[]{size.Width,1050d})
+            foreach(var text in new[]{"—","59分59秒","23時59分","999天23時"})
+            {
+                window.Width=width;vm.CountdownLabel=text;
+                await Dispatcher.Yield(DispatcherPriority.ApplicationIdle);window.UpdateLayout();
+                Assert.True(label.IsVisible);Assert.True(label.ActualWidth>0);
+                foreach(var corner in new[]{new Point(),new Point(label.ActualWidth,0),new Point(0,label.ActualHeight),new Point(label.ActualWidth,label.ActualHeight)})
+                {
+                    var point=label.TranslatePoint(corner,ring);
+                    var offset=point-new Point(ring.ActualWidth/2,ring.ActualHeight/2);
+                    Assert.True(offset.Length<=ring.ActualWidth/2-10,$"{text} exceeds the ring at width {width}");
+                }
+            }
+            window.Width=size.Width;vm.CountdownLabel="23時59分";
+            await Dispatcher.Yield(DispatcherPriority.ApplicationIdle);window.UpdateLayout();
+            Capture(window,"main-window-4k-200-layout");
+        }
+        finally {window.ForceClose();}
+    });
+
+    [Fact]
     public Task Main_window_starts_with_monitor_preset_and_restores_the_same_size() => MilestoneOneTests.RunSta(async () =>
     {
         using var fixture = new Fixture(); await fixture.Initialize();

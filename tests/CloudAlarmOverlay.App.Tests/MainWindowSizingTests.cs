@@ -7,22 +7,24 @@ public sealed class MainWindowSizingTests
 {
     [Theory]
     [InlineData(1920, 1080, 1, 1344, 960)]
-    [InlineData(1920, 1080, 1.5, 1344, 960)]
+    [InlineData(1920, 1080, 1.5, 1411.2, 1008)]
     [InlineData(1920, 1200, 1, 1344, 960)]
-    [InlineData(1920, 1200, 1.5, 1344, 960)]
+    [InlineData(1920, 1200, 1.5, 1579.2, 1128)]
     [InlineData(2560, 1440, 1, 1400, 1000)]
-    [InlineData(2560, 1440, 1.5, 1400, 1000)]
+    [InlineData(2560, 1440, 1.5, 1915.2, 1368)]
     [InlineData(2560, 1600, 1, 1400, 1000)]
-    [InlineData(2560, 1600, 2, 1400, 1000)]
+    [InlineData(2560, 1600, 2, 2105.6, 1504)]
     [InlineData(2560, 1080, 1, 1344, 960)]
     [InlineData(3440, 1440, 1, 1400, 1000)]
-    [InlineData(3440, 1440, 1.25, 1400, 1000)]
-    [InlineData(3440, 1440, 1.5, 1400, 1000)]
+    [InlineData(3440, 1440, 1.25, 1680, 1200)]
+    [InlineData(3440, 1440, 1.5, 1915.2, 1368)]
     [InlineData(3840, 2160, 1, 1400, 1000)]
-    [InlineData(3840, 2160, 2, 1400, 1000)]
-    [InlineData(5120, 2880, 2, 1400, 1000)]
-    [InlineData(7680, 4320, 3, 1400, 1000)]
-    public void Presets_keep_the_requested_physical_pixels_under_display_scaling(
+    [InlineData(3840, 2160, 1.5, 2016, 1440)]
+    [InlineData(3840, 2160, 1.75, 2352, 1680)]
+    [InlineData(3840, 2160, 2, 2688, 1920)]
+    [InlineData(5120, 2880, 2, 2688, 1920)]
+    [InlineData(7680, 4320, 3, 4032, 2880)]
+    public void Presets_preserve_layout_space_under_display_scaling(
         double width, double height, double scale, double expectedWidth, double expectedHeight)
     {
         var size = MainWindowSizing.Calculate(height, new Size(width, height - 48 * scale), scale);

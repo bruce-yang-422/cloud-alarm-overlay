@@ -6,6 +6,7 @@
         <ResourceDictionary Source="../Styles/CountdownStyles.xaml" />
         <ResourceDictionary Source="../Styles/PinButtonStyles.xaml" />
         <ResourceDictionary Source="../Styles/ConnectionStyles.xaml" />
+        <ResourceDictionary Source="../Styles/SlidingSegmentedControl.xaml" />
       </ResourceDictionary.MergedDictionaries>
       <Style x:Key="TaskMenuItem" TargetType="MenuItem">
         <Setter Property="Foreground" Value="{adaptive:AdaptiveBrush #16243E}"/>
@@ -182,7 +183,7 @@
                         <Grid.ColumnDefinitions>
                           <ColumnDefinition Width="*" />
                           <ColumnDefinition Width="126" />
-                          <ColumnDefinition Width="96" />
+                          <ColumnDefinition Width="136" />
                         </Grid.ColumnDefinitions>
                         <StackPanel VerticalAlignment="Center" Margin="0,0,10,0">
                           <ContentControl Content="{Binding NextReminder}" ContentTemplate="{StaticResource LevelBadge}" HorizontalAlignment="Left" />
@@ -215,12 +216,14 @@
                             <TextBlock Text="{Binding NextLunar}" FontSize="12" Foreground="{adaptive:AdaptiveBrush #697C99}" HorizontalAlignment="Center" TextWrapping="Wrap" />
                           </StackPanel>
                         </Border>
-                        <Grid Grid.Column="2" Width="88" Height="88" Margin="8,0,0,0" ToolTip="剩餘時間；環形以 24 小時為一圈">
+                        <Grid x:Name="NextCountdownRing" Grid.Column="2" Width="128" Height="128" Margin="8,0,0,0" ToolTip="剩餘時間；環形以 24 小時為一圈">
                           <controls:CountdownRing TrackBrush="{adaptive:AdaptiveBrush #F9CFD5}" ProgressBrush="{adaptive:AdaptiveBrush #E12A43}" RemainingHours="{Binding RemainingHours}" />
-                          <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
+                          <Viewbox Width="96" MaxHeight="48" Stretch="Uniform" StretchDirection="DownOnly" HorizontalAlignment="Center" VerticalAlignment="Center">
+                          <StackPanel>
                             <TextBlock Text="剩餘" FontSize="13" HorizontalAlignment="Center" />
-                            <TextBlock Text="{Binding CountdownLabel}" Foreground="{adaptive:AdaptiveBrush #D72540}" FontWeight="Bold" FontSize="18" HorizontalAlignment="Center" Margin="0,3,0,0" />
+                            <TextBlock x:Name="NextCountdownLabel" Text="{Binding CountdownLabel}" Foreground="{adaptive:AdaptiveBrush #D72540}" FontWeight="Bold" FontSize="18" HorizontalAlignment="Center" Margin="0,3,0,0" />
                           </StackPanel>
+                          </Viewbox>
                         </Grid>
                       </Grid>
                     </Border>
@@ -384,14 +387,27 @@
                 </ComboBox>
                 <Button Grid.Column="2" Content="↻" Command="{Binding RefreshCommand}" ToolTip="重新整理任務" AutomationProperties.Name="重新整理任務" Margin="0" Padding="12,4"/>
               </Grid>
-              <Border Background="{adaptive:AdaptiveBrush #EAF0F7}" CornerRadius="8" Padding="3" HorizontalAlignment="Left" Margin="0,4,0,8">
+              <DockPanel Margin="0,4,0,8" ToolTip="{Binding TaskSectionHint}">
+              <Border DockPanel.Dock="Left" Background="{adaptive:AdaptiveBrush #EAF0F7}" CornerRadius="8" Padding="3" HorizontalAlignment="Left" Margin="0,0,10,0">
                 <StackPanel Orientation="Horizontal"><StackPanel.Resources><Style TargetType="RadioButton"><Setter Property="Width" Value="72"/><Setter Property="Padding" Value="12,5"/><Setter Property="Foreground" Value="{adaptive:AdaptiveBrush #536982}"/><Setter Property="Template"><Setter.Value><ControlTemplate TargetType="RadioButton"><Border x:Name="Segment" CornerRadius="6" Padding="{TemplateBinding Padding}" Background="Transparent"><ContentPresenter HorizontalAlignment="Center"/></Border><ControlTemplate.Triggers><Trigger Property="IsChecked" Value="True"><Setter TargetName="Segment" Property="Background" Value="{adaptive:AdaptiveBrush #FFFFFF}"/><Setter Property="Foreground" Value="{adaptive:AdaptiveBrush #0766FF}"/><Setter Property="FontWeight" Value="SemiBold"/></Trigger><Trigger Property="IsKeyboardFocused" Value="True"><Setter TargetName="Segment" Property="BorderBrush" Value="{adaptive:AdaptiveBrush #0766FF}"/><Setter TargetName="Segment" Property="BorderThickness" Value="1"/></Trigger></ControlTemplate.Triggers></ControlTemplate></Setter.Value></Setter></Style></StackPanel.Resources>
                   <RadioButton Content="清單" IsChecked="{Binding IsTaskList,Mode=OneWay}" Command="{Binding ShowTaskListCommand}" GroupName="TaskView"/>
                   <RadioButton Content="月曆" IsChecked="{Binding IsTaskCalendar,Mode=OneWay}" Command="{Binding ShowTaskCalendarCommand}" GroupName="TaskView"/>
                 </StackPanel>
               </Border>
-              <DockPanel x:Name="TaskSelectionToolbar" Height="44" Margin="0,0,0,4" Visibility="{Binding IsTaskList,Converter={StaticResource BoolVisibility}}">
+                <pincontrols:SlidingSegmentedControl ItemsSource="{Binding TaskSections}" SelectedItem="{Binding TaskSection}" Width="300" HorizontalAlignment="Left" DockPanel.Dock="Left" AutomationProperties.Name="任務進度分區"/>
+                <TextBlock Text="{Binding TaskSectionSummary}" Style="{StaticResource Muted}" FontSize="11" Margin="12,0,0,0" VerticalAlignment="Center" TextTrimming="CharacterEllipsis"/>
+              </DockPanel>
+              <Border Background="{adaptive:AdaptiveBrush #E6F0FF}" CornerRadius="6" Padding="10,6" Margin="0,0,0,6" Visibility="{Binding HasTaskProgressMessage,Converter={StaticResource BoolVisibility}}">
+                <DockPanel>
+                  <Button DockPanel.Dock="Right" Content="關閉" Command="{Binding DismissTaskProgressMessageCommand}" Padding="6,3" Margin="6,0,0,0"/>
+                  <Button DockPanel.Dock="Right" Content="復原" Command="{Binding UndoTaskCompletionCommand}" Visibility="{Binding CanUndoTaskCompletion,Converter={StaticResource BoolVisibility}}" Padding="6,3" Margin="6,0,0,0"/>
+                  <TextBlock Text="{Binding TaskProgressMessage}" TextWrapping="Wrap" FontSize="12" VerticalAlignment="Center"/>
+                </DockPanel>
+              </Border>
+              <DockPanel x:Name="TaskSelectionToolbar" Height="36" Margin="0,0,0,2" Visibility="{Binding IsTaskList,Converter={StaticResource BoolVisibility}}">
                 <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" Visibility="{Binding HasTaskSelection,Converter={StaticResource BoolVisibility}}">
+                  <Button Content="✓ 完成" Command="{Binding CompleteSelectedTasksCommand}" Visibility="{Binding HasCompletableSelection,Converter={StaticResource BoolVisibility}}" Padding="10,5" Margin="0,0,6,0" ToolTip="在本機完成所選任務；重複任務只完成這一次，不回寫外部來源"/>
+                  <Button Content="恢復待處理" Command="{Binding RestoreSelectedTasksCommand}" Visibility="{Binding HasRestorableSelection,Converter={StaticResource BoolVisibility}}" Padding="10,5" Margin="0,0,6,0"/>
                   <Button Content="{Binding EditTaskLabel}" Command="{Binding EditTaskCommand}" Visibility="{Binding CanEditSelectedTask,Converter={StaticResource BoolVisibility}}" Padding="12,5" Margin="0,0,6,0"/>
                   <Button Content="複製" Command="{Binding CopyTaskCommand}" Visibility="{Binding CanCopySelectedTask,Converter={StaticResource BoolVisibility}}" Padding="12,5" Margin="0,0,6,0" ToolTip="複製為本機任務"/>
                   <Button x:Name="TaskActionsButton" Content="更多操作 ▾" Click="OpenTaskMenu" Padding="12,5" Margin="0,0,6,0" Visibility="{Binding CanCopySelectedTask,Converter={StaticResource BoolVisibility}}">
@@ -418,7 +434,7 @@
                   <TextBlock Text="{Binding CompactSelectionSummary}" ToolTip="{Binding SelectionHint}" Style="{StaticResource Muted}" VerticalAlignment="Center"/>
                 </StackPanel>
               </DockPanel>
-              <TextBlock Text="沒有符合條件的任務。按「新增任務」建立本機提醒。" Style="{StaticResource Muted}" Visibility="{Binding IsTasksEmpty,Converter={StaticResource BoolVisibility}}" Margin="0,6"/>
+              <TextBlock Text="{Binding TaskEmptyMessage}" Style="{StaticResource Muted}" Visibility="{Binding IsTasksEmpty,Converter={StaticResource BoolVisibility}}" Margin="0,6"/>
             </StackPanel>
             <Grid>
             <DataGrid x:Name="TaskGrid" Visibility="{Binding IsTaskList,Converter={StaticResource BoolVisibility}}" ItemsSource="{Binding Tasks}" SelectionMode="Extended" SelectionUnit="FullRow" SelectionChanged="TaskSelectionChanged">
@@ -432,7 +448,7 @@
                 <Style.Triggers>
                   <DataTrigger Binding="{Binding IsLocal}" Value="False">
                     <Setter Property="Background" Value="{adaptive:AdaptiveBrush #F3EFFA}"/>
-                    <Setter Property="ToolTip" Value="雲端唯讀：啟用狀態依 Sheet 設定；可選取並複製成本機任務。"/>
+                    <Setter Property="ToolTip" Value="外部內容唯讀；可在本機標記完成，不回寫來源，也可複製成本機任務。"/>
                   </DataTrigger>
                   <DataTrigger Binding="{Binding Task.IsGoogleCalendar}" Value="True"><Setter Property="Background" Value="{adaptive:AdaptiveBrush #FAFCFF}"/><Setter Property="ToolTip" Value="Google 日曆：可調整本機提醒開關與時間；行程內容持續由 Google 同步。"/></DataTrigger>
                   <Trigger Property="IsSelected" Value="True"><Setter Property="Background" Value="{adaptive:AdaptiveBrush #E6F0FF}"/></Trigger>
@@ -443,23 +459,27 @@
   <CheckBox Style="{StaticResource TaskSelectionCheckBox}" HorizontalAlignment="Center" PreviewMouseLeftButtonDown="TaskCheckMouseDown" PreviewKeyDown="TaskCheckKeyDown" IsChecked="{Binding IsSelected,RelativeSource={RelativeSource AncestorType=DataGridRow},Mode=OneWay}" AutomationProperties.Name="選取任務"/>
  </DataTemplate></DataGridTemplateColumn.CellTemplate>
 </DataGridTemplateColumn>
-<DataGridTemplateColumn Header="權限" Width="40" MinWidth="40">
- <DataGridTemplateColumn.CellTemplate><DataTemplate>
-  <TextBlock Text="&#xE72E;" FontFamily="Segoe MDL2 Assets" HorizontalAlignment="Center" ToolTip="雲端唯讀：不能編輯、刪除或切換啟用；可複製成本機任務。">
-   <TextBlock.Style><Style TargetType="TextBlock" BasedOn="{StaticResource {x:Type TextBlock}}"><Style.Triggers><DataTrigger Binding="{Binding CanAdjustReminder}" Value="True"><Setter Property="Visibility" Value="Collapsed"/></DataTrigger></Style.Triggers></Style></TextBlock.Style>
-  </TextBlock>
- </DataTemplate></DataGridTemplateColumn.CellTemplate>
-</DataGridTemplateColumn>
                 <DataGridTemplateColumn Header="任務名稱" Width="*" MinWidth="180"><DataGridTemplateColumn.CellTemplate><DataTemplate>
                  <Grid><Grid.ColumnDefinitions><ColumnDefinition/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
-                  <TextBlock Text="{Binding Title}" TextTrimming="CharacterEllipsis" Background="Transparent" Padding="4,0" Cursor="Hand" ToolTip="{Binding Title}" AutomationProperties.HelpText="連按兩下查看詳細訊息" MouseLeftButtonDown="TaskTitleDoubleClick"/>
+                  <StackPanel VerticalAlignment="Center">
+                    <TextBlock Text="{Binding Title}" TextTrimming="CharacterEllipsis" Background="Transparent" Padding="4,0" Cursor="Hand" ToolTip="{Binding Title}" AutomationProperties.HelpText="連按兩下查看詳細訊息" MouseLeftButtonDown="TaskTitleDoubleClick"/>
+                    <TextBlock Text="{Binding TaskDetail}" FontSize="11" Style="{StaticResource Muted}" Padding="4,0" TextTrimming="CharacterEllipsis"/>
+                  </StackPanel>
                   <Button Grid.Column="1" Style="{StaticResource TaskPinButton}" Tag="{Binding IsPinned}" Command="{Binding DataContext.ToggleTaskPinCommand,RelativeSource={RelativeSource AncestorType=Window}}" CommandParameter="{Binding}" Margin="3,2,2,2" ToolTip="{Binding PinLabel}" AutomationProperties.Name="{Binding PinLabel}"/>
                  </Grid>
                 </DataTemplate></DataGridTemplateColumn.CellTemplate></DataGridTemplateColumn>
                 <DataGridTextColumn Header="日期 / 時間" Binding="{Binding Time}" Width="128" MinWidth="128" />
                 <DataGridTemplateColumn Header="等級" CellTemplate="{StaticResource LevelBadge}" Width="90" MinWidth="90" />
-                <DataGridTextColumn Header="重複" Binding="{Binding Recurrence}" Width="90" MinWidth="90" />
-                <DataGridTemplateColumn Header="狀態" Width="148" MinWidth="148"><DataGridTemplateColumn.CellTemplate><DataTemplate>
+                <DataGridTemplateColumn Header="進度" Width="76" MinWidth="76"><DataGridTemplateColumn.CellTemplate><DataTemplate>
+                  <TextBlock Text="{Binding Progress}" ToolTip="{Binding ProgressDetails}" FontWeight="SemiBold" VerticalAlignment="Center">
+                    <TextBlock.Style><Style TargetType="TextBlock" BasedOn="{StaticResource {x:Type TextBlock}}"><Style.Triggers>
+                      <DataTrigger Binding="{Binding Progress}" Value="逾期"><Setter Property="Foreground" Value="{adaptive:AdaptiveBrush #D72540}"/></DataTrigger>
+                      <DataTrigger Binding="{Binding Progress}" Value="已完成"><Setter Property="Foreground" Value="{adaptive:AdaptiveBrush #099666}"/></DataTrigger>
+                      <DataTrigger Binding="{Binding Progress}" Value="已結束"><Setter Property="Foreground" Value="{adaptive:AdaptiveBrush #697C99}"/></DataTrigger>
+                    </Style.Triggers></Style></TextBlock.Style>
+                  </TextBlock>
+                </DataTemplate></DataGridTemplateColumn.CellTemplate></DataGridTemplateColumn>
+                <DataGridTemplateColumn Header="提醒" Width="148" MinWidth="148"><DataGridTemplateColumn.CellTemplate><DataTemplate>
                   <Grid><Grid.ColumnDefinitions><ColumnDefinition Width="58"/><ColumnDefinition/></Grid.ColumnDefinitions>
                     <CheckBox Style="{StaticResource PillSwitch}" IsChecked="{Binding Task.Enabled,Mode=OneWay}" IsEnabled="{Binding CanAdjustReminder}" VerticalAlignment="Center" Margin="0"
                       PreviewMouseLeftButtonDown="TaskStateMouseDown" PreviewKeyDown="TaskStateKeyDown" ToolTip="{Binding StateOrigin}" ToolTipService.ShowOnDisabled="True" AutomationProperties.Name="任務啟用開關"/>

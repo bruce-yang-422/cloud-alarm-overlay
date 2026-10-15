@@ -8,6 +8,7 @@ public interface IGoogleWorkspace
     Task ImportClientAsync(string json,CancellationToken ct=default);
     Task UseBuiltInClientAsync(CancellationToken ct=default);
     Task SignInAsync(string label,bool sheets,bool calendar,Action<string> openBrowser,CancellationToken ct=default,bool writeSheets=false);
+    Task ReauthenticateAsync(string accountId,Action<string> openBrowser,CancellationToken ct=default);
     Task SignOutAsync(string accountId,bool revoke,CancellationToken ct=default);
     Task RenameAccountAsync(string accountId,string name,CancellationToken ct=default);
     Task<IReadOnlyList<GoogleResource>> ListCalendarsAsync(string accountId,CancellationToken ct=default);

@@ -88,6 +88,7 @@ public partial class GoogleWorkspaceViewModel(IGoogleWorkspace workspace,IBrowse
     }
     public Task ImportAsync(string json)=>RunAsync(ct=>workspace.ImportClientAsync(json,ct),"OAuth 設定已匯入，可新增 Google 帳號。");
     public Task RenameAccountAsync(string accountId,string name)=>RunAsync(ct=>workspace.RenameAccountAsync(accountId,name,ct),"帳號名稱已更新。");
+    public Task ReauthenticateAsync(string accountId)=>RunAsync(ct=>workspace.ReauthenticateAsync(accountId,url=>browser.Open(new Uri(url)),ct),"帳號已重新連線，帳號名稱與同步來源已保留，來源將依排程繼續同步。");
     [RelayCommand] private Task UseBuiltInClientAsync()=>RunAsync(ct=>workspace.UseBuiltInClientAsync(ct),"已恢復程式內建的 Google 登入設定。");
     [RelayCommand(CanExecute=nameof(CanSignIn))] private Task SignInAsync()=>RunAsync(ct=>workspace.SignInAsync(AccountLabel,UseSheets,UseCalendar,url=>browser.Open(new Uri(url)),ct,WriteSheets),"帳號已連線。憑證有效時會在背景自動續用。");
     partial void OnSelectedChanged(GoogleSourceDraft? oldValue,GoogleSourceDraft? newValue)

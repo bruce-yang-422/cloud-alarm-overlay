@@ -142,6 +142,11 @@ public partial class GoogleWorkspaceView:UserControl
         var dialog=new GoogleAccountNameDialog(account);
         if(ShowDialog(dialog))await vm.RenameAccountAsync(account.Id,dialog.AccountName);
     }
+    private async void Reauthenticate(object sender,RoutedEventArgs e)
+    {
+        if(DataContext is not GoogleWorkspaceViewModel {CanAct:true,CanSignIn:true} vm || sender is not FrameworkElement {DataContext:GoogleAccount account})return;
+        await vm.ReauthenticateAsync(account.Id);
+    }
     private async void Revoke(object sender,RoutedEventArgs e)=>await DisconnectAccountAsync(sender,true);
     private async Task DisconnectAccountAsync(object sender,bool revoke)
     {

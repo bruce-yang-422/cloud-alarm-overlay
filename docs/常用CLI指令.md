@@ -8,14 +8,14 @@ Set-Location 'D:\Projects\csharp_dev\cloud_alarm_overlay'
 
 ## 1. 確認開發環境
 
-專案由 `global.json` 鎖定 .NET SDK 10.0.401：
+專案由 `global.json` 鎖定 .NET SDK 10.0.402：
 
 ```powershell
 dotnet --version
 dotnet --info
 ```
 
-`dotnet --version` 應顯示 `10.0.401`。
+`dotnet --version` 應顯示 `10.0.402`。
 
 若 PowerShell 不允許執行本機腳本，可只對目前終端機暫時開放：
 

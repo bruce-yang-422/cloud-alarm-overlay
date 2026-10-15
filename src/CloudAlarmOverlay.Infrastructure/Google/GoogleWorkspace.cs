@@ -9,7 +9,7 @@ namespace CloudAlarmOverlay.Infrastructure.Google;
 
 internal sealed partial class GoogleWorkspace(IGoogleVault vault,GoogleApi api,ITaskRepository tasks,
     ICsvSheetParser parser,IDeviceIdentityService identity,IAudienceFilterService audience,IEmployeeRepository employees,
-    ChangeSignal changes,TimeProvider clock,IPrivateSourceStore privateSources,IAuditService audit,GoogleBuiltInClient builtIn,AdminSession admin):IGoogleWorkspace,IDisposable
+    ChangeSignal changes,TimeProvider clock,IPrivateSourceStore privateSources,IAuditService audit,GoogleBuiltInClient builtIn,AdminSession admin,ITaskCompletionRepository taskCompletions):IGoogleWorkspace,IDisposable
 {
     // Personal Google connections belong to the current Windows user's vault.
     // Personal account/source operations follow Google consent; changing the OAuth client requires local administration.
@@ -43,7 +43,7 @@ internal sealed partial class GoogleWorkspace(IGoogleVault vault,GoogleApi api,I
         try
         {
             var state=await ReadStateAsync(ct);
-            return new(state.Client is not null,state.Accounts.Select(a=>new GoogleAccount(a.Id,a.Email,a.Label,a.Status)).ToArray(),state.Sources.ToArray()){UsesBuiltInClient=state.UsesBuiltInClient};
+            return new(state.Client is not null,state.Accounts.Select(a=>new GoogleAccount(a.Id,a.Email,a.Label,a.Status){PictureUrl=GoogleProfilePicture.NormalizeUrl(a.PictureUrl)}).ToArray(),state.Sources.ToArray()){UsesBuiltInClient=state.UsesBuiltInClient};
         }
         finally{gate.Release();}
     }
@@ -76,29 +76,67 @@ internal sealed partial class GoogleWorkspace(IGoogleVault vault,GoogleApi api,I
         }
         finally{gate.Release();}Notify();
     }
-    public async Task SignInAsync(string label,bool sheets,bool calendar,Action<string> openBrowser,CancellationToken ct=default,bool writeSheets=false)
+    public Task SignInAsync(string label,bool sheets,bool calendar,Action<string> openBrowser,CancellationToken ct=default,bool writeSheets=false)
+        =>AuthenticateAsync(null,label,sheets,calendar,openBrowser,ct,writeSheets);
+    public Task ReauthenticateAsync(string accountId,Action<string> openBrowser,CancellationToken ct=default)
+        =>AuthenticateAsync(accountId,"",false,false,openBrowser,ct,false);
+    private async Task AuthenticateAsync(string? accountId,string label,bool sheets,bool calendar,Action<string> openBrowser,CancellationToken ct,bool writeSheets)
     {
-        if(!sheets&&!calendar)throw new ArgumentException("請選擇 Sheets 或 Google 日曆。");
+        if(accountId is null&&!sheets&&!calendar)throw new ArgumentException("請選擇 Sheets 或 Google 日曆。");
         GoogleClient client;
+        string scope;
         await gate.WaitAsync(ct);
-        try{client=(await ReadStateAsync(ct)).Client??throw new InvalidOperationException("此版本尚未設定 Google 登入，請聯絡軟體提供者提供已設定的版本。");}
+        try
+        {
+            var state=await ReadStateAsync(ct);
+            client=state.Client??throw new InvalidOperationException("此版本尚未設定 Google 登入，請聯絡軟體提供者提供已設定的版本。");
+            var scopes=new HashSet<string>(StringComparer.Ordinal){"openid","email","profile"};
+            if(accountId is not null)
+            {
+                var account=state.Accounts.SingleOrDefault(a=>a.Id==accountId)??throw new InvalidOperationException("此帳號已移除，請重新整理帳號清單。");
+                foreach(var granted in account.Scope.Split(' ',StringSplitOptions.RemoveEmptyEntries))scopes.Add(granted);
+                var sources=state.Sources.Where(s=>s.AccountId==accountId).ToArray();
+                sheets=sources.Any(s=>s.Kind=="Sheet");calendar=sources.Any(s=>s.Kind=="Calendar");
+                writeSheets=sources.Any(s=>s.Kind=="Sheet"&&s.AllowWrite);
+            }
+            if(sheets)scopes.Add(writeSheets?GoogleApi.SheetsWrite:GoogleApi.SheetsRead);
+            if(calendar){scopes.Add(GoogleApi.CalendarList);scopes.Add(GoogleApi.CalendarRead);}
+            if(scopes.Contains(GoogleApi.SheetsWrite))scopes.Remove(GoogleApi.SheetsRead);
+            scope=string.Join(" ",scopes);
+        }
         finally{gate.Release();}
-        var scope="openid email"+(sheets?" "+(writeSheets?GoogleApi.SheetsWrite:GoogleApi.SheetsRead):"")+(calendar?" "+GoogleApi.CalendarList+" "+GoogleApi.CalendarRead:"");
         var tokens=await api.AuthorizeAsync(client,scope,openBrowser,ct);
         var access=GoogleApi.Text(tokens,"access_token");var refresh=GoogleApi.Text(tokens,"refresh_token");
         if(string.IsNullOrEmpty(access)||string.IsNullOrEmpty(refresh))throw new InvalidOperationException("Google 未提供可續用的憑證，請重新授權。");
+        var grantedScope=GoogleApi.Text(tokens,"scope");
+        if(accountId is not null&&grantedScope.Length>0)
+        {
+            var granted=grantedScope.Split(' ',StringSplitOptions.RemoveEmptyEntries).ToHashSet(StringComparer.Ordinal);
+            if(granted.Contains(GoogleApi.SheetsWrite))granted.Add(GoogleApi.SheetsRead);
+            if(scope.Split(' ').Where(s=>s is GoogleApi.SheetsRead or GoogleApi.SheetsWrite or GoogleApi.CalendarList or GoogleApi.CalendarRead).Any(s=>!granted.Contains(s)))
+                throw new InvalidOperationException("Google 未授予原同步來源所需的完整權限，請重新登入並允許所需權限；原連線未變更。");
+        }
         var user=await api.GetAsync("https://openidconnect.googleapis.com/v1/userinfo",access,ct);
         var id=GoogleApi.Text(user,"sub");var email=GoogleApi.Text(user,"email");
         if(id.Length==0||email.Length==0||!user.TryGetProperty("email_verified",out var verified)||verified.ValueKind!=JsonValueKind.True)
             throw new InvalidOperationException("無法確認 Google 帳號身分。");
+        if(accountId is not null&&id!=accountId)throw new InvalidOperationException("選擇的 Google 帳號與原帳號不同，請使用原帳號重新登入；帳號與同步來源未變更。");
         await gate.WaitAsync(ct);
         try
         {
             var state=await ReadStateAsync(ct);
             if(state.Client?.Id!=client.Id)throw new InvalidOperationException("OAuth 設定已變更，請重新登入。");
+            var existing=state.Accounts.SingleOrDefault(a=>a.Id==id);
+            if(accountId is not null&&existing is null)throw new InvalidOperationException("此帳號已移除，重新登入未套用。");
+            if(accountId is not null)label=existing!.Label;
             state.Accounts.RemoveAll(a=>a.Id==id);
             state.Accounts.Add(new(){Id=id,Email=email,Label=string.IsNullOrWhiteSpace(label)?email:label.Trim()[..Math.Min(label.Trim().Length,40)],
-                AccessToken=access,RefreshToken=refresh,Scope=GoogleApi.Text(tokens,"scope"),ExpiresAt=Expiry(tokens),Status="已連線"});
+                PictureUrl=GoogleProfilePicture.NormalizeUrl(GoogleApi.Text(user,"picture")),
+                AccessToken=access,RefreshToken=refresh,Scope=grantedScope.Length>0?grantedScope:scope,ExpiresAt=Expiry(tokens),Status="已連線"});
+            if(accountId is not null)
+                for(var i=0;i<state.Sources.Count;i++)
+                    if(state.Sources[i].AccountId==accountId)
+                        state.Sources[i]=state.Sources[i] with{LastAttempt=null,RetryAfter=null,FailureCount=0,Status=state.Sources[i].Enabled?"等待同步":"已停用"};
             await vault.WriteAsync(state,ct);
         }
         finally{gate.Release();}Notify();
@@ -112,7 +150,8 @@ internal sealed partial class GoogleWorkspace(IGoogleVault vault,GoogleApi api,I
             var state=await ReadStateAsync(ct);var account=state.Accounts.Single(a=>a.Id==accountId);
             if(revoke&&!string.IsNullOrEmpty(account.RefreshToken))await api.RevokeAsync(account.RefreshToken,ct);
 
-            foreach(var source in state.Sources.Where(s=>s.AccountId==accountId))await privateSources.ClearAsync(source.CacheSource,ct);
+            foreach(var source in state.Sources.Where(s=>s.AccountId==accountId))
+            {await privateSources.ClearAsync(source.CacheSource,ct);await taskCompletions.DeleteSourceAsync(source.CacheSource,ct);}
             drafts.Clear();
             state.Sources.RemoveAll(s=>s.AccountId==accountId);state.Accounts.RemoveAll(a=>a.Id==accountId);
             await vault.WriteAsync(state,ct);
@@ -130,6 +169,19 @@ internal sealed partial class GoogleWorkspace(IGoogleVault vault,GoogleApi api,I
             var refresh=GoogleApi.Text(response,"refresh_token");
             var next=account with{AccessToken=GoogleApi.Text(response,"access_token"),RefreshToken=refresh.Length>0?refresh:account.RefreshToken,ExpiresAt=Expiry(response),Status="已連線"};
             if(next.AccessToken.Length==0)throw new InvalidDataException("Google 憑證回應無效。");
+            if(account.Scope.Split(' ').Any(s=>s is "profile" or "https://www.googleapis.com/auth/userinfo.profile"))
+            {
+                try
+                {
+                    using var profileDeadline=CancellationTokenSource.CreateLinkedTokenSource(ct);
+                    profileDeadline.CancelAfter(TimeSpan.FromSeconds(3));
+                    var user=await api.GetAsync("https://openidconnect.googleapis.com/v1/userinfo",next.AccessToken,profileDeadline.Token);
+                    if(GoogleApi.Text(user,"sub")==account.Id)
+                        next=next with{PictureUrl=GoogleProfilePicture.NormalizeUrl(GoogleApi.Text(user,"picture"))};
+                }
+                catch(OperationCanceledException) when(!ct.IsCancellationRequested) { }
+                catch(Exception ex) when(ex is HttpRequestException or GoogleAuthorizationException or GoogleAccessException or GooglePolicyException or JsonException) { /* Profile failures must not invalidate a usable token. */ }
+            }
             state.Accounts[state.Accounts.IndexOf(account)]=next;
             await vault.WriteAsync(state,ct);return next.AccessToken;
         }
@@ -214,7 +266,7 @@ internal sealed partial class GoogleWorkspace(IGoogleVault vault,GoogleApi api,I
         try
         {
             var state=await ReadStateAsync(ct);var source=state.Sources.Single(s=>s.Id==id);
-            await privateSources.ClearAsync(source.CacheSource,ct);state.Sources.Remove(source);drafts.Clear();await vault.WriteAsync(state,ct);
+            await privateSources.ClearAsync(source.CacheSource,ct);await taskCompletions.DeleteSourceAsync(source.CacheSource,ct);state.Sources.Remove(source);drafts.Clear();await vault.WriteAsync(state,ct);
         }
         finally{gate.Release();}Notify();
     }

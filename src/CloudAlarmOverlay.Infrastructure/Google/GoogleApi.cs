@@ -44,7 +44,12 @@ internal sealed class GoogleApi:IDisposable
                         limited=errors.EnumerateArray().Any(e=>Text(e,"reason") is "rateLimitExceeded" or "userRateLimitExceeded" or "quotaExceeded");
                 }catch(JsonException){}
                 if(limited)throw new HttpRequestException("Google 流量受限，稍後重試。",null,HttpStatusCode.TooManyRequests);
-                if(error=="invalid_grant"||response.StatusCode==HttpStatusCode.Unauthorized)throw new Core.Models.GoogleAuthorizationException("需要重新登入");
+                if(error=="invalid_grant")throw new Core.Models.GoogleAuthorizationException("Google 授權已到期或遭撤銷，請按「重新登入」保留來源並重新授權。");
+                // A token endpoint 401 can indicate an OAuth client problem. It does not
+                // prove that the user's refresh token was revoked; keep it for retry.
+                if(response.StatusCode==HttpStatusCode.Unauthorized&&request.RequestUri?.AbsoluteUri=="https://oauth2.googleapis.com/token")
+                    throw new HttpRequestException("Google 憑證更新失敗，保留憑證；請檢查 OAuth 用戶端設定後重試。",null,response.StatusCode);
+                if(response.StatusCode==HttpStatusCode.Unauthorized)throw new Core.Models.GoogleAuthorizationException("需要重新登入");
                 if(error=="admin_policy_enforced")throw new GooglePolicyException("公司政策限制，請聯絡管理員。");
                 if(response.StatusCode==HttpStatusCode.Forbidden)throw new GoogleAccessException("Google 拒絕存取：請確認 API 已啟用、帳號授權與檔案／日曆權限，或公司政策限制。");
                 if(response.StatusCode==HttpStatusCode.NotFound)throw new GoogleAccessException("來源不存在或此帳號無法存取。");

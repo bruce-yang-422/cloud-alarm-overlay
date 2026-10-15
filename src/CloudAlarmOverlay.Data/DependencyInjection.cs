@@ -23,6 +23,7 @@ public static class DependencyInjection
         services.AddSingleton<IPrivateSourceStore,PrivateSourceStore>();
         services.AddSingleton<ICountdownRepository, CountdownRepository>();
         services.AddSingleton<ITaskHomePinRepository, TaskHomePinRepository>();
+        services.AddSingleton<ITaskCompletionRepository, TaskCompletionRepository>();
         services.AddSingleton<IHolidayRepository, HolidayRepository>();
         services.AddSingleton<ILunarCalendarRepository, LunarCalendarRepository>();
         services.AddSingleton<IEmployeeRepository, EmployeeRepository>();

@@ -3,12 +3,12 @@ using CloudAlarmOverlay.Core.Models;
 namespace CloudAlarmOverlay.App.ViewModels;
 
 // Reuses the home card presentation without creating a countdown or a second reminder.
-public sealed class PinnedTaskRow(AlarmTask task, DateTime? nextAt, DateTime? acknowledgedAt = null)
+public sealed class PinnedTaskRow(AlarmTask task, DateTime? nextAt, DateTime? completedAt = null)
     : CountdownRow(new CountdownItem
     {
         Id=task.Id, Title=task.Title, TargetAt=nextAt ?? task.ScheduledAt, Mode="Time",
         CreatedAt=task.CreatedAt, IsPinned=true,
-        CompletedAt=task.Recurrence=="None" ? acknowledgedAt : null
+        CompletedAt=task.Recurrence=="None" ? completedAt : null
     })
 {
     public override bool CanShare => false;
@@ -23,6 +23,10 @@ public sealed class PinnedTaskRow(AlarmTask task, DateTime? nextAt, DateTime? ac
     public override void Update(DateTime now, IReadOnlyDictionary<DateOnly,int>? lunarDays=null, IReadOnlyList<Holiday>? holidays=null)
     {
         base.Update(now,lunarDays,holidays);
+        if(Item.IsCompleted)
+        {
+            HomeSummary=StatusLabel="已完成";IsScheduleUnavailable=false;IsExpired=false;return;
+        }
         if (!Task.Enabled || NextAt is null && Task.Recurrence!="None")
         {
             IsScheduleUnavailable=true;
@@ -31,6 +35,5 @@ public sealed class PinnedTaskRow(AlarmTask task, DateTime? nextAt, DateTime? ac
             HomeElapsedLabel="";
             ShowHomeCountdown=false;
         }
-        else if (Item.IsCompleted) HomeSummary=StatusLabel="已確認完成";
     }
 }

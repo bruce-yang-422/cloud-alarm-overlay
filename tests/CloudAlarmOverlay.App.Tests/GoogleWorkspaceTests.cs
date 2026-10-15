@@ -25,6 +25,35 @@ namespace CloudAlarmOverlay.App.Tests;
 public sealed class GoogleWorkspaceTests
 {
     [Theory]
+    [InlineData("https://lh3.googleusercontent.com/a/avatar",true)]
+    [InlineData("",false)]
+    [InlineData("file:///C:/avatar.png",false)]
+    [InlineData("http://lh3.googleusercontent.com/a/avatar",false)]
+    [InlineData("https://lh3.googleusercontent.com.evil.test/avatar",false)]
+    [InlineData("https://user:password@lh3.googleusercontent.com/avatar",false)]
+    public void Profile_pictures_accept_only_public_google_https_urls(string url,bool valid)
+        =>Assert.Equal(valid,GoogleProfilePicture.NormalizeUrl(url).Length>0);
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task Profile_photo_updates_on_token_refresh_without_breaking_sync_when_profile_fails(bool failProfile)
+    {
+        using var f=new Fixture();await f.Initialize();
+        var state=await f.Vault.ReadAsync(default);
+        var oldPhoto="https://lh3.googleusercontent.com/a/old";
+        state.Accounts[0]=state.Accounts[0] with{Scope=GoogleApi.SheetsWrite+" profile",PictureUrl=oldPhoto};
+        await f.Vault.WriteAsync(state,default);
+        f.Handler.AuthUserId="a";f.Handler.Picture="https://lh3.googleusercontent.com/a/new";f.Handler.FailProfile=failProfile;
+        await f.Workspace.SyncAsync();
+        var snapshot=await f.Workspace.GetAsync();
+        var account=snapshot.Accounts.Single(a=>a.Id=="a");
+        Assert.Equal(failProfile?oldPhoto:f.Handler.Picture,account.PictureUrl);
+        Assert.Equal("已連線",account.Status);
+        Assert.StartsWith("同步成功",snapshot.Sources.Single(s=>s.AccountId=="a").Status);
+        Assert.Equal("refresh-a",(await f.Vault.ReadAsync(default)).Accounts[0].RefreshToken);
+    }
+    [Theory]
     [InlineData(false)]
     [InlineData(true)]
     public async Task OAuth_configuration_requires_admin_and_rechecks_expiry_before_writing(bool restore)
@@ -444,6 +473,71 @@ public sealed class GoogleWorkspaceTests
         Assert.Equal("abc",GoogleWorkspace.SpreadsheetId("https://docs.google.com/spreadsheets/d/abc/edit#gid=0"));
         Assert.Throws<ArgumentException>(()=>GoogleWorkspace.SpreadsheetId("https://example.com/abc"));
     }
+    [Fact] public async Task Reauthentication_restores_same_account_and_preserves_sources_without_admin()
+    {
+        using var f=new Fixture();await f.Initialize(UsageModes.Company);
+        f.Handler.InvalidRefresh=true;await f.Workspace.SyncAsync();f.Handler.InvalidRefresh=false;
+        var before=await f.Vault.ReadAsync(default);var original=before.Sources.Single(s=>s.AccountId=="a");
+        f.Handler.AuthUserId="a";f.Handler.AuthScope=GoogleApi.SheetsWrite+" profile";
+        f.Handler.Picture="https://lh3.googleusercontent.com/a/account-a";
+        Task? callback=null;
+        await f.Workspace.ReauthenticateAsync("a",url=>
+        {
+            var query=ParseQuery(new Uri(url).Query);
+            Assert.Contains(GoogleApi.SheetsWrite,query["scope"]);
+            Assert.Contains("profile",query["scope"].Split(' '));
+            f.Handler.ExpectedChallenge=query["code_challenge"];
+            callback=CompleteAuthorizationAsync(query);
+        });
+        await callback!;
+        var after=await f.Vault.ReadAsync(default);
+        var account=after.Accounts.Single(a=>a.Id=="a");
+        Assert.Equal(2,after.Accounts.Count);Assert.Equal("公司",account.Label);
+        Assert.Equal("已連線",account.Status);Assert.Equal("refresh-c",account.RefreshToken);
+        Assert.Equal(f.Handler.Picture,account.PictureUrl);
+        Assert.Equal(f.Handler.Picture,(await f.Workspace.GetAsync()).Accounts.Single(a=>a.Id=="a").PictureUrl);
+        Assert.Equal(before.Accounts.Single(a=>a.Id=="b"),after.Accounts.Single(a=>a.Id=="b"));
+        var source=after.Sources.Single(s=>s.AccountId=="a");
+        Assert.Equal(original with{LastAttempt=null,RetryAfter=null,FailureCount=0,Status="等待同步"},source);
+        Assert.Equal(before.Sources.Single(s=>s.AccountId=="b"),after.Sources.Single(s=>s.AccountId=="b"));
+        await f.Workspace.SyncAsync(source.Id,automatic:true);
+        Assert.StartsWith("同步成功",(await f.Workspace.GetAsync()).Sources.Single(s=>s.Id==source.Id).Status);
+    }
+    [Theory]
+    [InlineData("c",false,false)]
+    [InlineData("a",true,false)]
+    [InlineData("a",false,true)]
+    public async Task Reauthentication_wrong_account_partial_consent_or_cancel_keeps_original_state(string userId,bool partial,bool cancel)
+    {
+        using var f=new Fixture();await f.Initialize();
+        var before=JsonSerializer.Serialize(await f.Vault.ReadAsync(default));
+        f.Handler.AuthUserId=userId;f.Handler.AuthScope=partial?GoogleApi.SheetsRead:GoogleApi.SheetsWrite;
+        Task? callback=null;
+        var operation=f.Workspace.ReauthenticateAsync("a",url=>
+        {
+            var query=ParseQuery(new Uri(url).Query);f.Handler.ExpectedChallenge=query["code_challenge"];
+            callback=CompleteAuthorizationAsync(query,cancel);
+        });
+        if(cancel)await Assert.ThrowsAnyAsync<OperationCanceledException>(()=>operation);
+        else await Assert.ThrowsAsync<InvalidOperationException>(()=>operation);
+        await callback!;Assert.Equal(before,JsonSerializer.Serialize(await f.Vault.ReadAsync(default)));
+    }
+    [Fact] public async Task Token_endpoint_unauthorized_preserves_refresh_token_and_cache_for_retry()
+    {
+        using var f=new Fixture();await f.Initialize();await f.Workspace.SyncAsync();
+        var state=await f.Vault.ReadAsync(default);state.Accounts[0]=state.Accounts[0] with{ExpiresAt=DateTimeOffset.MinValue};await f.Vault.WriteAsync(state,default);
+        f.Handler.TokenUnauthorized=true;await f.Workspace.SyncAsync();
+        Assert.Equal("refresh-a",(await f.Vault.ReadAsync(default)).Accounts.Single(a=>a.Id=="a").RefreshToken);
+        Assert.Equal(2,(await f.Get<ITaskRepository>().GetAllAsync()).Count);
+        f.Handler.TokenUnauthorized=false;await f.Workspace.SyncAsync();
+        Assert.StartsWith("同步成功",(await f.Workspace.GetAsync()).Sources.Single(s=>s.Id==f.Company.Id).Status);
+    }
+    private static Task CompleteAuthorizationAsync(Dictionary<string,string> query,bool cancel=false)=>Task.Run(async()=>
+    {
+        using var client=new HttpClient();
+        var response=await client.GetAsync(query["redirect_uri"]+"?state="+query["state"]+(cancel?"&error=access_denied":"&code=authcode"));
+        Assert.Equal(HttpStatusCode.OK,response.StatusCode);
+    });
     [Fact] public async Task OAuth_uses_pkce_state_and_loopback_before_accepting_account()
     {
         using var f=new Fixture();await f.Initialize();Task? callback=null;
@@ -498,6 +592,14 @@ public sealed class GoogleWorkspaceTests
                 vm.Tabs[2].Kind="Google 日曆";vm.Tabs[2].Name="家庭行程";
                 var view=Find<GoogleWorkspaceView>(window)!;Assert.True(view.IsVisible);
                 Assert.True(view.IsEnabled);
+                var savedAccount=vm.Accounts[0];vm.Accounts[0]=savedAccount with{Status="需要重新登入"};
+                await Dispatcher.Yield(DispatcherPriority.ApplicationIdle);window.UpdateLayout();
+                var reconnect=Assert.Single(FindAll<Button>(view),b=>b.Content is "重新登入"&&b.IsVisible);
+                Assert.Equal(savedAccount.Id,((GoogleAccount)reconnect.DataContext).Id);
+                foreach(var menu in FindAll<Button>(view).Select(b=>b.ContextMenu).OfType<ContextMenu>())
+                    Assert.Contains(menu.Items.OfType<MenuItem>(),item=>item.Header is "重新登入…");
+                Capture(window,"google-reauthenticate-account");
+                vm.Accounts[0]=savedAccount;await Dispatcher.Yield(DispatcherPriority.ApplicationIdle);
                 main.Preferences.SelectedPage=SettingsPage.Sound;await Dispatcher.Yield(DispatcherPriority.ApplicationIdle);Assert.False(view.IsVisible);
                 main.Preferences.SelectedPage=SettingsPage.Google;await Dispatcher.Yield(DispatcherPriority.ApplicationIdle);Assert.True(view.IsVisible);
                 vm.Selected=vm.Tabs[1];vm.Selected.Name="未儲存草稿";vm.Selected=vm.Tabs[2];vm.Selected=vm.Tabs[1];Assert.Equal("未儲存草稿",vm.Selected.Name);Assert.True(vm.Selected.Locked);
@@ -661,7 +763,9 @@ public sealed class GoogleWorkspaceTests
     }
     private sealed class Handler:HttpMessageHandler
     {
-        public int Refreshes,Writes;public bool FailCompany,FailCalendar,InvalidRefresh,CancelEvent,TimeoutAfterWrite;
+        public int Refreshes,Writes;public bool FailCompany,FailCalendar,InvalidRefresh,CancelEvent,TimeoutAfterWrite,TokenUnauthorized,FailProfile;
+        public string AuthUserId="c",AuthScope=GoogleApi.SheetsRead;
+        public string Picture="";
         public string? ExpectedChallenge;
         public DateTimeOffset EventAt=DateTimeOffset.UtcNow.AddDays(2);
         public int? PopupMinutes=10;
@@ -678,15 +782,20 @@ public sealed class GoogleWorkspaceTests
                 if(fields["grant_type"]=="authorization_code")
                 {
                     var challenge=Convert.ToBase64String(SHA256.HashData(Encoding.ASCII.GetBytes(fields["code_verifier"]))).TrimEnd('=').Replace('+','-').Replace('/','_');Assert.Equal(ExpectedChallenge,challenge);
-                    result=new{access_token="token-c",refresh_token="refresh-c",expires_in=3600,scope=GoogleApi.SheetsRead};
+                    result=new{access_token="token-c",refresh_token="refresh-c",expires_in=3600,scope=AuthScope};
                 }
                 else
                 {
                     Refreshes++;if(InvalidRefresh)return Reply(new{error="invalid_grant"},HttpStatusCode.BadRequest);
+                    if(TokenUnauthorized)return Reply(new{error="invalid_client"},HttpStatusCode.Unauthorized);
                     result=new{access_token="new-a",expires_in=3600};
                 }
             }
-            else if(path=="/v1/userinfo")result=new{sub="c",email="c@example.test",email_verified=true};
+            else if(path=="/v1/userinfo")
+            {
+                if(FailProfile)return Reply(new{error="invalid_grant"},HttpStatusCode.BadRequest);
+                result=new{sub=AuthUserId,email=AuthUserId+"@example.test",email_verified=true,picture=Picture};
+            }
             else if(path=="/revoke")result=new{};
             else if(path.EndsWith(":batchUpdate"))
             {

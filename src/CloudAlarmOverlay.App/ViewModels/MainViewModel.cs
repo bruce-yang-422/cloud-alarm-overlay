@@ -9,13 +9,13 @@ using CloudAlarmOverlay.Core.Services;
 namespace CloudAlarmOverlay.App.ViewModels;
 public partial class MainViewModel(ITaskRepository tasks,ITaskService taskService,ITaskSchedulingService scheduling,
     IAckLogRepository history,ISyncLogRepository syncLogs,ISyncService sync,SyncConfiguration configuration,
-    IDeviceIdentityService identity,IAlarmPresenter presenter,IUserDialogs dialogs,ILunarCalendarRepository lunar,AdminViewModel admin,PreferencesViewModel preferences,PomodoroViewModel pomodoro,IAlarmHeartbeat heartbeat,CountdownsViewModel countdowns,ITaskHomePinRepository taskHomePins,ChangeSignal changes,IBrowserLauncher browser,HealthToolsViewModel healthTools,IGoogleWorkspace googleWorkspace,TaskCalendarViewModel calendar):ObservableObject
+    IDeviceIdentityService identity,IAlarmPresenter presenter,IUserDialogs dialogs,ILunarCalendarRepository lunar,AdminViewModel admin,PreferencesViewModel preferences,PomodoroViewModel pomodoro,IAlarmHeartbeat heartbeat,CountdownsViewModel countdowns,ITaskHomePinRepository taskHomePins,ChangeSignal changes,IBrowserLauncher browser,HealthToolsViewModel healthTools,IGoogleWorkspace googleWorkspace,TaskCalendarViewModel calendar,ITaskCompletionRepository taskCompletions,IHolidayRepository taskHolidays):ObservableObject
 {
     public HealthToolsViewModel HealthTools=>healthTools;
     public TaskCalendarViewModel TaskCalendar {get;}=calendar;
     [ObservableProperty,NotifyPropertyChangedFor(nameof(IsTaskList))] private bool isTaskCalendar;
     public bool IsTaskList=>!IsTaskCalendar;
-    [RelayCommand] private void ShowTaskCalendar(){SetTaskSelection([]);IsTaskCalendar=true;_=TaskCalendar.SetTasksAsync(Tasks.Select(r=>r.Task));}
+    [RelayCommand] private void ShowTaskCalendar(){SetTaskSelection([]);IsTaskCalendar=true;_=TaskCalendar.SetProgressTasksAsync(CalendarProgressTasks(),completionRecords,TaskSection);}
     [RelayCommand] private void ShowTaskList()=>IsTaskCalendar=false;
     [RelayCommand] private void NewActivity(DateTime? date)=>dialogs.EditActivity(date??TaskCalendar.SelectedDay);
     [RelayCommand] private void EditCalendarEntry(CalendarEntry entry){if(entry.CanEdit)dialogs.Edit(entry.Task,false);}
@@ -155,14 +155,14 @@ public partial class MainViewModel(ITaskRepository tasks,ITaskService taskServic
     public event Action? TaskSelectionRestored;
     public bool HasTaskSelection=>SelectedTasks.Count>0;
     public bool HasMultipleTaskSelection=>SelectedTasks.Count>1;
-    public string CompactSelectionSummary=>HasTaskSelection?$"已選 {SelectedTasks.Count} 筆 · 本機 {SelectedTasks.Count(t=>t.IsLocal)}／雲端 {SelectedTasks.Count(t=>!t.IsLocal)}":"勾選任務以操作";
+    public string CompactSelectionSummary=>HasTaskSelection?$"已選 {SelectedTasks.Count} 筆 · 本機 {SelectedTasks.Count(t=>t.IsLocal)}／雲端 {SelectedTasks.Count(t=>!t.IsLocal)}":TaskSection=="已完成"?"勾選任務以恢復待處理":"勾選任務以標記完成";
     public bool CanEditSelectedTask=>SelectedTasks.Count==1&&SelectedTasks[0].CanAdjustReminder;
-    public bool CanDeleteSelectedTask=>SelectedTasks.Count==1&&SelectedTasks[0].IsLocal;
+    public bool CanDeleteSelectedTask=>SelectedTasks.Count==1&&SelectedTasks[0].IsLocal&&SelectedTasks[0].IsAvailable&&!SelectedTasks[0].IsCompleted;
     public string EditTaskLabel=>SelectedTasks.Count==1&&SelectedTasks[0].Task.IsGoogleCalendar?"提醒設定":"編輯";
     public bool CanCopySelectedTask=>SelectedTasks.Count==1;
     public string SelectionHint=>!HasTaskSelection?"勾選任務以進行操作；名稱旁圖釘可釘選首頁，與倒數／正數共用名額，上限可於設定調整。":
         SelectedTasks.Count==1&&SelectedTasks[0].Task.IsGoogleCalendar?"Google 行程內容由雲端同步；可開關本機提醒，或選擇「提醒設定」修改時間及恢復 Google 設定。":
-        SelectedTasks.All(t=>!t.CanAdjustReminder)?"🔒 已選取雲端唯讀任務：不可編輯、啟停或刪除；可複製成本機後修改。":
+        SelectedTasks.All(t=>!t.CanAdjustReminder)?"🔒 已選取外部任務：可在本機標記完成；不可修改來源內容，可複製成本機。":
         SelectedTasks.Any(t=>!t.IsLocal)?"🔒 混合選取：批次啟用、停用及刪除只處理本機任務，雲端設定保持不變。":
         SelectedTasks.Count>1?"已選取多筆本機任務，請使用批次操作；編輯請只選一筆。":"已選取本機任務，可編輯、複製、啟停或刪除。";
     public string SelectionSummary=>$"已選取 {SelectedTasks.Count} 筆（本機 {SelectedTasks.Count(t=>t.IsLocal)} 筆、雲端 {SelectedTasks.Count(t=>!t.IsLocal)} 筆）";
@@ -175,12 +175,14 @@ public partial class MainViewModel(ITaskRepository tasks,ITaskService taskServic
         OnPropertyChanged(nameof(CanEditSelectedTask));OnPropertyChanged(nameof(CanDeleteSelectedTask));OnPropertyChanged(nameof(EditTaskLabel));OnPropertyChanged(nameof(CanCopySelectedTask));OnPropertyChanged(nameof(SelectionHint));
         EditTaskCommand.NotifyCanExecuteChanged();CopyTaskCommand.NotifyCanExecuteChanged();
         DeleteTaskCommand.NotifyCanExecuteChanged();ToggleTaskCommand.NotifyCanExecuteChanged();BatchTasksCommand.NotifyCanExecuteChanged();
+        CompleteSelectedTasksCommand.NotifyCanExecuteChanged();RestoreSelectedTasksCommand.NotifyCanExecuteChanged();
+        OnPropertyChanged(nameof(HasCompletableSelection));OnPropertyChanged(nameof(HasRestorableSelection));
     }
-    private bool CanBatchTasks(string operation)=>operation=="copy"?HasTaskSelection:SelectedTasks.Any(t=>t.IsLocal);
+    private bool CanBatchTasks(string operation)=>operation=="copy"?HasTaskSelection:SelectedTasks.Any(t=>t.IsLocal&&t.IsAvailable&&!t.IsCompleted);
     [RelayCommand(CanExecute=nameof(CanBatchTasks))] private async Task BatchTasksAsync(string operation)
     {
         var selected=SelectedTasks.ToArray();
-        var eligible=selected.Where(t=>operation=="copy"||t.IsLocal).ToArray();
+        var eligible=selected.Where(t=>operation=="copy"||t.IsLocal&&t.IsAvailable&&!t.IsCompleted).DistinctBy(t=>t.Task.Id).ToArray();
         if(eligible.Length==0){Status="請選取任務；雲端任務只可複製成本機。";return;}
         var action=operation switch {"copy"=>"複製成本機（先停用，編輯確認後再啟用）","delete"=>"刪除","enable"=>"啟用",_=>"停用"};
         if(!dialogs.Confirm($"確定{action} {eligible.Length} 筆任務？"+(operation=="copy"?"":"雲端任務將略過，既有簽收紀錄保留。")))return;
@@ -200,7 +202,7 @@ public partial class MainViewModel(ITaskRepository tasks,ITaskService taskServic
             catch(Exception ex){failed++;error=ex.Message;}
         }
         await RefreshAsync();
-        Status=$"批次作業：完成 {completed} 筆、略過 {selected.Length-eligible.Length} 筆雲端、失敗 {failed} 筆。"+(error is null?"":$" {error}");
+        Status=$"批次作業：完成 {completed} 筆、略過 {selected.Length-eligible.Length} 筆、失敗 {failed} 筆。"+(error is null?"":$" {error}");
     }
     public ObservableCollection<TaskRow> Upcoming {get;}=[];
     public ObservableCollection<HistoryRow> History {get;}=[];
@@ -292,7 +294,8 @@ public partial class MainViewModel(ITaskRepository tasks,ITaskService taskServic
             HomePinLimit=await taskHomePins.GetLimitAsync();
             await RefreshCalendarAsync(DateTime.Now);
             allTasks=await tasks.GetAllAsync();
-            taskPinIds=(await taskHomePins.GetTaskIdsAsync()).ToHashSet();FilterTasks();
+            taskPinIds=(await taskHomePins.GetTaskIdsAsync()).ToHashSet();
+            await LoadTaskProgressAsync(DateTime.Now);FilterTasks();
             CalendarWarning="";
             OnPropertyChanged(nameof(HasCalendarWarning));
             allHistory=await history.GetRangeAsync(DateTime.MinValue,DateTime.MaxValue);FilterHistory(false);
@@ -304,8 +307,7 @@ public partial class MainViewModel(ITaskRepository tasks,ITaskService taskServic
                 var next=await scheduling.GetNextOccurrenceAsync(task,now);
                 if(next is not null)upcoming.Add(new TaskRow(task,next));
                 if(taskPinIds.Contains(task.Id))newPinnedTasks.Add(new PinnedTaskRow(task,next,
-                    allHistory.Where(log=>log.TaskId==task.Id && log.ScheduledAt==task.ScheduledAt && log.AcknowledgedAt is not null)
-                        .Select(log=>log.AcknowledgedAt).FirstOrDefault()));
+                    completionRecords.FirstOrDefault(c=>c.Matches(task,task.ScheduledAt))?.CompletedAt));
             }
             pinnedTasks.Clear();pinnedTasks.AddRange(newPinnedTasks);
             Upcoming.Clear();foreach(var row in upcoming.OrderBy(t=>t.NextAt).Take(8))Upcoming.Add(row);
@@ -332,15 +334,15 @@ public partial class MainViewModel(ITaskRepository tasks,ITaskService taskServic
     }
     private void FilterTasks()
     {
-        var selectedIds=SelectedTasks.Select(t=>t.Task.Id).ToHashSet();
+        var selectedIds=SelectedTasks.Select(t=>t.Key).ToHashSet();
         rebuildingTasks=true;
         try {
-        var existing=Tasks.ToDictionary(r=>r.Task.Id);
+        var existing=Tasks.ToDictionary(r=>r.Key);
         var index=0;
-        foreach(var task in allTasks.Where(t=>(SourceFilter=="全部來源"||t.Source==SourceFilter||(SourceFilter=="Google"&&t.Source.StartsWith("Google:",StringComparison.Ordinal)))&&(t.Title.Contains(Search,StringComparison.OrdinalIgnoreCase)||t.Description?.Contains(Search,StringComparison.OrdinalIgnoreCase)==true||t.Note?.Contains(Search,StringComparison.OrdinalIgnoreCase)==true)))
+        foreach(var candidate in FilteredProgressRows())
         {
-            var row=existing.TryGetValue(task.Id,out var old) && old.Task==task ? old : new TaskRow(task);
-            row.IsPinned=taskPinIds.Contains(task.Id);
+            var row=existing.TryGetValue(candidate.Key,out var old)&&old.Task==candidate.Task&&old.CompletedAt==candidate.CompletedAt&&old.IsEnded==candidate.IsEnded&&old.IsAvailable==candidate.IsAvailable ? old : candidate;
+            row.IsPinned=taskPinIds.Contains(row.Task.Id);
             var previous=Tasks.IndexOf(row);
             if(previous<0)Tasks.Insert(index,row);
             else if(previous!=index)Tasks.Move(previous,index);
@@ -348,11 +350,12 @@ public partial class MainViewModel(ITaskRepository tasks,ITaskService taskServic
         }
         while(Tasks.Count>index)Tasks.RemoveAt(Tasks.Count-1);
         } finally {rebuildingTasks=false;}
-        SetTaskSelection(Tasks.Where(t=>selectedIds.Contains(t.Task.Id)).ToArray());
+        SetTaskSelection(Tasks.Where(t=>selectedIds.Contains(t.Key)).ToArray());
         SelectedTask=SelectedTasks.FirstOrDefault();
         TaskSelectionRestored?.Invoke();
         OnPropertyChanged(nameof(IsTasksEmpty));
-        _=TaskCalendar.SetTasksAsync(Tasks.Select(r=>r.Task));
+        foreach(var name in new[]{nameof(PendingTaskCount),nameof(CompletedTaskCount),nameof(EndedTaskCount),nameof(TaskSectionSummary)})OnPropertyChanged(name);
+        _=TaskCalendar.SetProgressTasksAsync(CalendarProgressTasks(),completionRecords,TaskSection);
     }
     [RelayCommand] private void OpenAdmin(string tab)
     {
@@ -475,6 +478,15 @@ public sealed partial class TaskRow(AlarmTask task,DateTime? nextAt=null):Observ
 {
     public AlarmTask Task {get;}=task;
     public DateTime? NextAt {get;}=nextAt;
+    public DateTime OccurrenceAt {get;init;}=TaskCompletion.Occurrence(task,nextAt??task.ScheduledAt);
+    public DateTime? CompletedAt {get;init;}
+    public bool IsCompleted=>CompletedAt.HasValue;
+    public bool IsEnded {get;init;}
+    public bool IsAvailable {get;init;}=true;
+    public string Key=>Task.Source+"|"+Task.Id+"|"+OccurrenceAt.Ticks;
+    public DateTime DisplayAt=>Task.ActivityStartAt??NextAt??Task.CalendarStartAt??Task.ScheduledAt;
+    public string Progress=>IsCompleted?"已完成":IsEnded?"已結束":Task.ActivityStartAt<=DateTime.Now&&Task.ActivityEndAt>DateTime.Now?"進行中":DisplayAt<DateTime.Now?"逾期":"待處理";
+    public string ProgressDetails=>!IsAvailable?"來源目前未載入；完成紀錄仍保留，來源恢復同步後可恢復待處理。":IsCompleted?$"完成於 {CompletedAt:yyyy/MM/dd HH:mm}；本機記錄，不回寫雲端":IsEnded?"活動已結束，未自動標記完成":"完成只記錄本次任務，不修改外部資料；簽收通知不等於完成任務。";
     [ObservableProperty] [NotifyPropertyChangedFor(nameof(PinLabel))] private bool isPinned;
     public string PinLabel=>IsPinned?"取消釘選":"釘選首頁";
     public string UpcomingState=>"等待觸發";
@@ -482,12 +494,13 @@ public sealed partial class TaskRow(AlarmTask task,DateTime? nextAt=null):Observ
     public string Source=>Task.Source.StartsWith("Google:",StringComparison.Ordinal)?"Google · "+Task.Note?.Split('\n')[0]:Task.Source;
     public string Access=>IsLocal?"本機":Task.IsGoogleCalendar?"可調整本機提醒":"🔒 "+Source;
     public string Level=>Task.Level;
-    public string Time=>Task.ScheduledAt.ToString("MM/dd HH:mm:ss");
+    public string Time=>DisplayAt.ToString("MM/dd HH:mm:ss");
     public string NextTime=>NextAt?.ToString("MM/dd HH:mm")??"—";
-    public string State=>Task.Enabled?"已啟用":"已停用";
+    public string State=>IsCompleted?"本次不提醒":Task.Enabled?"已開啟":Task.IsGoogleCalendar&&!Task.HasCalendarReminderOverride?"未設提醒":"已關閉";
     public string StateOrigin=>IsLocal?"本機可調整":Task.IsGoogleCalendar?(Task.HasCalendarReminderOverride?"自訂日曆提醒":"依 Google 提醒"): $"依 {Source} 設定";
-    public bool CanAdjustReminder=>IsLocal||Task.IsGoogleCalendar;
+    public bool CanAdjustReminder=>IsAvailable&&!IsCompleted&&(IsLocal||Task.IsGoogleCalendar);
     public string Recurrence=>CloudAlarmOverlay.Core.Recurrence.RecurrenceRule.Describe(Task.Recurrence);
+    public string TaskDetail=>Recurrence+" · "+(IsLocal?"本機任務":"外部來源 · 本機進度");
     public bool IsLocal=>Task.Source==TaskSources.Local;
 }
 public sealed record HistoryRow(AcknowledgementLog Entry)
