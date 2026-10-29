@@ -111,7 +111,7 @@ Get-FileHash -LiteralPath '.\CloudAlarmOverlay-v1.4.4-Setup-x64.exe' -Algorithm 
 
 ### Google 帳號
 
-在「設定 → Google 帳號與同步」連接私人 Sheets 與自己的 Google 日曆。Google 登入是否可用，取決於建置時的 OAuth 設定與專案授權狀態；Sheets 線上編輯須另行授權及啟用。詳細設定、重新登入與來源管理見 [Google 帳號與同步設定](docs/Google帳號與同步設定.md)。
+在「設定 → Google 帳號與同步」連接私人 Sheets 與自己的 Google 日曆。Google 登入是否可用，取決於建置時的 OAuth 設定與專案授權狀態；Sheets 線上編輯須另行授權及啟用。可在相同設定頁管理來源與重新登入；尚未實作的擴充見 [Google 整合待辦](docs/Google帳號與同步設定.md)。
 
 ### 任務產生器
 
@@ -157,7 +157,7 @@ dotnet build CloudAlarmOverlay.sln -c Release --no-restore
 dotnet test CloudAlarmOverlay.sln -c Release --no-build --no-restore
 ```
 
-WPF 測試須在 Windows 執行。若 DLL 被占用，請先從系統匣結束相關程式。Google OAuth 本機建置設定見 [Google 整合文件](docs/Google帳號與同步設定.md)。
+WPF 測試須在 Windows 執行。若 DLL 被占用，請先從系統匣結束相關程式。Google 登入建置須提供桌面 OAuth 設定；本機檔案名稱為 `google-desktop-oauth.local.json`，應包含桌面用戶端的 `installed` 設定並保留於 Git 忽略清單。
 
 ## 建置安裝套件
 
@@ -197,7 +197,7 @@ WPF 測試須在 Windows 執行。若 DLL 被占用，請先從系統匣結束�
 - [v1.4.4 發布說明](docs/v1.4.4發布說明.md)
 - [v1.4.3 發布說明](docs/v1.4.3發布說明.md)
 - [安裝教學](docs/安裝教學.md)
-- [Google 帳號與同步設定](docs/Google帳號與同步設定.md)
+- [Google 整合待辦](docs/Google帳號與同步設定.md)
 - [健康工具](docs/健康工具.md)
 - [氣象署警特報](docs/氣象署警特報.md)
 - [常用 CLI 指令](docs/常用CLI指令.md)
