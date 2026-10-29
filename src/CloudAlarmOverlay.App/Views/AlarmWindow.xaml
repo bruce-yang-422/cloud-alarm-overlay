@@ -34,5 +34,6 @@
 <StackPanel Orientation="Horizontal" HorizontalAlignment="Center"><ComboBox ItemsSource="{Binding SnoozeChoices}" SelectedItem="{Binding SnoozeMinutes}" Width="70"/><TextBlock Text="分鐘後" VerticalAlignment="Center" Margin="8,0" Foreground="{DynamicResource NoticeMuted}"/></StackPanel>
 <Button Content="{Binding SnoozeLabel}" Command="{Binding SnoozeCommand}" Margin="0,6,0,0" Padding="10,8"/>
 </StackPanel><Button x:Name="ConfirmButton" Content="{Binding ConfirmLabel}" Command="{Binding ConfirmCommand}" Background="{DynamicResource NoticeAccent}" Foreground="{DynamicResource NoticeButtonText}" HorizontalAlignment="Center" MinWidth="200" MaxWidth="280" Padding="32,12" MinHeight="48" Margin="0"/>
+<Button x:Name="CompleteTaskButton" Content="已完成" Command="{Binding CompleteTaskCommand}" Visibility="{Binding CanComplete,Converter={StaticResource BoolVisibility}}" Background="{DynamicResource NoticeAccent}" Foreground="{DynamicResource NoticeButtonText}" HorizontalAlignment="Center" MinWidth="200" MaxWidth="280" Padding="32,12" MinHeight="48" Margin="0,8,0,0"/>
 </StackPanel>
 </Grid></Grid></Grid></Border></Window>

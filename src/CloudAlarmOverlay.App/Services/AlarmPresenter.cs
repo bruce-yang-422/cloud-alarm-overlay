@@ -6,7 +6,7 @@ using CloudAlarmOverlay.Core.Services;
 using Microsoft.Extensions.Hosting;
 namespace CloudAlarmOverlay.App.Services;
 public sealed class AlarmPresenter(IRuntimeStore runtime,IDeviceIdentityService identity,IAckCodeGenerator codes,ChangeSignal changes,
-    IHostApplicationLifetime lifetime,NotificationPreferences preferences,ISoundService sound,CloudAlarmOverlay.Core.Repositories.ISystemEventStore events,ISnoozeStore snoozes,SnoozeService snoozeService,CloudAlarmOverlay.Core.Repositories.ITaskRepository tasks):IAlarmPresenter,IDisposable
+    IHostApplicationLifetime lifetime,NotificationPreferences preferences,ISoundService sound,CloudAlarmOverlay.Core.Repositories.ISystemEventStore events,ISnoozeStore snoozes,SnoozeService snoozeService,CloudAlarmOverlay.Core.Repositories.ITaskRepository tasks,CloudAlarmOverlay.Core.Repositories.ITaskCompletionRepository completions):IAlarmPresenter,IDisposable
 {
     private readonly SemaphoreSlim largeGate=new(1,1);
     private int smallCount;
@@ -48,9 +48,10 @@ public sealed class AlarmPresenter(IRuntimeStore runtime,IDeviceIdentityService 
             var colorMode=await preferences.ColorModeAsync(ct).ConfigureAwait(false);
             var colorScheme=await preferences.ColorSchemeAsync(ct).ConfigureAwait(false);
             var audio=await preferences.SoundAsync(task.Level,ct).ConfigureAwait(false);
+            var completionTask=preview?null:await tasks.GetByIdAsync(task.Id,ct).ConfigureAwait(false);
             await dispatcher.InvokeAsync(()=>{
                 ct.ThrowIfCancellationRequested();
-                window=new AlarmWindow(new AlarmViewModel(task,codes.Generate(),preview,allowSnooze:allowSnooze,snoozeCount:count),task.Level,large?0:smallCount++,flashMs,colorMode,colorScheme);
+                window=new AlarmWindow(new AlarmViewModel(task,codes.Generate(),preview,allowSnooze:allowSnooze,snoozeCount:count,allowCompletion:completionTask is not null),task.Level,large?0:smallCount++,flashMs,colorMode,colorScheme);
                 window.Show();
                 if(audio.Enabled&&audio.Name!="")_ = PlaySafelyAsync(audio.Name);
             });
@@ -62,7 +63,12 @@ public sealed class AlarmPresenter(IRuntimeStore runtime,IDeviceIdentityService 
                 if(!await GoogleTaskAvailableAsync(task,ct))await dispatcher.InvokeAsync(()=>window.Finish(false));
             }
             if(await window!.Completion.ConfigureAwait(false) && !preview)
+            {
                 await runtime.CompleteAsync(occurrenceId,CancellationToken.None).ConfigureAwait(false);
+                var completed=await dispatcher.InvokeAsync(()=>((AlarmViewModel)window.DataContext).TaskCompleted);
+                if(completed && completionTask is not null && await tasks.GetByIdAsync(task.Id,CancellationToken.None).ConfigureAwait(false) is not null)
+                    await completions.CompleteAsync(completionTask,scheduledAt,CancellationToken.None).ConfigureAwait(false);
+            }
             changes.Notify();
             return window.SnoozeMinutes;
         }

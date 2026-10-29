@@ -3,8 +3,10 @@ using CommunityToolkit.Mvvm.Input;
 using CloudAlarmOverlay.Core.Models;
 using CloudAlarmOverlay.Core.Services;
 namespace CloudAlarmOverlay.App.ViewModels;
-public partial class AlarmViewModel(AlarmTask task,string code,bool preview,string? caption=null,bool allowSnooze=false,int snoozeCount=0):ObservableObject
+public partial class AlarmViewModel(AlarmTask task,string code,bool preview,string? caption=null,bool allowSnooze=false,int snoozeCount=0,bool allowCompletion=false):ObservableObject
 {
+    public bool CanComplete => allowCompletion && !preview && caption is null;
+    public bool TaskCompleted {get;private set;}
     public bool CanSnooze => allowSnooze && !preview && caption is null && snoozeCount<SnoozePolicy.MaximumCount;
     public int[] SnoozeChoices { get; } = [5,10,15,30];
     [ObservableProperty] private int snoozeMinutes=5;
@@ -17,7 +19,7 @@ public partial class AlarmViewModel(AlarmTask task,string code,bool preview,stri
     [NotifyPropertyChangedFor(nameof(HasDescription))]
     private string healthDescription="";
     public string Description=>string.Join("\n\n",new[]{task.Description,HealthDescription}.Where(s=>!string.IsNullOrWhiteSpace(s)));
-    public string ConfirmLabel=>caption=="健康工具"?"確定":IsPomodoro&&task.Title.StartsWith("專注",StringComparison.Ordinal)?"開始休息":"我已閱讀，確認";
+    public string ConfirmLabel=>caption=="健康工具"?"確定":IsPomodoro&&task.Title.StartsWith("專注",StringComparison.Ordinal)?"開始休息":CanComplete?"只確認已讀":"我已閱讀，確認";
     public string Note=>task.Note??"";
     public bool HasDescription=>!string.IsNullOrWhiteSpace(Description);
     public bool HasNote=>!string.IsNullOrWhiteSpace(Note);
@@ -25,16 +27,23 @@ public partial class AlarmViewModel(AlarmTask task,string code,bool preview,stri
     public string Caption=>caption??(preview?"通知預覽 · ":"")+CloudAlarmOverlay.App.Styles.AlarmLevelLabelConverter.Label(task.Level)+(task.Level==AlarmLevels.Max?" · 公司／系統發布":"");
     public bool RequiresCode=>task.Level==AlarmLevels.Max;
     public string Code=>code;
-    public string Instruction=>caption=="健康工具"?"閱讀後按「確定」關閉提醒；確認不代表已完成活動。":caption is not null?"閱讀後按下確認，繼續番茄鐘流程。":RequiresCode?"正式確認請輸入 9 位數字確認碼；可輸入 xxx-xxx-xxx 或連續 9 位數字。"+(CanSnooze?" 忙碌時可直接按「稍後提醒」，不需輸入確認碼。":""):task.Level==AlarmLevels.Low?"10 秒後自動關閉；滑鼠移入可暫停。":"閱讀後，按下確認即可完成提醒確認。";
+    public string Instruction=>(caption=="健康工具"?"閱讀後按「確定」關閉提醒；確認不代表已完成活動。":caption is not null?"閱讀後按下確認，繼續番茄鐘流程。":RequiresCode?"正式確認請輸入 9 位數字確認碼；可輸入 xxx-xxx-xxx 或連續 9 位數字。"+(CanSnooze?" 忙碌時可直接按「稍後提醒」，不需輸入確認碼。":""):task.Level==AlarmLevels.Low?"10 秒後自動關閉；滑鼠移入可暫停。":"閱讀後，按下確認即可完成提醒確認。")+(CanComplete?" 「只確認已讀」保留待處理狀態；「已完成」會完成本次任務。":"");
     [ObservableProperty] private string input="";
     [ObservableProperty] private string error="";
     public event Action? Confirmed;
     public event Action? Incorrect;
     [RelayCommand] private void Confirm()
+        =>ConfirmTask(false);
+    [RelayCommand(CanExecute=nameof(CanComplete))] private void CompleteTask()
+    {
+        if(CanComplete)ConfirmTask(true);
+    }
+    private void ConfirmTask(bool complete)
     {
         var entered=Input.Trim();
         if(RequiresCode&&entered!=Code&&entered!=Code.Replace("-",""))
         {Error="確認碼不正確，請再試一次。";Incorrect?.Invoke();return;}
+        TaskCompleted=complete;
         Confirmed?.Invoke();
     }
 }
