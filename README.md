@@ -9,9 +9,9 @@
 
 Windows 桌面提醒工具，整合本機任務、Google Sheets 團隊通知、Google 日曆、倒數計時、番茄鐘與健康提醒。程式常駐系統匣，支援離線本機排程，並分別記錄通知簽收與任務完成進度。
 
-[下載最新發布版本](https://github.com/bruce-yang-422/cloud-alarm-overlay/releases/latest) · [產品網站](https://remind.stack-base.com/) · [v1.4.4 發布說明](docs/v1.4.4發布說明.md) · [回報問題](https://github.com/bruce-yang-422/cloud-alarm-overlay/issues)
+[下載最新發布版本](https://github.com/bruce-yang-422/cloud-alarm-overlay/releases/latest) · [產品網站](https://remind.stack-base.com/) · [v1.4.5 發布說明](docs/v1.4.5發布說明.md) · [回報問題](https://github.com/bruce-yang-422/cloud-alarm-overlay/issues)
 
-> 原始碼版本為 **1.4.4**。可下載的公開版本與安裝檔，以 GitHub Releases 實際發布內容為準。
+> 原始碼版本為 **1.4.5**。可下載的公開版本與安裝檔，以 GitHub Releases 實際發布內容為準。
 
 ## 目錄
 
@@ -58,7 +58,7 @@ Windows 桌面提醒工具，整合本機任務、Google Sheets 團隊通知、G
 驗證安裝檔的指令：
 
 ```powershell
-Get-FileHash -LiteralPath '.\CloudAlarmOverlay-v1.4.4-Setup-x64.exe' -Algorithm SHA256
+Get-FileHash -LiteralPath '.\CloudAlarmOverlay-v1.4.5-Setup-x64.exe' -Algorithm SHA256
 ```
 
 既有版本可覆蓋安裝，保留本機任務、設定及歷史紀錄。升級前請備份並儲存編輯內容；安裝器會結束同一安裝路徑的舊程式。詳細操作及 SmartScreen 說明見[安裝教學](docs/安裝教學.md)。
@@ -164,7 +164,7 @@ WPF 測試須在 Windows 執行。若 DLL 被占用，請先從系統匣結束�
 更新 [Directory.Build.props](Directory.Build.props) 的版本後執行：
 
 ```powershell
-.\installer\build-installer.ps1 -Version 1.4.4
+.\installer\build-installer.ps1 -Version 1.4.5
 ```
 
 腳本以 Windows x64 自包含方式發布，再呼叫 Inno Setup；可用 `-Iscc` 指定編譯器。輸出位置：
@@ -172,7 +172,7 @@ WPF 測試須在 Windows 執行。若 DLL 被占用，請先從系統匣結束�
 | 路徑 | 內容 |
 | --- | --- |
 | `artifacts/publish/` | 自包含程式與隨附資源。 |
-| `artifacts/installer/` | `CloudAlarmOverlay-v1.4.4-Setup-x64.exe` 安裝檔與校驗檔。 |
+| `artifacts/installer/` | `CloudAlarmOverlay-v1.4.5-Setup-x64.exe` 安裝檔與校驗檔。 |
 
 發布順序為：完成測試與封裝、計算 SHA-256、建立 GitHub Release 並上傳產物、下載核對產物，再更新 `version.json`。封裝版本必須高於 `version.json` 的已發布版本；既有版本產物不得覆寫。
 
@@ -194,8 +194,9 @@ WPF 測試須在 Windows 執行。若 DLL 被占用，請先從系統匣結束�
 
 ## 文件
 
-- [v1.4.4 發布說明](docs/v1.4.4發布說明.md)
-- [v1.4.3 發布說明](docs/v1.4.3發布說明.md)
+- [v1.4.5 發布說明](docs/v1.4.5發布說明.md)
+- [v1.4.4 發布說明](https://github.com/bruce-yang-422/cloud-alarm-overlay/releases/tag/v1.4.4)
+- [v1.4.3 發布說明](https://github.com/bruce-yang-422/cloud-alarm-overlay/releases/tag/v1.4.3)
 - [安裝教學](docs/安裝教學.md)
 - [Google 整合待辦](docs/Google帳號與同步設定.md)
 - [健康工具](docs/健康工具.md)
