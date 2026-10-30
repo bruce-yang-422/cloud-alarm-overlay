@@ -43,13 +43,47 @@ test('offline resources, failed Sheets, manual entry and Excel/CSV export', asyn
       page.on('pageerror', error => errors.push(error.message));
       await page.goto(url);
       await page.waitForFunction(() => document.querySelector('#cloud-status').textContent.includes('失敗') || location.protocol === 'file:');
+      assert.deepEqual(await page.locator('input[name="level"]').evaluateAll(inputs => inputs.map(input => input.value)), ['一般提醒', '重要提醒', '緊急提醒']);
+      const recurrenceCases = [
+        ['None', 'None'], ['ONCE', 'None'], ['Daily', 'Daily'],
+        ['WORKDAY', 'Weekly:1,2,3,4,5'], ['Weekly:1,4,7', 'Weekly:1,4,7'],
+        ['Monthly:31', 'Monthly:31'], ['Monthly:10:1,3,5,7,9,11', 'Monthly:10:1,3,5,7,9,11'],
+        ['LunarDay:1,15', 'LunarDay:1,15'],
+      ];
+      for (const [input, expected] of recurrenceCases) {
+        assert.equal(await page.evaluate(rule => { setRecurrenceToUI(rule); return computeRecurrence(); }, input), expected);
+      }
+      assert.equal(await page.evaluate(() => canEditRecurrence('LunarDate:3:23:Both')), false);
+      await page.evaluate(() => setRecurrenceToUI('None'));
       await page.locator('#field-title').fill('離線測試任務');
       await page.locator('#field-date').fill('2099-01-01');
       await page.locator('#field-clock').fill('13:00');
       await page.locator('#field-target').fill('TEST-001');
       await page.locator('#field-exclude').fill('TEST-002');
+      await page.evaluate(() => document.querySelector('input[name="level"]:checked').value = '強制通知');
+      await page.locator('#btn-submit').click();
+      assert.equal(await page.evaluate(() => tasks.length), 0);
+      assert.match(await page.locator('#toast-text').innerText(), /強制通知僅限管理者/);
+      await page.evaluate(() => document.querySelector('input[name="level"]:checked').value = '一般提醒');
       await page.locator('#btn-submit').click();
       assert.equal(await page.evaluate(() => tasks.length), 1);
+      // Cloud forced notifications remain read-only and do not enter draft exports.
+      await page.evaluate(() => { cloudTasks = [{ ...tasks[0], Id: 'ADMIN-001', Level: '強制通知' }]; renderCloudTasks(); });
+      assert.match(await page.locator('#cloud-tbody').innerText(), /強制通知/);
+      // Reject unsupported recurrence editing without changing the form or task.
+      await page.evaluate(() => { tasks[0].Recurrence = 'LunarDate:3:23:Both'; editTask(0); });
+      assert.equal(await page.locator('#edit-index').inputValue(), '-1');
+      assert.equal(await page.evaluate(() => tasks[0].Recurrence), 'LunarDate:3:23:Both');
+      await page.evaluate(() => { tasks[0].Recurrence = 'None'; });
+      let downloadCount = 0;
+      page.on('download', () => downloadCount++);
+      await page.evaluate(() => { tasks[0].Level = '強制通知'; });
+      for (const exporter of ['exportToExcel', 'exportToCsv', 'copyDataOnlyTSV']) {
+        await page.evaluate(name => window[name](), exporter);
+        assert.match(await page.locator('#toast-text').innerText(), /不開放員工建立/);
+      }
+      assert.equal(downloadCount, 0);
+      await page.evaluate(() => { tasks[0].Level = '一般提醒'; });
       assert.ok(await page.locator('svg.lucide').count() > 0);
       assert.equal(await page.locator('body').evaluate(el => getComputedStyle(el).backgroundColor), 'rgb(248, 250, 252)');
       assert.equal(await page.evaluate(async () => {
@@ -65,7 +99,11 @@ test('offline resources, failed Sheets, manual entry and Excel/CSV export', asyn
           const wb = XLSX.read(contents);
           const rows = XLSX.utils.sheet_to_json(wb.Sheets.Tasks, { header: 1 });
           assert.ok(rows.some(row => row.includes('離線測試任務') && row.includes('TEST-001') && row.includes('TEST-002')));
-        } else assert.ok(contents.toString('utf8').includes('離線測試任務'));
+          assert.ok(!rows.some(row => row.includes('強制通知')));
+        } else {
+          assert.ok(contents.toString('utf8').includes('離線測試任務'));
+          assert.ok(!contents.toString('utf8').includes('強制通知'));
+        }
       }
       assert.deepEqual(external, []);
       assert.deepEqual(errors, []);

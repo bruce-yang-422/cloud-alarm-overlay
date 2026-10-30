@@ -98,7 +98,7 @@
       <div class="px-5 pb-4 pt-1 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 text-[11px] text-slate-600 border-t border-slate-100">
         <div class="pt-3">
           <h4 class="text-xs font-semibold text-slate-800 mb-1">等級 Level</h4>
-          一般提醒／重要提醒／緊急提醒／強制通知。強制通知會全螢幕強制打斷，啟用前請先確認公司政策核准。
+          可建立一般提醒／重要提醒／緊急提醒。強制通知僅限管理者透過公司管理流程設定，不開放一般員工建立。
         </div>
         <div class="pt-3">
           <h4 class="text-xs font-semibold text-slate-800 mb-1">重複規則 Recurrence</h4>
@@ -191,7 +191,7 @@
             <!-- Row 4: Level Segmented Pills -->
             <div>
               <label class="block text-xs font-semibold text-slate-700 mb-1.5">提醒等級 <span class="font-mono text-[10px] text-slate-400">Level</span></label>
-              <div class="grid grid-cols-4 gap-1.5 p-1 bg-slate-100 rounded-xl">
+              <div class="grid grid-cols-3 gap-1.5 p-1 bg-slate-100 rounded-xl">
                 <label class="cursor-pointer select-none">
                   <input type="radio" name="level" value="一般提醒" checked class="peer sr-only">
                   <div class="text-center py-1.5 px-2 text-xs font-medium rounded-lg text-slate-600 peer-checked:bg-white peer-checked:text-emerald-700 peer-checked:shadow-xs peer-checked:font-semibold transition-all">
@@ -210,13 +210,8 @@
                     緊急提醒
                   </div>
                 </label>
-                <label class="cursor-pointer select-none">
-                  <input type="radio" name="level" value="強制通知" class="peer sr-only">
-                  <div class="text-center py-1.5 px-2 text-xs font-medium rounded-lg text-slate-600 peer-checked:bg-white peer-checked:text-purple-700 peer-checked:shadow-xs peer-checked:font-semibold transition-all">
-                    強制通知
-                  </div>
-                </label>
               </div>
+              <p class="text-[11px] text-slate-500 mt-1.5">強制通知由管理者設定，不開放一般員工建立。</p>
             </div>
 
             <!-- Row 5: Recurrence Type Segmented & Subpanels -->
@@ -780,7 +775,7 @@
               <!-- Switch 2: RequireAck -->
               <label class="flex items-center justify-between cursor-pointer">
                 <div>
-                  <div class="text-xs font-semibold text-slate-800">強制確認按鈕 (RequireAck)</div>
+                  <div class="text-xs font-semibold text-slate-800">要求手動確認 (RequireAck)</div>
                   <div class="text-[10px] text-slate-500">跳出後須手動點擊確認才關閉視窗</div>
                 </div>
                 <div class="relative inline-flex items-center">
@@ -970,12 +965,13 @@
     ];
 
     const HEADERS_ZH = [
-      "編號", "時間(YYYY-MM-DD HH:mm)", "標題", "等級(一般提醒/重要提醒/緊急提醒/強制通知)",
+      "編號", "時間(YYYY-MM-DD HH:mm)", "標題", "等級(一般提醒/重要提醒/緊急提醒)",
       "是否啟用(TRUE/FALSE)", "說明", "是否需確認(TRUE/FALSE)",
       "重複規則(None/Daily/Weekly:星期/Monthly:日:月份/LunarDay:日)", "國定假日略過(TRUE/FALSE)",
       "目標對象(留空=全公司；可填部門/姓名/裝置代碼，分號分隔)", "排除對象(留空=不排除；可填部門/姓名/裝置代碼，分號分隔)"
     ];
 
+    const EMPLOYEE_LEVELS = new Set(['一般提醒', '重要提醒', '緊急提醒']);
     let tasks = [];
 
     // Sheet 的連線資訊（SpreadsheetId／GID）屬於公司內部設定，不寫死在這個頁面裡。
@@ -1339,6 +1335,14 @@
       throw new Error('重複規則無效');
     }
 
+    function canEditRecurrence(value) {
+      const rule = (value || '').trim().toUpperCase();
+      return ['', 'NONE', 'ONCE', 'DAILY', 'WORKDAY', 'WEEKLY', 'MONTHLY'].includes(rule)
+        || /^WEEKLY:[1-7](,[1-7])*$/.test(rule)
+        || /^MONTHLY:(?:[1-9]|[12]\d|3[01])(?::(?:[1-9]|1[0-2])(?:,(?:[1-9]|1[0-2]))*)?$/.test(rule)
+        || /^LUNARDAY:(?:[1-9]|[12]\d|30)(?:,(?:[1-9]|[12]\d|30))*$/.test(rule);
+    }
+
     function setRecurrenceToUI(val) {
       val = (val || '').trim().toUpperCase();
       if (val === 'MONTHLY' || val.startsWith('MONTHLY:')) {
@@ -1402,6 +1406,9 @@
       normalizeClockInput();
       let firstInvalid = null;
       const errors = [];
+      if (!EMPLOYEE_LEVELS.has(document.querySelector('input[name="level"]:checked')?.value)) {
+        errors.push('請選擇一般、重要或緊急提醒；強制通知僅限管理者設定。');
+      }
 
       const id = document.getElementById('field-id').value.trim();
       const title = document.getElementById('field-title').value.trim();
@@ -1486,6 +1493,8 @@
     function editTask(idx) {
       const t = tasks[idx];
       if (!t) return;
+      if (!EMPLOYEE_LEVELS.has(t.Level)) { showToast('強制通知僅限管理者設定，無法在此編輯。'); return; }
+      if (!canEditRecurrence(t.Recurrence)) { showToast('此重複規則需由管理者或程式內的任務編輯器調整，已保留原始資料。'); return; }
 
       ['field-id', 'field-title', 'field-date', 'field-clock'].forEach(id => markFieldError(id, false));
       document.getElementById('edit-index').value = idx;
@@ -2124,7 +2133,16 @@
       showToast("已載入 4 筆預設測試範例！");
     }
 
+    function canExportEmployeeTasks() {
+      if (tasks.some(t => !EMPLOYEE_LEVELS.has(t.Level))) {
+        showToast('清單含有不開放員工建立的提醒等級，請移除該項目後再複製或匯出。');
+        return false;
+      }
+      return true;
+    }
+
     function exportToCsv() {
+      if (!canExportEmployeeTasks()) return;
       if (tasks.length === 0) { showToast('請先新增要匯出的任務。'); return; }
       const grid = [HEADERS_EN, HEADERS_ZH, ...tasks.map(t => HEADERS_EN.map(key => t[key] ?? ''))];
       const csv = grid.map(row => row.map(value => '"' + String(value).replace(/"/g, '""') + '"').join(',')).join('\r\n') + '\r\n';
@@ -2137,6 +2155,7 @@
 
     // Export .xlsx with headers intact
     function exportToExcel() {
+      if (!canExportEmployeeTasks()) return;
       if (tasks.length === 0) {
         alert("清單目前沒有任何任務，請先新增任務或點擊「載入範例」！");
         return;
@@ -2169,6 +2188,7 @@
 
     // Copy DATA ONLY (without headers) for direct paste into existing Google Sheets
     function copyDataOnlyTSV() {
+      if (!canExportEmployeeTasks()) return;
       if (tasks.length === 0) {
         alert("清單目前沒有任何任務可複製！");
         return;
