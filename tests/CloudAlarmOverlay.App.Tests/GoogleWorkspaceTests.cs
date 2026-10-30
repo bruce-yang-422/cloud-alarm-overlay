@@ -6,12 +6,14 @@ using System.Text;
 using System.Text.Json;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Threading;
 using CloudAlarmOverlay.App.ViewModels;
 using CloudAlarmOverlay.App.Views;
 using CloudAlarmOverlay.App.Styles;
+using CloudAlarmOverlay.App.Controls;
 using CloudAlarmOverlay.Core.Models;
 using CloudAlarmOverlay.Core.Repositories;
 using CloudAlarmOverlay.Core.Services;
@@ -393,17 +395,44 @@ public sealed class GoogleWorkspaceTests
                 Assert.True(vm.ToggleRowCommand.CanExecute(row));Assert.All(vm.Tasks.Where(t=>!t.Task.IsGoogleCalendar),t=>Assert.False(vm.ToggleRowCommand.CanExecute(t)));
                 await vm.ToggleRowCommand.ExecuteAsync(row);
                 var saved=(await f.Get<ITaskRepository>().GetByIdAsync(row.Task.Id))!;Assert.False(saved.Enabled);
+                var originalAt=saved.ScheduledAt;
+                var unchanged=new CalendarReminderWindow(f.Get<ITaskService>(),saved){Owner=window};
+                unchanged.Loaded+=(_,_)=>unchanged.Dispatcher.BeginInvoke(()=>((Button)unchanged.FindName("SaveButton")).RaiseEvent(new RoutedEventArgs(Button.ClickEvent)));
+                Assert.True(unchanged.ShowDialog());
+                saved=(await f.Get<ITaskRepository>().GetByIdAsync(row.Task.Id))!;
+                Assert.Equal(originalAt,saved.ScheduledAt);Assert.Null(saved.CalendarReminderAt);
                 var editor=new CalendarReminderWindow(f.Get<ITaskService>(),saved){Owner=window};
                 editor.Loaded+=(_,_)=>editor.Dispatcher.BeginInvoke(()=>
                 {
                     editor.UpdateLayout();Capture(editor,"calendar-reminder-disabled");
+                    Assert.False(((CyclicTimeSelector)editor.FindName("ReminderHour")).IsEnabled);
+                    Assert.False(((CyclicTimeSelector)editor.FindName("ReminderMinute")).IsEnabled);
                     ((CheckBox)editor.FindName("ReminderEnabled")).IsChecked=true;
                     ((DatePicker)editor.FindName("ReminderDate")).SelectedDate=f.Handler.EventAt.LocalDateTime.Date.AddDays(1);
-                    ((TextBox)editor.FindName("ReminderTime")).Text="08:15";
+                    var hour=(CyclicTimeSelector)editor.FindName("ReminderHour");
+                    var minute=(CyclicTimeSelector)editor.FindName("ReminderMinute");
+                    Assert.Null(Find<TextBox>(hour));Assert.Null(Find<TextBox>(minute));
+                    void Roll(CyclicTimeSelector selector,int delta)
+                    {
+                        var wheel=new MouseWheelEventArgs(Mouse.PrimaryDevice,Environment.TickCount,delta){RoutedEvent=Mouse.PreviewMouseWheelEvent};
+                        selector.RaiseEvent(wheel);Assert.True(wheel.Handled);
+                    }
+                    hour.Value=8;minute.Value=59;
+                    Roll(minute,-120);Assert.Equal(0,minute.Value);Assert.Equal(8,hour.Value);
+                    Roll(minute,-120);Assert.Equal(1,minute.Value);
+                    Roll(minute,120);Assert.Equal(0,minute.Value);
+                    Roll(minute,120);Assert.Equal(59,minute.Value);
+                    Roll(minute,-60);Assert.Equal(59,minute.Value);
+                    Roll(minute,-60);Assert.Equal(0,minute.Value);
+                    hour.Value=23;Roll(hour,-120);Assert.Equal(0,hour.Value);
+                    Roll(hour,120);Assert.Equal(23,hour.Value);
+                    hour.Value=8;minute.Value=15;
                     editor.UpdateLayout();Capture(editor,"calendar-reminder-editor");
                     Assert.InRange(((ScrollViewer)editor.FindName("EditorScroll")).ScrollableHeight,0,1);
                     var date=(DatePicker)editor.FindName("ReminderDate");
-                    Assert.InRange(Math.Abs(date.ActualHeight-((TextBox)editor.FindName("ReminderTime")).ActualHeight),0,1);
+                    Assert.Equal(23,hour.Maximum);Assert.Equal(59,minute.Maximum);
+                    Assert.True(hour.IsEnabled);Assert.True(minute.IsEnabled);
+                    Assert.InRange(Math.Abs(date.ActualHeight-hour.ActualHeight),0,1);
                     AdaptiveBrushExtension.Apply(true);editor.UpdateLayout();Capture(editor,"calendar-reminder-dark");
                     date.IsDropDownOpen=true;editor.UpdateLayout();
                     var popup=(System.Windows.Controls.Primitives.Popup)date.Template.FindName("PART_Popup",date);

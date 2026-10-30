@@ -53,6 +53,7 @@ public static class AdminSettingsJson
             "TasksBGid": "",
             "IntervalSeconds": 45
           },
+          "UpdateManifestUrl": "https://raw.githubusercontent.com/bruce-yang-422/cloud-alarm-overlay/main/version.json",
           "SyncLinksLocked": false,
           "AllowUrgentSnooze": true,
           "FlashMilliseconds": 500,

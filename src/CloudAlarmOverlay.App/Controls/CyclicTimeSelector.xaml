@@ -1,0 +1,16 @@
+<UserControl x:Class="CloudAlarmOverlay.App.Controls.CyclicTimeSelector"
+ xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+ xmlns:adaptive="clr-namespace:CloudAlarmOverlay.App.Styles" x:Name="Root" Height="40" MinWidth="64" Focusable="True"
+ Cursor="Hand" ToolTip="向下滾動增加、向上滾動減少；到達邊界後循環。也可點選箭頭或使用上下方向鍵。">
+ <Border x:Name="Surface" CornerRadius="7" BorderThickness="1" BorderBrush="{adaptive:AdaptiveBrush #D6E1EF}" Background="{adaptive:AdaptiveBrush #FDFEFF}">
+  <Grid><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="24"/></Grid.ColumnDefinitions>
+   <TextBlock Text="{Binding Value,ElementName=Root,StringFormat={}{0:D2}}" HorizontalAlignment="Center" VerticalAlignment="Center" Foreground="{adaptive:AdaptiveBrush #16243E}"/>
+   <Grid Grid.Column="1"><Grid.RowDefinitions><RowDefinition/><RowDefinition/></Grid.RowDefinitions>
+    <Grid.Resources><Style TargetType="Button"><Setter Property="Padding" Value="0"/><Setter Property="Margin" Value="0"/><Setter Property="MinHeight" Value="0"/><Setter Property="Focusable" Value="False"/><Setter Property="Background" Value="Transparent"/><Setter Property="BorderThickness" Value="0"/><Setter Property="Foreground" Value="{adaptive:AdaptiveBrush #576C8B}"/></Style></Grid.Resources>
+    <Button Content="▴" Click="Previous" AutomationProperties.Name="減少一格" ToolTip="減少一格，00 會循環到最大值"/>
+    <Button Grid.Row="1" Content="▾" Click="Next" AutomationProperties.Name="增加一格" ToolTip="增加一格，最大值會循環到 00"/>
+   </Grid>
+  </Grid>
+ </Border>
+ <UserControl.Style><Style TargetType="UserControl"><Style.Triggers><Trigger Property="IsEnabled" Value="False"><Setter Property="Opacity" Value=".45"/></Trigger></Style.Triggers></Style></UserControl.Style>
+</UserControl>

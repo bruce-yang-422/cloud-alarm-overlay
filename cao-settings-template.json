@@ -1,5 +1,6 @@
 {
   "FormatVersion": 1,
+  "RuntimeLogRetentionDays": 30,
   "SyncOptions": {
     "SheetAId": "REPLACE_WITH_SHEET_A_ID",
     "TasksAGid": "0",
@@ -10,12 +11,11 @@
     "TasksBGid": "",
     "IntervalSeconds": 45
   },
+  "UpdateManifestUrl": "https://raw.githubusercontent.com/bruce-yang-422/cloud-alarm-overlay/main/version.json",
   "SyncLinksLocked": false,
   "AllowUrgentSnooze": true,
   "FlashMilliseconds": 500,
   "LockFlash": false,
   "QuietPeriods": [],
-  "LockQuiet": false,
-  "UpdateManifestUrl": "https://example.com/version.json",
-  "RuntimeLogRetentionDays": 30
+  "LockQuiet": false
 }

@@ -1,4 +1,3 @@
-using System.Globalization;
 using System.Windows;
 using System.Windows.Input;
 using CloudAlarmOverlay.Core.Models;
@@ -20,7 +19,8 @@ public partial class CalendarReminderWindow : Window
         EventStart.Text=$"開始於 {task.CalendarStartAt:yyyy/MM/dd HH:mm} · 本機時間";
         ReminderEnabled.IsChecked=task.Enabled;
         ReminderDate.SelectedDate=task.ScheduledAt.Date;
-        ReminderTime.Text=task.ScheduledAt.ToString("HH:mm:ss");
+        ReminderHour.Value=task.ScheduledAt.Hour;
+        ReminderMinute.Value=task.ScheduledAt.Minute;
         GoogleDefaults.Text=task.GoogleReminderEnabled==true?$"{task.GoogleReminderAt:yyyy/MM/dd HH:mm:ss}":"未設定彈出式提醒";
         ReminderMode.Text=task.HasCalendarReminderOverride?"目前已自訂":"目前跟隨 Google";
         Closing+=(_,e)=>{if(busy)e.Cancel=true;};
@@ -34,9 +34,12 @@ public partial class CalendarReminderWindow : Window
             if(reset)await tasks.ResetCalendarReminderAsync(task.Id);
             else
             {
-                if(ReminderDate.SelectedDate is not {} date || !TimeOnly.TryParseExact(ReminderTime.Text.Trim(),["HH:mm","H:mm","HH:mm:ss"],CultureInfo.InvariantCulture,DateTimeStyles.None,out var time))
-                    throw new ArgumentException("請選擇日期，並輸入有效時間，例如 09:30。");
-                var at=date.Date.Add(time.ToTimeSpan());
+                if(ReminderDate.SelectedDate is not {} date)
+                    throw new ArgumentException("請選擇提醒日期、小時與分鐘。");
+                // Preserve seconds from Google when the displayed time has not changed.
+                var time=ReminderHour.Value==task.ScheduledAt.Hour && ReminderMinute.Value==task.ScheduledAt.Minute
+                    ?task.ScheduledAt.TimeOfDay:new TimeSpan(ReminderHour.Value,ReminderMinute.Value,0);
+                var at=date.Date.Add(time);
                 // Toggling alone must not freeze a time that is still following Google.
                 await tasks.SaveCalendarReminderAsync(task.Id,ReminderEnabled.IsChecked==true,at==task.ScheduledAt?null:at);
             }
