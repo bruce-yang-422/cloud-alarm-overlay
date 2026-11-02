@@ -47,6 +47,18 @@ internal sealed class TaskRepository(Database db) : ITaskRepository
             await c.ExecuteAsync(new CommandDefinition(Upsert, Database.Parameters(t), tx, cancellationToken: cancellationToken));
         }
         var ids = tasks.Select(t => t.Id).ToArray();
+        // Restore only after a successful fetch of the same source and event. A successful
+        // snapshot also discards recovery entries for cancelled or no longer returned events.
+        await c.ExecuteAsync(new CommandDefinition("""
+            UPDATE Tasks SET
+                CalendarReminderEnabled=(SELECT Enabled FROM CalendarReminderRecovery WHERE TaskId=Tasks.Id AND Source=@source),
+                CalendarReminderAt=(SELECT ScheduledAt FROM CalendarReminderRecovery WHERE TaskId=Tasks.Id AND Source=@source),
+                Enabled=COALESCE((SELECT Enabled FROM CalendarReminderRecovery WHERE TaskId=Tasks.Id AND Source=@source),GoogleReminderEnabled),
+                ScheduledAt=COALESCE((SELECT ScheduledAt FROM CalendarReminderRecovery WHERE TaskId=Tasks.Id AND Source=@source),GoogleReminderAt)
+            WHERE Source=@source AND CalendarStartAt IS NOT NULL
+                AND Id IN (SELECT TaskId FROM CalendarReminderRecovery WHERE Source=@source);
+            DELETE FROM CalendarReminderRecovery WHERE Source=@source;
+            """,new{source},tx,cancellationToken:cancellationToken));
         await c.ExecuteAsync(new CommandDefinition("DELETE FROM Tasks WHERE Source=@source AND Id NOT IN @ids;", new { source, ids }, tx, cancellationToken: cancellationToken));
         tx.Commit();
     }

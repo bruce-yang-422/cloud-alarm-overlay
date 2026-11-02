@@ -76,5 +76,34 @@ public sealed class CalendarReminderTests : IDisposable, IAppPaths
         await repo.SaveLocalAsync(edited with{Id="copy",Source=TaskSources.Local,ExternalId=null});
         var copy=(await repo.GetByIdAsync("copy"))!;Assert.False(copy.IsGoogleCalendar);Assert.Null(copy.CalendarReminderAt);Assert.Null(copy.GoogleReminderAt);
     }
+    [Theory]
+    [InlineData(true)] [InlineData(false)]
+    public async Task Temporary_private_cache_clear_preserves_reminders_across_repeated_failures(bool enabled)
+    {
+        var repo=Get<ITaskRepository>();var task=Calendar();var chosen=task.ScheduledAt.AddHours(-2);
+        await repo.ReplaceCloudCacheAsync(task.Source,[task]);await repo.SaveCalendarReminderAsync(task.Id,enabled,chosen);
+        var store=Get<IPrivateSourceStore>();
+        await store.ClearAsync(task.Source,preserveCalendarReminders:true);
+        Assert.Null(await repo.GetByIdAsync(task.Id));
+        await store.ClearAsync(task.Source,preserveCalendarReminders:true);
+        await repo.ReplaceCloudCacheAsync(task.Source,[task with{GoogleReminderEnabled=!enabled,Enabled=!enabled}]);
+        var restored=(await repo.GetByIdAsync(task.Id))!;
+        Assert.Equal(enabled,restored.Enabled);Assert.Equal(chosen,restored.ScheduledAt);Assert.True(restored.HasCalendarReminderOverride);
+        await repo.ResetCalendarReminderAsync(task.Id);
+        await repo.ReplaceCloudCacheAsync(task.Source,[task]);
+        Assert.False((await repo.GetByIdAsync(task.Id))!.HasCalendarReminderOverride);
+    }
+    [Theory]
+    [InlineData(true)] [InlineData(false)]
+    public async Task Explicit_removal_or_absent_event_discards_recovery(bool removeSource)
+    {
+        var repo=Get<ITaskRepository>();var task=Calendar();
+        await repo.ReplaceCloudCacheAsync(task.Source,[task]);await repo.SaveCalendarReminderAsync(task.Id,false,null);
+        var store=Get<IPrivateSourceStore>();await store.ClearAsync(task.Source,preserveCalendarReminders:true);
+        if(removeSource)await store.ClearAsync(task.Source);
+        else await repo.ReplaceCloudCacheAsync(task.Source,[]);
+        await repo.ReplaceCloudCacheAsync(task.Source,[task]);
+        Assert.False((await repo.GetByIdAsync(task.Id))!.HasCalendarReminderOverride);
+    }
     public void Dispose(){services.Dispose();Microsoft.Data.Sqlite.SqliteConnection.ClearAllPools();if(Directory.Exists(DataDirectory))Directory.Delete(DataDirectory,true);}
 }

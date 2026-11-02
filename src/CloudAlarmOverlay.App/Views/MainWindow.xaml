@@ -8,6 +8,21 @@
         <ResourceDictionary Source="../Styles/ConnectionStyles.xaml" />
         <ResourceDictionary Source="../Styles/SlidingSegmentedControl.xaml" />
       </ResourceDictionary.MergedDictionaries>
+      <Style x:Key="TaskReminderSwitch" TargetType="CheckBox" BasedOn="{StaticResource PillSwitch}">
+        <Setter Property="Template"><Setter.Value><ControlTemplate TargetType="CheckBox">
+          <Border x:Name="FocusRing" BorderBrush="Transparent" BorderThickness="1" CornerRadius="16" Padding="2" HorizontalAlignment="Left">
+            <Border x:Name="Track" Width="46" Height="26" CornerRadius="13" Background="{adaptive:AdaptiveBrush TaskMuted}" BorderBrush="{adaptive:AdaptiveBrush TaskDivider}" BorderThickness="1">
+              <Ellipse x:Name="Knob" Width="18" Height="18" Fill="White" HorizontalAlignment="Left" Margin="3"/>
+            </Border>
+          </Border>
+          <ControlTemplate.Triggers>
+            <Trigger Property="IsChecked" Value="True"><Setter TargetName="Track" Property="Background" Value="{adaptive:AdaptiveBrush TaskFocus}"/><Setter TargetName="Knob" Property="HorizontalAlignment" Value="Right"/></Trigger>
+            <Trigger Property="IsMouseOver" Value="True"><Setter TargetName="Track" Property="BorderBrush" Value="{adaptive:AdaptiveBrush TaskFocus}"/></Trigger>
+            <Trigger Property="IsKeyboardFocused" Value="True"><Setter TargetName="FocusRing" Property="BorderBrush" Value="{adaptive:AdaptiveBrush TaskFocus}"/></Trigger>
+            <Trigger Property="IsEnabled" Value="False"><Setter Property="Cursor" Value="Arrow"/></Trigger>
+          </ControlTemplate.Triggers>
+        </ControlTemplate></Setter.Value></Setter>
+      </Style>
       <Style x:Key="TaskMenuItem" TargetType="MenuItem">
         <Setter Property="Foreground" Value="{adaptive:AdaptiveBrush #16243E}"/>
         <Setter Property="Padding" Value="14,9"/>
@@ -437,21 +452,63 @@
               <TextBlock Text="{Binding TaskEmptyMessage}" Style="{StaticResource Muted}" Visibility="{Binding IsTasksEmpty,Converter={StaticResource BoolVisibility}}" Margin="0,6"/>
             </StackPanel>
             <Grid>
-            <DataGrid x:Name="TaskGrid" Visibility="{Binding IsTaskList,Converter={StaticResource BoolVisibility}}" ItemsSource="{Binding Tasks}" SelectionMode="Extended" SelectionUnit="FullRow" SelectionChanged="TaskSelectionChanged">
+            <DataGrid x:Name="TaskGrid" Visibility="{Binding IsTaskList,Converter={StaticResource BoolVisibility}}" ItemsSource="{Binding Tasks}" SelectionMode="Extended" SelectionUnit="FullRow" SelectionChanged="TaskSelectionChanged" AlternationCount="2"
+                      Background="{adaptive:AdaptiveBrush TaskSurface}" Foreground="{adaptive:AdaptiveBrush TaskText}" HorizontalGridLinesBrush="{adaptive:AdaptiveBrush TaskDivider}">
+              <DataGrid.Style><Style TargetType="DataGrid" BasedOn="{StaticResource {x:Type DataGrid}}">
+                <Setter Property="RowBackground" Value="{adaptive:AdaptiveBrush TaskSurface}"/><Setter Property="AlternatingRowBackground" Value="{adaptive:AdaptiveBrush TaskSurface}"/>
+              </Style></DataGrid.Style>
               <DataGrid.CellStyle><Style TargetType="DataGridCell" BasedOn="{StaticResource {x:Type DataGridCell}}">
-                <Setter Property="Padding" Value="6,4"/><Setter Property="Background" Value="Transparent"/><Setter Property="Foreground" Value="{adaptive:AdaptiveBrush #16243E}"/>
+                <Setter Property="Padding" Value="6,4"/><Setter Property="Background" Value="Transparent"/><Setter Property="Foreground" Value="{adaptive:AdaptiveBrush TaskText}"/>
+                <Setter Property="BorderBrush" Value="Transparent"/>
+                <Setter Property="Template"><Setter.Value><ControlTemplate TargetType="DataGridCell">
+                  <Border Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="1" Padding="{TemplateBinding Padding}"><ContentPresenter VerticalAlignment="Center"/></Border>
+                </ControlTemplate></Setter.Value></Setter>
                 <Style.Triggers><Trigger Property="IsSelected" Value="True">
-                  <Setter Property="Background" Value="Transparent"/><Setter Property="Foreground" Value="{adaptive:AdaptiveBrush #16243E}"/>
-                </Trigger></Style.Triggers>
+                  <Setter Property="Background" Value="Transparent"/><Setter Property="Foreground" Value="{adaptive:AdaptiveBrush TaskText}"/>
+                </Trigger><Trigger Property="IsKeyboardFocused" Value="True"><Setter Property="BorderBrush" Value="{adaptive:AdaptiveBrush TaskFocus}"/></Trigger></Style.Triggers>
               </Style></DataGrid.CellStyle>
               <DataGrid.RowStyle><Style TargetType="DataGridRow">
+                <Setter Property="Background" Value="{adaptive:AdaptiveBrush TaskSheetRow}"/>
+                <Setter Property="BorderBrush" Value="Transparent"/><Setter Property="BorderThickness" Value="0"/>
+                <Setter Property="Template"><Setter.Value><ControlTemplate TargetType="DataGridRow">
+                  <Grid Background="{TemplateBinding Background}" SnapsToDevicePixels="True">
+                    <DataGridCellsPresenter SnapsToDevicePixels="{TemplateBinding SnapsToDevicePixels}"/>
+                    <Border x:Name="SelectionIndicator" Width="3" HorizontalAlignment="Left" VerticalAlignment="Stretch"
+                            Background="{adaptive:AdaptiveBrush TaskFocus}" Visibility="Collapsed" IsHitTestVisible="False"/>
+                  </Grid>
+                  <ControlTemplate.Triggers>
+                    <Trigger Property="IsSelected" Value="True"><Setter TargetName="SelectionIndicator" Property="Visibility" Value="Visible"/></Trigger>
+                  </ControlTemplate.Triggers>
+                </ControlTemplate></Setter.Value></Setter>
                 <Style.Triggers>
+                  <DataTrigger Binding="{Binding IsLocal}" Value="True">
+                    <Setter Property="Background" Value="{adaptive:AdaptiveBrush TaskLocalRow}"/>
+                  </DataTrigger>
                   <DataTrigger Binding="{Binding IsLocal}" Value="False">
-                    <Setter Property="Background" Value="{adaptive:AdaptiveBrush #F3EFFA}"/>
                     <Setter Property="ToolTip" Value="外部內容唯讀；可在本機標記完成，不回寫來源，也可複製成本機任務。"/>
                   </DataTrigger>
-                  <DataTrigger Binding="{Binding Task.IsGoogleCalendar}" Value="True"><Setter Property="Background" Value="{adaptive:AdaptiveBrush #FAFCFF}"/><Setter Property="ToolTip" Value="Google 日曆：可調整本機提醒開關與時間；行程內容持續由 Google 同步。"/></DataTrigger>
-                  <Trigger Property="IsSelected" Value="True"><Setter Property="Background" Value="{adaptive:AdaptiveBrush #E6F0FF}"/></Trigger>
+                  <DataTrigger Binding="{Binding Task.IsGoogleCalendar}" Value="True">
+                    <Setter Property="Background" Value="{adaptive:AdaptiveBrush TaskCalendarRow}"/>
+                    <Setter Property="ToolTip" Value="Google 日曆：可調整本機提醒開關與時間；行程內容持續由 Google 同步。"/>
+                  </DataTrigger>
+                  <Trigger Property="ItemsControl.AlternationIndex" Value="1"><Setter Property="Background" Value="{adaptive:AdaptiveBrush TaskSheetRowAlternate}"/></Trigger>
+                  <MultiDataTrigger><MultiDataTrigger.Conditions>
+                    <Condition Binding="{Binding IsLocal}" Value="True"/><Condition Binding="{Binding (ItemsControl.AlternationIndex),RelativeSource={RelativeSource Self}}" Value="1"/>
+                  </MultiDataTrigger.Conditions><Setter Property="Background" Value="{adaptive:AdaptiveBrush TaskLocalRowAlternate}"/></MultiDataTrigger>
+                  <MultiDataTrigger><MultiDataTrigger.Conditions>
+                    <Condition Binding="{Binding Task.IsGoogleCalendar}" Value="True"/><Condition Binding="{Binding (ItemsControl.AlternationIndex),RelativeSource={RelativeSource Self}}" Value="1"/>
+                  </MultiDataTrigger.Conditions><Setter Property="Background" Value="{adaptive:AdaptiveBrush TaskCalendarRowAlternate}"/></MultiDataTrigger>
+                  <Trigger Property="IsMouseOver" Value="True"><Setter Property="Background" Value="{adaptive:AdaptiveBrush TaskSheetRowHover}"/></Trigger>
+                  <MultiDataTrigger><MultiDataTrigger.Conditions>
+                    <Condition Binding="{Binding IsLocal}" Value="True"/><Condition Binding="{Binding IsMouseOver,RelativeSource={RelativeSource Self}}" Value="True"/>
+                  </MultiDataTrigger.Conditions><Setter Property="Background" Value="{adaptive:AdaptiveBrush TaskLocalRowHover}"/></MultiDataTrigger>
+                  <MultiDataTrigger><MultiDataTrigger.Conditions>
+                    <Condition Binding="{Binding Task.IsGoogleCalendar}" Value="True"/><Condition Binding="{Binding IsMouseOver,RelativeSource={RelativeSource Self}}" Value="True"/>
+                  </MultiDataTrigger.Conditions><Setter Property="Background" Value="{adaptive:AdaptiveBrush TaskCalendarRowHover}"/></MultiDataTrigger>
+                  <Trigger Property="IsSelected" Value="True"><Setter Property="Background" Value="{adaptive:AdaptiveBrush TaskSelected}"/></Trigger>
+                  <MultiTrigger><MultiTrigger.Conditions><Condition Property="IsSelected" Value="True"/><Condition Property="IsMouseOver" Value="True"/></MultiTrigger.Conditions>
+                    <Setter Property="Background" Value="{adaptive:AdaptiveBrush TaskSelectedHover}"/>
+                  </MultiTrigger>
                 </Style.Triggers>
               </Style></DataGrid.RowStyle>
               <DataGrid.Columns><DataGridTemplateColumn Header="選取" Width="48" MinWidth="48">
@@ -462,14 +519,14 @@
                 <DataGridTemplateColumn Header="任務名稱" Width="*" MinWidth="180"><DataGridTemplateColumn.CellTemplate><DataTemplate>
                  <Grid><Grid.ColumnDefinitions><ColumnDefinition/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
                   <StackPanel VerticalAlignment="Center">
-                    <TextBlock Text="{Binding Title}" TextTrimming="CharacterEllipsis" Background="Transparent" Padding="4,0" Cursor="Hand" ToolTip="{Binding Title}" AutomationProperties.HelpText="連按兩下查看詳細訊息" MouseLeftButtonDown="TaskTitleDoubleClick"/>
-                    <TextBlock Text="{Binding TaskDetail}" FontSize="11" Style="{StaticResource Muted}" Padding="4,0" TextTrimming="CharacterEllipsis"/>
+                    <TextBlock Text="{Binding Title}" Foreground="{adaptive:AdaptiveBrush TaskText}" TextTrimming="CharacterEllipsis" Background="Transparent" Padding="4,0" Cursor="Hand" ToolTip="{Binding Title}" AutomationProperties.HelpText="連按兩下查看詳細訊息" MouseLeftButtonDown="TaskTitleDoubleClick"/>
+                    <TextBlock Text="{Binding TaskDetail}" FontSize="11" Foreground="{adaptive:AdaptiveBrush TaskMuted}" Padding="4,0" TextTrimming="CharacterEllipsis"/>
                   </StackPanel>
                   <Button Grid.Column="1" Style="{StaticResource TaskPinButton}" Tag="{Binding IsPinned}" Command="{Binding DataContext.ToggleTaskPinCommand,RelativeSource={RelativeSource AncestorType=Window}}" CommandParameter="{Binding}" Margin="3,2,2,2" ToolTip="{Binding PinLabel}" AutomationProperties.Name="{Binding PinLabel}"/>
                  </Grid>
                 </DataTemplate></DataGridTemplateColumn.CellTemplate></DataGridTemplateColumn>
                 <DataGridTextColumn Header="日期 / 時間" Binding="{Binding Time}" Width="128" MinWidth="128" />
-                <DataGridTemplateColumn Header="等級" CellTemplate="{StaticResource LevelBadge}" Width="90" MinWidth="90" />
+                <DataGridTemplateColumn Header="等級" CellTemplate="{StaticResource LevelBadge}" Width="104" MinWidth="104" />
                 <DataGridTemplateColumn Header="進度" Width="76" MinWidth="76"><DataGridTemplateColumn.CellTemplate><DataTemplate>
                   <TextBlock Text="{Binding Progress}" ToolTip="{Binding ProgressDetails}" FontWeight="SemiBold" VerticalAlignment="Center">
                     <TextBlock.Style><Style TargetType="TextBlock" BasedOn="{StaticResource {x:Type TextBlock}}"><Style.Triggers>
@@ -479,14 +536,19 @@
                     </Style.Triggers></Style></TextBlock.Style>
                   </TextBlock>
                 </DataTemplate></DataGridTemplateColumn.CellTemplate></DataGridTemplateColumn>
-                <DataGridTemplateColumn Header="提醒" Width="148" MinWidth="148"><DataGridTemplateColumn.CellTemplate><DataTemplate>
+                <DataGridTemplateColumn Header="提醒" Width="164" MinWidth="164"><DataGridTemplateColumn.CellTemplate><DataTemplate>
                   <Grid><Grid.ColumnDefinitions><ColumnDefinition Width="58"/><ColumnDefinition/></Grid.ColumnDefinitions>
-                    <CheckBox Style="{StaticResource PillSwitch}" IsChecked="{Binding Task.Enabled,Mode=OneWay}" IsEnabled="{Binding CanAdjustReminder}" VerticalAlignment="Center" Margin="0"
+                    <CheckBox Style="{StaticResource TaskReminderSwitch}" IsChecked="{Binding Task.Enabled,Mode=OneWay}" IsEnabled="{Binding CanAdjustReminder}" VerticalAlignment="Center" Margin="0"
                       PreviewMouseLeftButtonDown="TaskStateMouseDown" PreviewKeyDown="TaskStateKeyDown" ToolTip="{Binding StateOrigin}" ToolTipService.ShowOnDisabled="True" AutomationProperties.Name="任務啟用開關"/>
-                    <StackPanel Grid.Column="1"><TextBlock Text="{Binding State}"/><TextBlock Text="{Binding StateOrigin}" FontSize="11" Foreground="{adaptive:AdaptiveBrush #70568F}"/></StackPanel>
+                    <StackPanel Grid.Column="1"><TextBlock Text="{Binding State}" Foreground="{adaptive:AdaptiveBrush TaskText}"/><DockPanel ToolTip="{Binding StateOrigin}">
+                      <TextBlock Text="&#xE72E;" FontFamily="Segoe MDL2 Assets" FontSize="10" Foreground="{adaptive:AdaptiveBrush TaskMuted}" Margin="0,0,3,0" ToolTip="此提醒目前無法在本機修改">
+                        <TextBlock.Style><Style TargetType="TextBlock"><Setter Property="Visibility" Value="Visible"/><Style.Triggers><DataTrigger Binding="{Binding CanAdjustReminder}" Value="True"><Setter Property="Visibility" Value="Collapsed"/></DataTrigger></Style.Triggers></Style></TextBlock.Style>
+                      </TextBlock>
+                      <TextBlock Text="{Binding StateOrigin}" FontSize="11" Foreground="{adaptive:AdaptiveBrush TaskMuted}" TextTrimming="CharacterEllipsis"/>
+                    </DockPanel></StackPanel>
                   </Grid>
                 </DataTemplate></DataGridTemplateColumn.CellTemplate></DataGridTemplateColumn>
-                <DataGridTemplateColumn Header="來源" CellTemplate="{StaticResource SourceBadge}" Width="76" MinWidth="76" />
+                <DataGridTemplateColumn Header="來源" CellTemplate="{StaticResource SourceBadge}" Width="108" MinWidth="108" />
               </DataGrid.Columns>
             </DataGrid>
             <views:TaskCalendarView xmlns:views="clr-namespace:CloudAlarmOverlay.App.Views" Visibility="{Binding IsTaskCalendar,Converter={StaticResource BoolVisibility}}"/>

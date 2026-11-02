@@ -492,6 +492,7 @@ public sealed partial class TaskRow(AlarmTask task,DateTime? nextAt=null):Observ
     public string UpcomingState=>"等待觸發";
     public string Title=>Task.Title;
     public string Source=>Task.Source.StartsWith("Google:",StringComparison.Ordinal)?"Google · "+Task.Note?.Split('\n')[0]:Task.Source;
+    public string SourceLabel=>Task.IsGoogleCalendar?"Google 日曆":Task.Source.StartsWith("Google:",StringComparison.Ordinal)?"Google Sheets":Task.Source;
     public string Access=>IsLocal?"本機":Task.IsGoogleCalendar?"可調整本機提醒":"🔒 "+Source;
     public string Level=>Task.Level;
     public string Time=>DisplayAt.ToString("MM/dd HH:mm:ss");

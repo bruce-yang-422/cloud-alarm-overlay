@@ -188,7 +188,7 @@ internal sealed partial class GoogleWorkspace(IGoogleVault vault,GoogleApi api,I
         catch(GoogleAuthorizationException)
         {
             state.Accounts[state.Accounts.IndexOf(account)]=account with{AccessToken="",RefreshToken="",Status="需要重新登入"};
-            foreach(var source in state.Sources.Where(s=>s.AccountId==id))await privateSources.ClearAsync(source.CacheSource,ct);
+            foreach(var source in state.Sources.Where(s=>s.AccountId==id))await privateSources.ClearAsync(source.CacheSource,ct,preserveCalendarReminders:true);
             await vault.WriteAsync(state,ct);Notify();throw;
         }
     }
@@ -312,7 +312,7 @@ internal sealed partial class GoogleWorkspace(IGoogleVault vault,GoogleApi api,I
                 catch(Exception ex)
                 {
                     if(ex is GoogleAuthorizationException or GoogleAccessException or GooglePolicyException)
-                        await privateSources.ClearAsync(source.CacheSource,ct);
+                        await privateSources.ClearAsync(source.CacheSource,ct,preserveCalendarReminders:true);
                     var failures=Math.Min(source.FailureCount+1,10);
                     next=next with{Status=SafeError(ex),FailureCount=failures,RetryAfter=clock.GetUtcNow().AddMinutes(Math.Min(60,source.IntervalMinutes*Math.Pow(2,Math.Min(failures,6)))).AddSeconds(Random.Shared.Next(0,31))};
                 }

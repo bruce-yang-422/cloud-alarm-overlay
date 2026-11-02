@@ -188,7 +188,7 @@ public sealed class BackupRestoreService(Database db, IAuthenticationService aut
         if(await c.ExecuteScalarAsync<long>("SELECT COUNT(*) FROM Occurrences WHERE State IN ('Claimed','Displayed','Snoozed');",transaction:tx)>0)throw new InvalidOperationException("請先完成目前通知，再還原備份。");
         if(await c.ExecuteScalarAsync<long>("SELECT COUNT(*) FROM PomodoroLog WHERE IsActive=1;",transaction:tx)>0)throw new InvalidOperationException("請先結束番茄鐘，再還原備份。");
         var oldIdentity=await c.QuerySingleOrDefaultAsync<Device>("SELECT * FROM Devices LIMIT 1;",transaction:tx);
-        if(oldIdentity?.DeviceId!=p.Identity.DeviceId || oldIdentity?.DisplayName!=p.Identity.DisplayName)await Run("DELETE FROM Tasks WHERE Source<>'本機'; DELETE FROM TaskCompletions WHERE Source<>'本機';");
+        if(oldIdentity?.DeviceId!=p.Identity.DeviceId || oldIdentity?.DisplayName!=p.Identity.DisplayName)await Run("DELETE FROM Tasks WHERE Source<>'本機'; DELETE FROM TaskCompletions WHERE Source<>'本機'; DELETE FROM CalendarReminderRecovery;");
         await Run("DELETE FROM Devices;");
         await Insert(c,tx,"Devices",p.Identity with{Id=1},cancellationToken);
         foreach(var setting in p.Settings)

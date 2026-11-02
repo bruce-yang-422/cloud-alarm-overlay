@@ -40,6 +40,43 @@ public sealed class AdaptiveBrushExtension(string color) : MarkupExtension
     }
     private static Color Resolve(string value)
     {
+        // Task semantics stay consistent across all accent styles and light/dark modes.
+        string? taskColor=value switch
+        {
+            "TaskSurface" => dark ? "#182433" : "#FFFFFF",
+            "TaskHover" => dark ? "#223247" : "#F8FAFC",
+            "TaskSelected" => dark ? "#17385C" : "#DBEAFE",
+            "TaskSelectedHover" => dark ? "#214B76" : "#BFDBFE",
+            "TaskLocalRow" => dark ? "#1B2635" : "#F8FAFC",
+            "TaskLocalRowHover" => dark ? "#253447" : "#EEF2F6",
+            "TaskLocalRowAlternate" => dark ? "#223044" : "#EEF2F6",
+            "TaskSheetRow" => dark ? "#2B2238" : "#FAF5FF",
+            "TaskSheetRowHover" => dark ? "#392D4A" : "#F3E8FF",
+            "TaskSheetRowAlternate" => dark ? "#342A43" : "#F3E8FF",
+            "TaskCalendarRow" => dark ? "#173337" : "#F0FDFA",
+            "TaskCalendarRowHover" => dark ? "#20464B" : "#DDF7F0",
+            "TaskCalendarRowAlternate" => dark ? "#1D4044" : "#E0F7F1",
+            "TaskFocus" => dark ? "#60A5FA" : "#2563EB",
+            "TaskText" => dark ? "#E2E8F0" : "#16243E",
+            "TaskMuted" => dark ? "#B8C6D8" : "#475569",
+            "TaskDivider" => dark ? "#334155" : "#E2E8F0",
+            "TaskLocalSurface" => dark ? "#263244" : "#F1F5F9",
+            "TaskLocalText" => dark ? "#CBD5E1" : "#475569",
+            "TaskSheetSurface" => dark ? "#352447" : "#F3E8FF",
+            "TaskSheetText" => dark ? "#D8B4FE" : "#7E22CE",
+            "TaskCalendarSurface" => dark ? "#153B43" : "#CFFAFE",
+            "TaskCalendarText" => dark ? "#67E8F9" : "#155E75",
+            "TaskNormalSurface" => dark ? "#263244" : "#EFF4FA",
+            "TaskNormalText" => dark ? "#CBD5E1" : "#475569",
+            "TaskImportantSurface" => dark ? "#43321A" : "#FEF3C7",
+            "TaskImportantText" => dark ? "#FCD34D" : "#92400E",
+            "TaskUrgentSurface" => dark ? "#45262E" : "#FEE2E2",
+            "TaskUrgentText" => dark ? "#FCA5A5" : "#991B1B",
+            "TaskMandatorySurface" => dark ? "#541F2D" : "#881337",
+            "TaskMandatoryText" => dark ? "#FECDD3" : "#FFFFFF",
+            _ => null
+        };
+        if(taskColor is not null)return (Color)ColorConverter.ConvertFromString(taskColor);
         // Neutral workspace surfaces keep navigation, content and semantic accents distinct.
         string? workspaceColor=value switch
         {

@@ -532,6 +532,30 @@ public sealed class GoogleWorkspaceTests
         await f.Workspace.SyncAsync(source.Id,automatic:true);
         Assert.StartsWith("同步成功",(await f.Workspace.GetAsync()).Sources.Single(s=>s.Id==source.Id).Status);
     }
+    [Fact] public async Task Calendar_reminder_survives_expired_authorization_and_reauthentication()
+    {
+        using var f=new Fixture();await f.Initialize();
+        var source=new GoogleSource{Name="日曆",AccountId="b",Kind="Calendar",ResourceId="own"};
+        await f.Workspace.SaveSourceAsync(source);await f.Workspace.SyncAsync(source.Id);
+        var repo=f.Get<ITaskRepository>();var task=Assert.Single(await repo.GetAllAsync(),t=>t.Source==source.CacheSource);
+        var chosen=task.ScheduledAt.AddHours(-2);await repo.SaveCalendarReminderAsync(task.Id,true,chosen);
+        var state=await f.Vault.ReadAsync(default);var index=state.Accounts.FindIndex(a=>a.Id=="b");
+        state.Accounts[index]=state.Accounts[index] with{ExpiresAt=DateTimeOffset.MinValue};await f.Vault.WriteAsync(state,default);
+        f.Handler.InvalidRefresh=true;await f.Workspace.SyncAsync(source.Id);
+        Assert.Null(await repo.GetByIdAsync(task.Id));
+        f.Handler.InvalidRefresh=false;f.Handler.AuthUserId="b";
+        f.Handler.AuthScope=GoogleApi.SheetsRead+" "+GoogleApi.CalendarList+" "+GoogleApi.CalendarRead;
+        Task? callback=null;
+        await f.Workspace.ReauthenticateAsync("b",url=>
+        {
+            var query=ParseQuery(new Uri(url).Query);f.Handler.ExpectedChallenge=query["code_challenge"];
+            callback=CompleteAuthorizationAsync(query);
+        });
+        await callback!;f.Handler.PopupMinutes=null;await f.Workspace.SyncAsync(source.Id,automatic:true);
+        var restored=(await repo.GetByIdAsync(task.Id))!;
+        Assert.True(restored.Enabled);Assert.Equal(chosen,restored.ScheduledAt);Assert.True(restored.HasCalendarReminderOverride);
+        Assert.False(restored.GoogleReminderEnabled);
+    }
     [Theory]
     [InlineData("c",false,false)]
     [InlineData("a",true,false)]

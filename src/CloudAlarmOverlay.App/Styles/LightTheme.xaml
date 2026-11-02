@@ -189,36 +189,40 @@
     </Setter>
   </Style>
   <DataTemplate x:Key="LevelBadge">
-    <Border x:Name="Badge" Background="{adaptive:AdaptiveBrush #EAF3FF}" CornerRadius="5" Padding="8,4" HorizontalAlignment="Left">
-      <TextBlock x:Name="BadgeText" Text="{Binding Level,Converter={StaticResource AlarmLevelLabel}}" Foreground="{adaptive:AdaptiveBrush #0766FF}" FontWeight="SemiBold" />
+    <Border x:Name="Badge" Background="{adaptive:AdaptiveBrush TaskNormalSurface}" CornerRadius="5" Padding="8,4" HorizontalAlignment="Left">
+      <StackPanel Orientation="Horizontal">
+        <TextBlock x:Name="MandatoryIcon" Text="&#xE7BA;" FontFamily="Segoe MDL2 Assets" Foreground="{adaptive:AdaptiveBrush TaskMandatoryText}" Margin="0,0,4,0" Visibility="Collapsed"/>
+        <TextBlock x:Name="BadgeText" Text="{Binding Level,Converter={StaticResource AlarmLevelLabel}}" Foreground="{adaptive:AdaptiveBrush TaskNormalText}" FontWeight="SemiBold" />
+      </StackPanel>
     </Border>
     <DataTemplate.Triggers>
       <DataTrigger Binding="{Binding Level}" Value="重要提醒">
-        <Setter TargetName="Badge" Property="Background" Value="{adaptive:AdaptiveBrush #EDF7F2}" />
-        <Setter TargetName="BadgeText" Property="Foreground" Value="{adaptive:AdaptiveBrush #14715E}" />
+        <Setter TargetName="Badge" Property="Background" Value="{adaptive:AdaptiveBrush TaskImportantSurface}" />
+        <Setter TargetName="BadgeText" Property="Foreground" Value="{adaptive:AdaptiveBrush TaskImportantText}" />
       </DataTrigger>
       <DataTrigger Binding="{Binding Level}" Value="緊急提醒">
-        <Setter TargetName="Badge" Property="Background" Value="{adaptive:AdaptiveBrush #FAEEF0}" />
-        <Setter TargetName="BadgeText" Property="Foreground" Value="{adaptive:AdaptiveBrush #963D52}" />
+        <Setter TargetName="Badge" Property="Background" Value="{adaptive:AdaptiveBrush TaskUrgentSurface}" />
+        <Setter TargetName="BadgeText" Property="Foreground" Value="{adaptive:AdaptiveBrush TaskUrgentText}" />
       </DataTrigger>
       <DataTrigger Binding="{Binding Level}" Value="強制通知">
-        <Setter TargetName="Badge" Property="Background" Value="{adaptive:AdaptiveBrush #FFF0EC}" />
-        <Setter TargetName="BadgeText" Property="Foreground" Value="{adaptive:AdaptiveBrush #BC2925}" />
+        <Setter TargetName="Badge" Property="Background" Value="{adaptive:AdaptiveBrush TaskMandatorySurface}" />
+        <Setter TargetName="BadgeText" Property="Foreground" Value="{adaptive:AdaptiveBrush TaskMandatoryText}" />
+        <Setter TargetName="MandatoryIcon" Property="Visibility" Value="Visible" />
       </DataTrigger>
     </DataTemplate.Triggers>
   </DataTemplate>
   <DataTemplate x:Key="SourceBadge">
-    <Border x:Name="SourceBox" Background="{adaptive:AdaptiveBrush #EFF2F7}" CornerRadius="5" Padding="8,4" HorizontalAlignment="Left">
-      <TextBlock x:Name="SourceText" Text="{Binding Source}" Foreground="{adaptive:AdaptiveBrush #50617C}" />
+    <Border x:Name="SourceBox" Background="{adaptive:AdaptiveBrush TaskSheetSurface}" CornerRadius="5" Padding="8,4" HorizontalAlignment="Left" ToolTip="{Binding Source}">
+      <TextBlock x:Name="SourceText" Text="{Binding SourceLabel}" FontSize="12" Foreground="{adaptive:AdaptiveBrush TaskSheetText}" TextTrimming="CharacterEllipsis" />
     </Border>
     <DataTemplate.Triggers>
-      <DataTrigger Binding="{Binding Source}" Value="SheetA">
-        <Setter TargetName="SourceBox" Property="Background" Value="{adaptive:AdaptiveBrush #EAF3FF}" />
-        <Setter TargetName="SourceText" Property="Foreground" Value="{adaptive:AdaptiveBrush #0766FF}" />
+      <DataTrigger Binding="{Binding IsLocal}" Value="True">
+        <Setter TargetName="SourceBox" Property="Background" Value="{adaptive:AdaptiveBrush TaskLocalSurface}" />
+        <Setter TargetName="SourceText" Property="Foreground" Value="{adaptive:AdaptiveBrush TaskLocalText}" />
       </DataTrigger>
-      <DataTrigger Binding="{Binding Source}" Value="SheetB">
-        <Setter TargetName="SourceBox" Property="Background" Value="{adaptive:AdaptiveBrush #E9F9EF}" />
-        <Setter TargetName="SourceText" Property="Foreground" Value="{adaptive:AdaptiveBrush #148D48}" />
+      <DataTrigger Binding="{Binding Task.IsGoogleCalendar}" Value="True">
+        <Setter TargetName="SourceBox" Property="Background" Value="{adaptive:AdaptiveBrush TaskCalendarSurface}" />
+        <Setter TargetName="SourceText" Property="Foreground" Value="{adaptive:AdaptiveBrush TaskCalendarText}" />
       </DataTrigger>
     </DataTemplate.Triggers>
   </DataTemplate>

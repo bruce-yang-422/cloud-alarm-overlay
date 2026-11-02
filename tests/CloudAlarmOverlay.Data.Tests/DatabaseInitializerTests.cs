@@ -29,7 +29,8 @@ public sealed class DatabaseInitializerTests : IDisposable
         { "SystemEvents", "Id Time EventType Message" },
         { "Countdowns", "Id Title TargetAt Mode IsPinned CreatedAt IsTop Category Repeat ReminderDays ReminderMinutes Notes CompletedAt ReminderChangedAt Direction DisplayFormat Recurrence SkipOnHoliday" },
         { "TaskHomePins", "TaskId" },
-        { "TaskCompletions", "Source TaskId OccurrenceAt CompletedAt SnapshotJson" }
+        { "TaskCompletions", "Source TaskId OccurrenceAt CompletedAt SnapshotJson" },
+        { "CalendarReminderRecovery", "TaskId Source Enabled ScheduledAt" }
     };
 
     [Fact]
@@ -55,13 +56,13 @@ public sealed class DatabaseInitializerTests : IDisposable
     }
 
     [Fact]
-    public async Task Fresh_database_has_baseline_schema_and_exactly_eighteen_empty_business_tables()
+    public async Task Fresh_database_has_baseline_schema_and_exactly_nineteen_empty_business_tables()
     {
         Assert.False(File.Exists(_paths.DatabasePath));
         await Initializer.InitializeAsync();
         Assert.True(File.Exists(_paths.DatabasePath));
         Assert.Equal((long)DatabaseInitializer.CurrentSchemaVersion, await ScalarAsync("PRAGMA user_version;"));
-        Assert.Equal(18L, await ScalarAsync(
+        Assert.Equal(19L, await ScalarAsync(
             "SELECT COUNT(*) FROM sqlite_master WHERE type = 'table' AND name NOT LIKE 'sqlite_%';"));
         foreach (var row in TableColumns)
             Assert.Equal(0L, await ScalarAsync($"SELECT COUNT(*) FROM [{row[0]}];"));

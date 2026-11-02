@@ -9,9 +9,9 @@
 
 Windows 桌面提醒工具，整合本機任務、Google Sheets 團隊通知、Google 日曆、倒數計時、番茄鐘與健康提醒。程式常駐系統匣，支援離線本機排程，並分別記錄通知簽收與任務完成進度。
 
-[下載最新發布版本](https://github.com/bruce-yang-422/cloud-alarm-overlay/releases/latest) · [產品網站](https://remind.stack-base.com/) · [v1.4.5 發布說明](docs/v1.4.5發布說明.md) · [回報問題](https://github.com/bruce-yang-422/cloud-alarm-overlay/issues)
+[下載最新發布版本](https://github.com/bruce-yang-422/cloud-alarm-overlay/releases/latest) · [產品網站](https://remind.stack-base.com/) · [v1.4.6 發布說明](docs/v1.4.6發布說明.md) · [回報問題](https://github.com/bruce-yang-422/cloud-alarm-overlay/issues)
 
-> 原始碼版本為 **1.4.5**。可下載的公開版本與安裝檔，以 GitHub Releases 實際發布內容為準。
+> 原始碼版本為 **1.4.6**。可下載的公開版本與安裝檔，以 GitHub Releases 實際發布內容為準。
 
 ## 目錄
 

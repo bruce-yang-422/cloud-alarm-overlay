@@ -5,7 +5,7 @@ namespace CloudAlarmOverlay.Data;
 
 public sealed class DatabaseInitializer(ISqliteConnectionFactory connections) : IDatabaseInitializer
 {
-    public const int CurrentSchemaVersion = 13;
+    public const int CurrentSchemaVersion = 14;
 
     public async Task InitializeAsync(CancellationToken cancellationToken = default)
     {
@@ -130,6 +130,13 @@ public sealed class DatabaseInitializer(ISqliteConnectionFactory connections) : 
             await ExecuteNonQueryAsync(connection,transaction,await reader.ReadToEndAsync(cancellationToken),cancellationToken);
             await ExecuteNonQueryAsync(connection,transaction,"PRAGMA user_version = 13;",cancellationToken);
         }
+        if(version<14)
+        {
+            using var upgrade=typeof(DatabaseInitializer).Assembly.GetManifestResourceStream("CloudAlarmOverlay.Data.Migrations.V14.sql")!;
+            using var reader=new StreamReader(upgrade);
+            await ExecuteNonQueryAsync(connection,transaction,await reader.ReadToEndAsync(cancellationToken),cancellationToken);
+            await ExecuteNonQueryAsync(connection,transaction,"PRAGMA user_version = 14;",cancellationToken);
+        }
         // Fail before displaying the main window if an expected table/column is missing.
         using (var validation = connection.CreateCommand())
         {
@@ -162,6 +169,7 @@ public sealed class DatabaseInitializer(ISqliteConnectionFactory connections) : 
     }
 
     private const string SchemaValidationSql = """
+        SELECT TaskId, Source, Enabled, ScheduledAt FROM CalendarReminderRecovery LIMIT 0;
         SELECT Id, ExternalId, Title, Description, ScheduledAt, Source, Level, Enabled,
             IsTriggered, RequireAcknowledgement, TargetDeviceOrName, ExcludeDeviceOrName,
             Recurrence, SkipOnHoliday, CreatedAt, UpdatedAt, Note,

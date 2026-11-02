@@ -6,6 +6,7 @@ using System.Windows.Media.Imaging;
 using System.Windows.Threading;
 using CloudAlarmOverlay.App.ViewModels;
 using CloudAlarmOverlay.App.Views;
+using CloudAlarmOverlay.App.Styles;
 using CloudAlarmOverlay.Core.Models;
 using CloudAlarmOverlay.Core.Repositories;
 using CloudAlarmOverlay.Core.Services;
@@ -16,6 +17,122 @@ namespace CloudAlarmOverlay.App.Tests;
 
 public sealed class TaskProgressUiTests
 {
+    [Fact] public Task Source_badges_and_selection_remain_distinct_and_readable_in_every_theme()=>MilestoneOneTests.RunSta(async()=>
+    {
+        using var f=new Fixture();await f.Initialize();var vm=f.Get<MainViewModel>();await vm.InitializeAsync();vm.PageIndex=1;
+        var at=DateTime.Today.AddDays(3).AddHours(12);
+        var local=Sample("local-design","午休",at) with{Level=AlarmLevels.Low};
+        var sheetA=Sample("sheet-a-design","值日生 倒垃圾",at) with{Source=TaskSources.SheetA,ExternalId="a",Level=AlarmLevels.Mid};
+        var sheetB=sheetA with{Id="sheet-b-design",Source=TaskSources.SheetB,Title="跑網路部下午報表",Level=AlarmLevels.High};
+        var calendar=Sample("calendar-design","回診提醒",at) with{Source="Google:"+Guid.NewGuid().ToString("N"),ExternalId="event",Note="私人帳號 · 日曆",CalendarStartAt=at,GoogleReminderAt=at,GoogleReminderEnabled=false,Enabled=false,Level=AlarmLevels.Max};
+        var privateSheet=sheetA with{Id="private-sheet",Source="Google:"+Guid.NewGuid().ToString("N"),Note="公司帳號 · 任務表",Title="私人試算表任務"};
+        var secondLocal=local with{Id="local-alternate",Title="準備下班"};
+        var secondCalendar=calendar with{Id="calendar-alternate",Title="下次回診"};
+        vm.Tasks.Clear();foreach(var task in new[]{local,sheetA,sheetB,calendar,privateSheet,secondLocal,secondCalendar})vm.Tasks.Add(new TaskRow(task));
+        var window=f.Get<MainWindow>();window.ShowActivated=false;window.ShowInTaskbar=false;window.Width=1344;window.Height=960;window.Show();
+        try
+        {
+            var grid=(DataGrid)window.FindName("TaskGrid");
+            foreach(var dark in new[]{false,true})foreach(var style in Enum.GetValues<ThemeColorStyle>())
+            {
+                AdaptiveBrushExtension.Apply(dark,style);grid.UnselectAll();window.UpdateLayout();await Dispatcher.Yield(DispatcherPriority.ApplicationIdle);
+                var rows=vm.Tasks.Select(item=>(DataGridRow)grid.ItemContainerGenerator.ContainerFromItem(item)).ToArray();
+                var rowColors=rows.Select(row=>BrushColor(row.Background)).ToArray();
+                Assert.Equal(6,rowColors.Distinct().Count());
+                Assert.NotEqual(rowColors[0],rowColors[5]);Assert.NotEqual(rowColors[1],rowColors[2]);Assert.NotEqual(rowColors[3],rowColors[6]);
+                Assert.Equal(rowColors[2],rowColors[4]);
+                Assert.All(rows,row=>Assert.Equal(Visibility.Collapsed,Indicator(row).Visibility));
+                var sourceColors=new List<Color>();
+                foreach(var row in rows)
+                {
+                    var box=Descendants<Border>(row).Single(b=>b.Name=="SourceBox");
+                    var text=Descendants<TextBlock>(box).Single(t=>t.Name=="SourceText");
+                    Assert.True(Contrast(box.Background,text.Foreground)>=4.5,$"Source contrast: {dark}/{style}");
+                    sourceColors.Add(BrushColor(box.Background));
+                    var badge=Descendants<Border>(row).Single(b=>b.Name=="Badge");
+                    var label=Descendants<TextBlock>(badge).Single(t=>t.Name=="BadgeText");
+                    Assert.True(Contrast(badge.Background,label.Foreground)>=4.5,$"Level contrast: {dark}/{style}");
+                }
+                Assert.Equal(sourceColors[1],sourceColors[2]);Assert.Equal(sourceColors[1],sourceColors[4]);Assert.Equal(3,sourceColors.Distinct().Count());
+                Assert.Contains(Descendants<TextBlock>(rows[3]),t=>t.Text=="Google 日曆");
+                Assert.Contains(Descendants<TextBlock>(rows[4]),t=>t.Text=="Google Sheets");
+                var locked=Descendants<CheckBox>(rows[1]).Single(c=>c.Style==window.FindResource("TaskReminderSwitch"));
+                Assert.False(locked.IsEnabled);Assert.Equal(1d,locked.Opacity);
+                grid.SelectedItem=vm.Tasks[1];await Dispatcher.Yield(DispatcherPriority.ApplicationIdle);window.UpdateLayout();
+                Assert.True(rows[1].IsSelected);
+                Assert.NotEqual(BrushColor(rows[0].Background),BrushColor(rows[1].Background));
+                Assert.Equal(3d,Indicator(rows[1]).ActualWidth);
+                Assert.Equal((Color)ColorConverter.ConvertFromString(dark?"#60A5FA":"#2563EB"),BrushColor(Indicator(rows[1]).Background));
+                Assert.True(Contrast(rows[1].Background,Indicator(rows[1]).Background)>=3);
+                var selectedColor=BrushColor(rows[1].Background);
+                grid.SelectedItems.Add(vm.Tasks[3]);await Dispatcher.Yield(DispatcherPriority.ApplicationIdle);window.UpdateLayout();
+                Assert.Equal(selectedColor,BrushColor(rows[3].Background));Assert.Equal(3d,Indicator(rows[3]).ActualWidth);
+                Assert.Equal(BrushColor(Indicator(rows[1]).Background),BrushColor(Indicator(rows[3]).Background));
+                // Selecting a toolbar control must not remove the selection color.
+                var toolbarButton=Descendants<Button>(window).First(b=>b.IsVisible&&b.IsEnabled&&b.Focusable);
+                Assert.True(toolbarButton.Focus());await Dispatcher.Yield(DispatcherPriority.ApplicationIdle);
+                Assert.Equal(selectedColor,BrushColor(rows[1].Background));Assert.Equal(selectedColor,BrushColor(rows[3].Background));
+                // Verify rendered pixels, not just row properties: system row templates can
+                // ignore BorderBrush/BorderThickness even when their values are correct.
+                var renderedRoot=(FrameworkElement)window.Content;
+                var rendered=new RenderTargetBitmap((int)Math.Ceiling(renderedRoot.ActualWidth),(int)Math.Ceiling(renderedRoot.ActualHeight),96,96,PixelFormats.Pbgra32);
+                rendered.Render(renderedRoot);
+                foreach(var row in rows)
+                {
+                    var origin=row.TransformToAncestor(renderedRoot).Transform(new Point(0,row.ActualHeight/2));
+                    var pixels=new byte[16];
+                    rendered.CopyPixels(new Int32Rect((int)Math.Round(origin.X),(int)Math.Round(origin.Y),4,1),pixels,16,0);
+                    var expected=BrushColor(row.IsSelected?Indicator(row).Background:row.Background);
+                    for(var x=0;x<3;x++)Assert.Equal(expected,Color.FromArgb(pixels[x*4+3],pixels[x*4+2],pixels[x*4+1],pixels[x*4]));
+                    if(row.IsSelected)Assert.NotEqual(expected,Color.FromArgb(pixels[15],pixels[14],pixels[13],pixels[12]));
+                }
+                foreach(var row in rows)
+                {
+                    var title=Descendants<TextBlock>(row).Single(t=>t.Text==((TaskRow)row.Item).Title);
+                    Assert.True(Contrast(row.Background,title.Foreground)>=4.5);
+                    var detail=Descendants<TextBlock>(row).Single(t=>t.Text==((TaskRow)row.Item).TaskDetail);
+                    Assert.True(Contrast(row.Background,detail.Foreground)>=4.5);
+                }
+                var cell=Descendants<DataGridCell>(rows[1]).First();Assert.True(cell.Focus());window.UpdateLayout();
+                Assert.NotEqual(Colors.Transparent,BrushColor(cell.BorderBrush));
+                if(style==ThemeColorStyle.Default)
+                {
+                    foreach(var width in new[]{1050d,1344d})
+                    {
+                        window.Width=width;window.UpdateLayout();await Dispatcher.Yield(DispatcherPriority.ApplicationIdle);
+                        foreach(var row in rows)
+                            Assert.All(Descendants<TextBlock>(row).Where(t=>t.Name=="SourceText"),t=>
+                            {
+                                var labelWidth=new FormattedText(t.Text,System.Globalization.CultureInfo.CurrentUICulture,t.FlowDirection,
+                                    new Typeface(t.FontFamily,t.FontStyle,t.FontWeight,t.FontStretch),t.FontSize,t.Foreground,VisualTreeHelper.GetDpi(t).PixelsPerDip).WidthIncludingTrailingWhitespace;
+                                Assert.True(t.ActualWidth>=labelWidth,$"Source label clipped: {t.Text} at {width}");
+                            });
+                        Capture(window,$"task-colors-{(dark?"dark":"light")}-{width}");
+                    }
+                }
+            }
+        }
+        finally{AdaptiveBrushExtension.Apply(false);window.ForceClose();}
+    });
+    private static Border Indicator(DataGridRow row)=>Descendants<Border>(row).Single(b=>b.Name=="SelectionIndicator");
+    private static IEnumerable<T> Descendants<T>(DependencyObject root) where T:DependencyObject
+    {
+        for(var i=0;i<VisualTreeHelper.GetChildrenCount(root);i++)
+        {
+            var child=VisualTreeHelper.GetChild(root,i);if(child is T match)yield return match;
+            foreach(var descendant in Descendants<T>(child))yield return descendant;
+        }
+    }
+    private static Color BrushColor(Brush brush)=>((SolidColorBrush)brush).Color;
+    private static double Contrast(Brush first,Brush second)
+    {
+        static double Luminance(Color color)
+        {
+            static double Channel(byte value){var s=value/255d;return s<=.04045?s/12.92:Math.Pow((s+.055)/1.055,2.4);}
+            return .2126*Channel(color.R)+.7152*Channel(color.G)+.0722*Channel(color.B);
+        }
+        var a=Luminance(BrushColor(first));var b=Luminance(BrushColor(second));return (Math.Max(a,b)+.05)/(Math.Min(a,b)+.05);
+    }
     [Fact] public Task Completion_sections_preserve_external_sources_repeat_instances_and_undo()=>MilestoneOneTests.RunSta(async()=>
     {
         using var f=new Fixture();await f.Initialize();var tasks=f.Get<ITaskRepository>();
