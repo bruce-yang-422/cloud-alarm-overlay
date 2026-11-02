@@ -204,7 +204,7 @@ Get-Content -LiteralPath "$installerPath.sha256"
 2. 將 `docs/v<版本>發布說明.md` 內容貼入發布說明，上傳對應的安裝 EXE 與 `.sha256` 檔。
 3. 發布後，下載公開安裝檔並核對 SHA-256。
 4. 核對成功後，才更新 `version.json` 的 `latestVersion`、`downloadUrl`、`sha256`、`releaseNote`，提交並推送至 `main`。
-5. 同一次提交更新 `index.html` 的版本號：頁面標題、社群分享標題、結構化資料的版本與連結、首屏標籤；若重新擷取截圖，也更新截圖說明的版本。
+5. 同一次提交更新 `index.html` 的版本號：結構化資料的版本與連結、首屏標籤；若重新擷取截圖，也更新截圖說明的版本。頁面標題與社群分享標題不含版本號。
 
 列出 `index.html` 目前標示的版本，確認沒有遺漏：
 

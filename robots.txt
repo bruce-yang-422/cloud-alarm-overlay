@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://remind.stack-base.com/sitemap.xml
