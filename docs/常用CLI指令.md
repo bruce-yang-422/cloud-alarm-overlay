@@ -60,7 +60,7 @@ git diff -- ':(glob)**/packages.lock.json'
 Get-Process CloudAlarmOverlay.App -ErrorAction SilentlyContinue
 ```
 
-Google 登入建置設定見 [Google 帳號與同步設定](Google帳號與同步設定.md)。本機 OAuth 檔案為 `google-desktop-oauth.local.json`，不得提交憑證或授權資料。
+Google 登入建置設定見[貢獻指南](../CONTRIBUTING.md#開發環境)。本機 OAuth 檔案為 `google-desktop-oauth.local.json`，不得提交憑證或授權資料。
 
 ## 3. 執行測試
 
@@ -204,6 +204,14 @@ Get-Content -LiteralPath "$installerPath.sha256"
 2. 將 `docs/v<版本>發布說明.md` 內容貼入發布說明，上傳對應的安裝 EXE 與 `.sha256` 檔。
 3. 發布後，下載公開安裝檔並核對 SHA-256。
 4. 核對成功後，才更新 `version.json` 的 `latestVersion`、`downloadUrl`、`sha256`、`releaseNote`，提交並推送至 `main`。
+5. 同一次提交更新 `index.html` 的版本號：頁面標題、社群分享標題、結構化資料的版本與連結、首屏標籤；若重新擷取截圖，也更新截圖說明的版本。
+
+列出 `index.html` 目前標示的版本，確認沒有遺漏：
+
+```powershell
+Select-String -Path .\index.html -Pattern '\d+\.\d+\.\d+' -AllMatches |
+  ForEach-Object { $_.Matches.Value } | Group-Object | Select-Object Name, Count
+```
 
 公開下載驗證範例（沿用上一節變數）：
 
