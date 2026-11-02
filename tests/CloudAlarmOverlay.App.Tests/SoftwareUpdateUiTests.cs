@@ -71,7 +71,7 @@ public sealed class SoftwareUpdateUiTests
     }
     [Fact] public Task Settings_render_release_notes_and_download_without_administrator_login()=>MilestoneOneTests.RunSta(async()=>
     {
-        var updates=new Updates();var browser=new Browser();using var host=CreateHost(updates,browser);
+        var updates=new Updates();var installer=new Installer();var dialogs=new Dialogs();using var host=CreateHost(updates,installer,dialogs);
         var vm=host.Services.GetRequiredService<MaintenanceViewModel>();Assert.False(host.Services.GetRequiredService<AdminSession>().IsAuthenticated);
         var view=new SoftwareUpdateView{DataContext=vm};
         var window=new Window{Content=new ScrollViewer{Content=view,Padding=new Thickness(24),HorizontalScrollBarVisibility=ScrollBarVisibility.Disabled},Width=900,Height=730,ShowInTaskbar=false,ShowActivated=false};
@@ -90,21 +90,80 @@ public sealed class SoftwareUpdateUiTests
                 Capture(window,dark?"software-update-dark":"software-update-light");
             }
             await vm.OpenDownloadCommand.ExecuteAsync(null);
-            Assert.Equal(new Uri("https://example.test/setup.exe"),browser.Opened);
-            Assert.Contains("瀏覽器下載",vm.UpdateMessage);
+            Assert.Equal(1,installer.Downloads);Assert.Equal(0,installer.Installs);Assert.Equal(1,dialogs.Confirmations);
+            Assert.True(vm.HasDownloadedUpdate);Assert.Contains("SHA-256",vm.UpdateMessage);
         }
         finally{window.Close();AdaptiveBrushExtension.Apply(false);}
     });
-    private static IHost CreateHost(Updates updates,Browser? browser=null)=>new HostBuilder().ConfigureServices(s=>
-    {CompositionRoot.ConfigureServices(s);s.AddSingleton<IUpdateCheckService>(updates);s.AddSingleton<IBrowserLauncher>(browser??new());}).Build();
+    [Fact] public async Task Declining_install_keeps_verified_download_and_later_install_requires_confirmation()
+    {
+        var updates=new Updates();var installer=new Installer();var dialogs=new Dialogs();using var host=CreateHost(updates,installer,dialogs);
+        var vm=host.Services.GetRequiredService<MaintenanceViewModel>();await vm.CheckUpdateAsync();
+        updates.Version=new(100,0,0);await vm.OpenDownloadCommand.ExecuteAsync(null);
+        Assert.Equal(new Version(100,0,0),vm.DownloadedUpdate!.Info.LatestVersion);
+        Assert.True(vm.InstallUpdateCommand.CanExecute(null));Assert.Equal(0,installer.Installs);
+        dialogs.Accept=true;await vm.InstallUpdateCommand.ExecuteAsync(null);
+        Assert.Equal(1,installer.Installs);Assert.Equal(2,dialogs.Confirmations);Assert.False(vm.HasDownloadedUpdate);
+        Assert.Contains("已啟動安裝",vm.UpdateMessage);Assert.False(vm.Busy);
+    }
+    [Fact] public async Task Confirming_after_download_installs_only_after_successful_verification()
+    {
+        var installer=new Installer();var dialogs=new Dialogs{Accept=true};using var host=CreateHost(new Updates(),installer,dialogs);
+        var vm=host.Services.GetRequiredService<MaintenanceViewModel>();await vm.CheckUpdateAsync();await vm.OpenDownloadCommand.ExecuteAsync(null);
+        Assert.Equal(1,installer.Downloads);Assert.Equal(1,installer.Installs);Assert.Equal(1,dialogs.Confirmations);
+        Assert.False(vm.HasDownloadedUpdate);Assert.False(vm.Busy);
+    }
+    [Fact] public async Task Failed_verification_never_offers_install_and_tampering_invalidates_ready_state()
+    {
+        var installer=new Installer{FailDownload=true};var dialogs=new Dialogs();using var host=CreateHost(new Updates(),installer,dialogs);
+        var vm=host.Services.GetRequiredService<MaintenanceViewModel>();await vm.CheckUpdateAsync();await vm.OpenDownloadCommand.ExecuteAsync(null);
+        Assert.Equal(0,dialogs.Confirmations);Assert.Equal(0,installer.Installs);Assert.False(vm.HasDownloadedUpdate);Assert.Contains("SHA-256",vm.UpdateMessage);
+        installer.FailDownload=false;await vm.OpenDownloadCommand.ExecuteAsync(null);Assert.True(vm.HasDownloadedUpdate);
+        installer.FailInstall=true;dialogs.Accept=true;await vm.InstallUpdateCommand.ExecuteAsync(null);
+        Assert.Equal(0,installer.Installs);Assert.False(vm.HasDownloadedUpdate);Assert.Contains("SHA-256",vm.UpdateMessage);Assert.False(vm.Busy);
+    }
+    [Theory] [InlineData(false)] [InlineData(true)]
+    public async Task Cancelling_download_or_changing_source_restores_commands_and_never_offers_install(bool changeSource)
+    {
+        var installer=new Installer{BlockDownload=true};var dialogs=new Dialogs();using var host=CreateHost(new Updates(),installer,dialogs);
+        var vm=host.Services.GetRequiredService<MaintenanceViewModel>();await vm.CheckUpdateAsync();
+        var operation=vm.OpenDownloadCommand.ExecuteAsync(null);await installer.Started.Task;
+        Assert.True(vm.IsDownloading);Assert.False(vm.CheckUpdateCommand.CanExecute(null));Assert.False(vm.OpenDownloadCommand.CanExecute(null));
+        if(changeSource)vm.UpdateUrl="https://example.test/replacement.json";
+        else vm.CancelDownloadCommand.Execute(null);
+        await operation;
+        Assert.False(vm.Busy);Assert.False(vm.IsDownloading);Assert.False(vm.HasDownloadedUpdate);
+        Assert.True(vm.CheckUpdateCommand.CanExecute(null));Assert.Equal(0,dialogs.Confirmations);Assert.Contains("已取消下載",vm.UpdateMessage);
+    }
+    private static IHost CreateHost(Updates updates,Installer? installer=null,Dialogs? dialogs=null)=>new HostBuilder().ConfigureServices(s=>
+    {CompositionRoot.ConfigureServices(s);s.AddSingleton<IUpdateCheckService>(updates);s.AddSingleton<IUpdateInstallerService>(installer??new());s.AddSingleton<IUserDialogs>(dialogs??new());}).Build();
     private sealed class Updates:IUpdateCheckService
     {
         public Version Version=new(99,0,0);public bool Fail;
         public string Note="## 新增功能\n- **提醒設定**：可調整通知時間。\n- 顯示版本更新內容。\n\n## 改善\n修正重複提示。";
         public Task<UpdateInfo?> CheckAsync(CancellationToken cancellationToken=default)=>throw new NotSupportedException();
-        public Task<UpdateInfo> GetManifestAsync(CancellationToken cancellationToken=default)=>Fail?Task.FromException<UpdateInfo>(new IOException("測試連線中斷")):Task.FromResult(new UpdateInfo(Version,new("https://example.test/setup.exe"),Note));
+        public Task<UpdateInfo> GetManifestAsync(CancellationToken cancellationToken=default)=>Fail?Task.FromException<UpdateInfo>(new IOException("測試連線中斷")):Task.FromResult(new UpdateInfo(Version,new("https://github.com/owner/repo/releases/download/v99/setup.exe"),Note){Sha256=new string('a',64)});
     }
-    private sealed class Browser:IBrowserLauncher{public Uri? Opened;public void Open(Uri uri)=>Opened=uri;}
+    private sealed class Installer:IUpdateInstallerService
+    {
+        public int Downloads,Installs;public bool FailDownload,FailInstall,BlockDownload;
+        public TaskCompletionSource Started {get;}=new(TaskCreationOptions.RunContinuationsAsynchronously);
+        public async Task<DownloadedUpdate> DownloadAsync(UpdateInfo update,IProgress<UpdateDownloadProgress>? progress=null,CancellationToken ct=default)
+        {
+            Downloads++;Started.TrySetResult();if(BlockDownload)await Task.Delay(Timeout.Infinite,ct);
+            if(FailDownload)throw new InvalidDataException("SHA-256 驗證失敗。");
+            return new(update,Path.Combine(Path.GetTempPath(),"test-update.exe"));
+        }
+        public Task InstallAsync(DownloadedUpdate update,CancellationToken ct=default)
+        {if(FailInstall)throw new InvalidDataException("SHA-256 驗證失敗。");Installs++;return Task.CompletedTask;}
+    }
+    private sealed class Dialogs:IUserDialogs
+    {
+        public bool Accept;public int Confirmations;
+        public bool Confirm(string message){Confirmations++;Assert.Contains("SHA-256",message);return Accept;}
+        public void Edit(AlarmTask? task,bool copy)=>throw new NotSupportedException();
+        public void Export(string contents)=>throw new NotSupportedException();
+    }
     private static void Capture(Window window,string name)
     {
         var content=(FrameworkElement)window.Content;var dpi=VisualTreeHelper.GetDpi(content);

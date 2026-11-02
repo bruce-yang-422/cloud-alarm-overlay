@@ -39,6 +39,8 @@ public sealed class UpdateCheckService(ISettingsRepository settings, HttpClient 
         var root=json.RootElement;
         if(!root.TryGetProperty("latestVersion",out var version)||!Version.TryParse(version.GetString(),out var latest))throw new InvalidDataException("version.json 版本格式錯誤。");
         if(!root.TryGetProperty("downloadUrl",out var download))throw new InvalidDataException("更新資訊缺少下載連結。");
-        return new(latest,ValidateUrl(download.GetString()??""),root.TryGetProperty("releaseNote",out var note)?note.GetString()??"":"");
+        var sha256=root.TryGetProperty("sha256",out var hash)&&hash.ValueKind==JsonValueKind.String?hash.GetString()??"":"";
+        if(root.TryGetProperty("sha256",out _)&&!UpdateDownloadPolicy.IsSha256(sha256))throw new InvalidDataException("version.json 的 SHA-256 格式錯誤。");
+        return new(latest,ValidateUrl(download.GetString()??""),root.TryGetProperty("releaseNote",out var note)?note.GetString()??"":""){Sha256=sha256};
     }
 }

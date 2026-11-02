@@ -2,7 +2,7 @@ using CloudAlarmOverlay.Core.Models;
 
 namespace CloudAlarmOverlay.Core.Services;
 
-/// <summary>Contract scaffold. Business implementation follows in a later milestone.</summary>
+/// <summary>Reads release metadata and checks whether a newer version is available.</summary>
 public interface IUpdateCheckService
 {
     Task<UpdateInfo> GetManifestAsync(CancellationToken cancellationToken = default);

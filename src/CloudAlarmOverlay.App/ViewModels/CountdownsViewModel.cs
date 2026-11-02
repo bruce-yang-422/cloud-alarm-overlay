@@ -12,6 +12,11 @@ namespace CloudAlarmOverlay.App.ViewModels;
 
 public partial class CountdownsViewModel(ICountdownRepository repository, TimeProvider clock, IUserDialogs dialogs, ChangeSignal changes, IHolidayRepository? holidays = null) : ObservableObject
 {
+    [RelayCommand(CanExecute=nameof(CanEdit))] private async Task ExportCalendarAsync()
+    {
+        try{await dialogs.ExportCalendarAsync(false,true);}
+        catch(Exception ex){Message="行事曆匯出失敗："+ex.Message;}
+    }
     private bool CanShareImage(CountdownRow? row)=>!IsBusy && row is not null && row.CanShare;
     [RelayCommand(CanExecute=nameof(CanShareImage))] private async Task ShareImageAsync(CountdownRow row)
     {
@@ -172,7 +177,7 @@ public partial class CountdownsViewModel(ICountdownRepository repository, TimePr
     [ObservableProperty] private bool pinOnHome;
     [ObservableProperty] private string message = "";
     [ObservableProperty]
-    [NotifyCanExecuteChangedFor(nameof(NewCommand), nameof(EditCommand), nameof(SaveCommand), nameof(TogglePinCommand), nameof(ToggleTopCommand), nameof(ToggleCompleteCommand), nameof(DeleteCommand), nameof(ShareImageCommand))]
+    [NotifyCanExecuteChangedFor(nameof(NewCommand), nameof(EditCommand), nameof(SaveCommand), nameof(TogglePinCommand), nameof(ToggleTopCommand), nameof(ToggleCompleteCommand), nameof(DeleteCommand), nameof(ShareImageCommand),nameof(ExportCalendarCommand))]
     private bool isBusy;
     private bool CanEdit => !IsBusy;
     public bool IsTimeMode => Mode == "倒數時間";

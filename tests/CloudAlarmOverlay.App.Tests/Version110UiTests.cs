@@ -207,18 +207,18 @@ public sealed class Version110UiTests
     });
 
     [Fact]
-    public async Task Download_command_fetches_current_manifest_without_prior_check_and_reports_errors()
+    public async Task Download_command_fetches_current_manifest_without_prior_check_and_rejects_unverified_installers()
     {
         var updates = new FakeUpdates(); var browser = new FakeBrowser();
         using var fixture = new Fixture(s => { s.AddSingleton<IUpdateCheckService>(updates); s.AddSingleton<IBrowserLauncher>(browser); });
         await fixture.Initialize();
         var vm = fixture.Get<MaintenanceViewModel>();
         await vm.OpenDownloadCommand.ExecuteAsync(null);
-        Assert.Equal(new Uri("https://example.test/current.exe"), browser.Opened);
-        Assert.Contains("已交由瀏覽器下載安裝檔", vm.UpdateMessage); Assert.False(vm.Busy);
+        Assert.Null(browser.Opened);Assert.NotNull(vm.LatestRelease);
+        Assert.Contains("SHA-256", vm.UpdateMessage); Assert.False(vm.Busy);
         updates.Failure = true;
         await vm.OpenDownloadCommand.ExecuteAsync(null);
-        Assert.Contains("無法啟動安裝檔下載", vm.UpdateMessage); Assert.False(vm.Busy);
+        Assert.Contains("更新未完成", vm.UpdateMessage); Assert.Null(browser.Opened);Assert.False(vm.Busy);
     }
 
     [Fact]

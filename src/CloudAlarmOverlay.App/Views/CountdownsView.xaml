@@ -14,6 +14,7 @@
   <StackPanel>
    <DockPanel Margin="0,0,0,4">
     <Button DockPanel.Dock="Right" Content="＋ 新增倒數" Click="ShowEditor" Style="{StaticResource Primary}" VerticalAlignment="Top" Margin="12,0,0,0"/>
+    <Button DockPanel.Dock="Right" Content="匯出行事曆…" Command="{Binding ExportCalendarCommand}" VerticalAlignment="Top" Margin="12,0,0,0"/>
     <StackPanel><TextBlock Text="倒數／正數" Style="{StaticResource Heading}"/>
      <TextBlock Text="讓期待有刻度，讓重要時刻一目了然。" Style="{StaticResource Muted}" Margin="0,0,0,10"/>
     </StackPanel>

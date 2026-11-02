@@ -1,0 +1,56 @@
+<Window x:Class="CloudAlarmOverlay.App.Views.CalendarExportWindow"
+ xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+ xmlns:adaptive="clr-namespace:CloudAlarmOverlay.App.Styles" Title="匯出行事曆（ICS）"
+ xmlns:p="clr-namespace:System.Windows.Controls.Primitives;assembly=PresentationFramework"
+ Width="640" Height="740" MinWidth="520" MinHeight="540" WindowStartupLocation="CenterOwner" ShowInTaskbar="False"
+ Background="{adaptive:AdaptiveBrush #F7FAFE}" Foreground="{adaptive:AdaptiveBrush #16243E}" FontSize="13" FontFamily="Segoe UI, Microsoft JhengHei UI">
+ <Window.Resources><ResourceDictionary><ResourceDictionary.MergedDictionaries><ResourceDictionary Source="../Styles/SettingsFormStyles.xaml"/><ResourceDictionary Source="../Styles/CalendarStyles.xaml"/></ResourceDictionary.MergedDictionaries>
+  <Style x:Key="ExportPopupCalendar" TargetType="Calendar" BasedOn="{StaticResource EditorCalendar}">
+   <Setter Property="Template"><Setter.Value><ControlTemplate TargetType="Calendar">
+    <Border x:Name="PopupSurface" Background="{adaptive:AdaptiveBrush #FFFFFF}" BorderBrush="{adaptive:AdaptiveBrush #D6E1EF}" BorderThickness="1" CornerRadius="10" Padding="10">
+     <StackPanel x:Name="PART_Root"><p:CalendarItem x:Name="PART_CalendarItem" Style="{TemplateBinding CalendarItemStyle}"/></StackPanel>
+    </Border>
+   </ControlTemplate></Setter.Value></Setter>
+  </Style>
+ </ResourceDictionary></Window.Resources>
+ <DockPanel Margin="24">
+  <StackPanel DockPanel.Dock="Bottom">
+   <TextBlock x:Name="PreviewMessage" Text="{Binding Message}" TextWrapping="Wrap" AutomationProperties.LiveSetting="Polite" Margin="0,12,0,8"/>
+   <ScrollViewer MaxHeight="100" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+    <TextBlock x:Name="CoverageWarning" Text="{Binding Warnings}" Foreground="{adaptive:AdaptiveBrush CountdownDueAccent}" TextWrapping="Wrap" AutomationProperties.LiveSetting="Polite"/>
+   </ScrollViewer>
+   <ProgressBar Height="4" IsIndeterminate="True" Visibility="{Binding Busy,Converter={StaticResource BoolVisibility}}" Margin="0,12,0,8"/>
+   <WrapPanel HorizontalAlignment="Right" Margin="0,16,0,0">
+    <Button Content="取消預覽" Command="{Binding CancelCommand}" Margin="0,0,8,8"/>
+    <Button x:Name="PreviewButton" Content="預覽事件" Command="{Binding PreviewCommand}" Margin="0,0,8,8"/>
+    <Button x:Name="SaveButton" Content="儲存 .ics…" Command="{Binding SaveCommand}" Style="{StaticResource SettingsPrimary}" Margin="0,0,0,8"/>
+   </WrapPanel>
+  </StackPanel>
+  <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+   <StackPanel>
+    <TextBlock Text="匯出行事曆" FontSize="23" FontWeight="SemiBold" Margin="0,0,0,8"/>
+    <TextBlock Text="將本機任務與倒數／正數事件匯出，匯入 Outlook 或 Google 日曆。" Style="{StaticResource Muted}" Margin="0,0,0,20"/>
+    <StackPanel IsEnabled="{Binding CanEdit}">
+     <TextBlock Text="匯出來源" FontWeight="SemiBold" Margin="0,0,0,8"/>
+     <WrapPanel Margin="0,0,0,16"><CheckBox x:Name="TasksChoice" Content="本機任務" IsChecked="{Binding IncludeTasks}" Margin="0,0,20,8"/><CheckBox Content="倒數／正數事件" IsChecked="{Binding IncludeCountdowns}" Margin="0,0,0,8"/></WrapPanel>
+     <TextBlock Text="日期範圍" FontWeight="SemiBold" Margin="0,0,0,8"/>
+     <ComboBox x:Name="RangeChoice" ItemsSource="{Binding Ranges}" SelectedItem="{Binding Range}" Margin="0,0,0,12"/>
+     <Grid Margin="0,0,0,16"><Grid.ColumnDefinitions><ColumnDefinition/><ColumnDefinition Width="16"/><ColumnDefinition/></Grid.ColumnDefinitions>
+      <StackPanel><TextBlock Text="起日（包含）" Style="{StaticResource Muted}" Margin="0,0,0,4"/><DatePicker x:Name="FromDate" SelectedDate="{Binding From}" Style="{StaticResource HistoryDatePicker}" CalendarStyle="{StaticResource ExportPopupCalendar}" CalendarOpened="DateCalendarOpened"/></StackPanel>
+      <StackPanel Grid.Column="2"><TextBlock Text="迄日（包含）" Style="{StaticResource Muted}" Margin="0,0,0,4"/><DatePicker x:Name="ToDate" SelectedDate="{Binding To}" Style="{StaticResource HistoryDatePicker}" CalendarStyle="{StaticResource ExportPopupCalendar}" CalendarOpened="DateCalendarOpened"/></StackPanel>
+     </Grid>
+     <CheckBox Content="包含停用的本機任務" IsChecked="{Binding IncludeDisabledTasks}" IsEnabled="{Binding IncludeTasks}" Margin="0,0,0,10"/>
+     <CheckBox Content="包含已完成的任務／事件" IsChecked="{Binding IncludeCompleted}" Margin="0,0,0,10"/>
+     <CheckBox Content="包含提醒" IsChecked="{Binding IncludeReminders}" Margin="0,0,0,18"/>
+    </StackPanel>
+    <Border Style="{StaticResource SettingsGroup}" Padding="12" Margin="0,0,0,12"><StackPanel>
+     <TextBlock Text="重複排程會展開成所選期間內的個別事件，農曆與略過假日也適用。單次最多 100 年、50,000 個事件。" Style="{StaticResource Muted}"/>
+     <TextBlock Text="{Binding LunarRangeLabel}" Style="{StaticResource Muted}" Margin="0,8,0,0"/>
+     <TextBlock Text="{Binding TimeZoneLabel}" Style="{StaticResource Muted}" Margin="0,4,0,0"/>
+     <TextBlock Text="未設定活動期間的定時事件以 30 分鐘匯出；全天事件保留完整日期。" Style="{StaticResource Muted}" Margin="0,8,0,0"/>
+    </StackPanel></Border>
+    <TextBlock Text="匯出檔為靜態快照，不會同步後續修改。假日資料不足的提示會顯示在預覽中；外部日曆可能依自身設定調整提醒，重複匯入的處理方式也可能不同。" Style="{StaticResource Muted}"/>
+   </StackPanel>
+  </ScrollViewer>
+ </DockPanel>
+</Window>

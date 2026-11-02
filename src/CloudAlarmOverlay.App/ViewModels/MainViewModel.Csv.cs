@@ -3,6 +3,11 @@ using CloudAlarmOverlay.Core.Services;
 namespace CloudAlarmOverlay.App.ViewModels;
 public partial class MainViewModel
 {
+    [RelayCommand] private async Task ExportCalendarAsync()
+    {
+        try{await dialogs.ExportCalendarAsync(true,false);}
+        catch(Exception ex){Status="行事曆匯出失敗："+ex.Message;}
+    }
     [RelayCommand] private async Task ImportTasksAsync()
     {
         try { await dialogs.ImportTasksAsync(); await RefreshAsync(); }

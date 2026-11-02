@@ -1,3 +1,4 @@
+using System.IO;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CloudAlarmOverlay.Core.Models;
@@ -7,7 +8,7 @@ using CloudAlarmOverlay.App.Styles;
 using CloudAlarmOverlay.App.Services;
 namespace CloudAlarmOverlay.App.ViewModels;
 
-public partial class MaintenanceViewModel(IBackupRestoreService backups, IUpdateCheckService updates, ISettingsRepository settings, IThemeService theme, AdminSession session, IBrowserLauncher browser) : ObservableObject
+public partial class MaintenanceViewModel(IBackupRestoreService backups, IUpdateCheckService updates, ISettingsRepository settings, IThemeService theme, AdminSession session, IUpdateInstallerService installer, IUserDialogs dialogs) : ObservableObject
 {
     public void RequireAdministrator()=>session.RequireAdmin();
     public IBackupRestoreService Backups {get;}=backups;
@@ -27,8 +28,11 @@ public partial class MaintenanceViewModel(IBackupRestoreService backups, IUpdate
     [ObservableProperty] private string themeColorChoice="預設";
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(CanCheckUpdate))]
+    [NotifyPropertyChangedFor(nameof(CanDownloadUpdate))]
+    [NotifyPropertyChangedFor(nameof(CanInstallUpdate))]
     [NotifyCanExecuteChangedFor(nameof(CheckUpdateCommand))]
     [NotifyCanExecuteChangedFor(nameof(OpenDownloadCommand))]
+    [NotifyCanExecuteChangedFor(nameof(InstallUpdateCommand))]
     private bool busy;
     [ObservableProperty] private string updateMessage="按下檢查更新，查看公開版本與更新內容。";
     [ObservableProperty]
@@ -37,12 +41,29 @@ public partial class MaintenanceViewModel(IBackupRestoreService backups, IUpdate
     [NotifyPropertyChangedFor(nameof(ReleaseNotes))]
     [NotifyPropertyChangedFor(nameof(DownloadLabel))]
     [NotifyPropertyChangedFor(nameof(AvailableUpdate))]
+    [NotifyPropertyChangedFor(nameof(CanDownloadUpdate))]
+    [NotifyCanExecuteChangedFor(nameof(OpenDownloadCommand))]
     private UpdateInfo? latestRelease;
     public bool CanCheckUpdate=>!Busy;
+    public bool CanDownloadUpdate=>!Busy;
+    public bool CanInstallUpdate=>!Busy&&DownloadedUpdate is not null;
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(HasDownloadedUpdate))]
+    [NotifyPropertyChangedFor(nameof(CanInstallUpdate))]
+    [NotifyCanExecuteChangedFor(nameof(InstallUpdateCommand))]
+    private DownloadedUpdate? downloadedUpdate;
+    public bool HasDownloadedUpdate=>DownloadedUpdate is not null;
+    [ObservableProperty]
+    [NotifyCanExecuteChangedFor(nameof(CancelDownloadCommand))]
+    private bool isDownloading;
+    [ObservableProperty] private bool downloadIndeterminate=true;
+    [ObservableProperty] private double downloadPercent;
+    [ObservableProperty] private string downloadProgressText="";
+    private CancellationTokenSource? downloadCancellation;
     public bool HasRelease=>LatestRelease is not null;
     public string ReleaseHeading=>LatestRelease is {} info?$"公開版本 {info.LatestVersion}":"更新內容";
     public string ReleaseNotes=>ReleaseNotesFormatter.Format(LatestRelease?.ReleaseNote);
-    public string DownloadLabel=>LatestRelease is {} info?$"下載 v{info.LatestVersion} 安裝檔":"下載安裝檔";
+    public string DownloadLabel=>LatestRelease is {} info?$"下載並驗證 v{info.LatestVersion}":"下載並驗證安裝檔";
     [ObservableProperty] private bool keepWindowAspectRatio=true;
     partial void OnKeepWindowAspectRatioChanged(bool value)
     {
@@ -67,7 +88,8 @@ public partial class MaintenanceViewModel(IBackupRestoreService backups, IUpdate
     private static int CompareVersion(Version version)=>new Version(version.Major,version.Minor,Math.Max(0,version.Build),Math.Max(0,version.Revision)).CompareTo(UpdateCheckService.CurrentVersion);
     partial void OnUpdateUrlChanged(string value)
     {
-        LatestRelease=null;
+        downloadCancellation?.Cancel();
+        LatestRelease=null;DownloadedUpdate=null;
         UpdateMessage="按下檢查更新，查看公開版本與更新內容。";
     }
     private bool loading;
@@ -132,7 +154,7 @@ public partial class MaintenanceViewModel(IBackupRestoreService backups, IUpdate
     [RelayCommand(CanExecute=nameof(CanCheckUpdate))] public async Task CheckUpdateAsync()
     {
         if(Busy)return;
-        Busy=true;LatestRelease=null;UpdateMessage="正在檢查更新…";
+        Busy=true;LatestRelease=null;DownloadedUpdate=null;DownloadIndeterminate=true;UpdateMessage="正在檢查更新…";
         try
         {
             LatestRelease=await updates.GetManifestAsync();
@@ -142,18 +164,53 @@ public partial class MaintenanceViewModel(IBackupRestoreService backups, IUpdate
         catch(Exception ex){UpdateMessage="無法檢查更新："+ex.Message;}
         finally {Busy=false;}
     }
-    [RelayCommand(CanExecute=nameof(CanCheckUpdate))] private async Task OpenDownloadAsync()
+    [RelayCommand(CanExecute=nameof(CanDownloadUpdate))] private async Task OpenDownloadAsync()
     {
-        if(Busy)return;
-        Busy=true;UpdateMessage="正在取得下載連結…";
+        if(!CanDownloadUpdate)return;
+        using var cancellation=new CancellationTokenSource();downloadCancellation=cancellation;
+        Busy=true;IsDownloading=true;DownloadedUpdate=null;DownloadPercent=0;DownloadIndeterminate=true;
+        DownloadProgressText="正在取得更新資訊…";UpdateMessage="正在下載更新…";
         try
         {
-            var update=await updates.GetManifestAsync();
+            var update=await updates.GetManifestAsync(cancellation.Token);
             LatestRelease=update;
-            browser.Open(update.DownloadUrl);
-            UpdateMessage="已交由瀏覽器下載安裝檔。下載完成後，開啟安裝檔進行更新。";
+            var progress=new Progress<UpdateDownloadProgress>(value=>
+            {
+                if(!IsDownloading||downloadCancellation!=cancellation)return;
+                DownloadIndeterminate=value.TotalBytes is null||value.IsVerifying;
+                DownloadPercent=value.TotalBytes is >0?Math.Clamp(value.BytesReceived*100d/value.TotalBytes.Value,0,100):0;
+                DownloadProgressText=value.IsVerifying?"正在驗證 SHA-256…":value.TotalBytes is {} total
+                    ?$"{value.BytesReceived/1048576d:F1} / {total/1048576d:F1} MB（{DownloadPercent:F0}%）"
+                    :$"已下載 {value.BytesReceived/1048576d:F1} MB";
+            });
+            var downloaded=await installer.DownloadAsync(update,progress,cancellation.Token);
+            cancellation.Token.ThrowIfCancellationRequested();
+            DownloadedUpdate=downloaded;
+            IsDownloading=false;
+            await OfferInstallAsync();
         }
-        catch(Exception ex){UpdateMessage="無法啟動安裝檔下載："+ex.Message;}
-        finally {Busy=false;}
+        catch(OperationCanceledException){UpdateMessage=cancellation.IsCancellationRequested?"已取消下載，未完成的安裝檔已清除。":"更新下載逾時，請稍後重新下載。";}
+        catch(Exception ex){DownloadedUpdate=null;UpdateMessage="更新未完成："+ex.Message;}
+        finally {IsDownloading=false;downloadCancellation=null;Busy=false;}
+    }
+    [RelayCommand(CanExecute=nameof(IsDownloading))] private void CancelDownload()=>downloadCancellation?.Cancel();
+    [RelayCommand(CanExecute=nameof(CanInstallUpdate))] private async Task InstallUpdateAsync()
+    {
+        if(!CanInstallUpdate)return;
+        Busy=true;
+        try{await OfferInstallAsync();}
+        catch(InvalidDataException ex){DownloadedUpdate=null;UpdateMessage=ex.Message;}
+        catch(Exception ex){UpdateMessage="無法啟動安裝程式："+ex.Message;}
+        finally{Busy=false;}
+    }
+    private async Task OfferInstallAsync()
+    {
+        if(DownloadedUpdate is not {} downloaded)return;
+        UpdateMessage="安裝檔已下載並通過 SHA-256 驗證，可立即安裝或稍後再安裝。";
+        if(!dialogs.ConfirmAdminAction("安裝更新",$"v{downloaded.Info.LatestVersion} 安裝檔已通過 SHA-256 驗證。\n\n現在安裝？請先儲存編輯內容，安裝程式將關閉目前程式並引導你完成更新。","立即安裝"))return;
+        DownloadIndeterminate=true;UpdateMessage="正在重新驗證安裝檔並啟動安裝程式…";
+        await installer.InstallAsync(downloaded);
+        DownloadedUpdate=null;
+        UpdateMessage="已啟動安裝程式，請依安裝精靈完成更新。";
     }
 }

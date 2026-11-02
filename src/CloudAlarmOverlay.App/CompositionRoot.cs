@@ -42,6 +42,8 @@ public static class CompositionRoot
         services.AddSingleton<AlarmPresenter>();
         services.AddSingleton<IAlarmPresenter>(provider=>provider.GetRequiredService<AlarmPresenter>());
         services.AddSingleton<IUserDialogs, UserDialogs>();
+        services.AddSingleton<IIcsFileSaver,IcsFileSaver>();
+        services.AddSingleton<CalendarExportDialogService>();
         services.AddSingleton<CountdownShareRenderer>();
         services.AddSingleton<CountdownShareService>();
         services.AddSingleton<IAutoStartService, AutoStartService>();

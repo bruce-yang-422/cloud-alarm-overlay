@@ -169,6 +169,11 @@ public sealed class MaintenanceTests : IDisposable
         handler.Content="{\"latestVersion\":\"9.0.0\",\"downloadUrl\":\"file:///C:/setup.exe\"}";
         await Assert.ThrowsAsync<ArgumentException>(()=>update.CheckAsync());
         handler.Content=new string('x',66000);await Assert.ThrowsAsync<InvalidDataException>(()=>update.CheckAsync());
+        var digest=new string('a',64);
+        handler.Content=$"{{\"latestVersion\":\"9.0.0\",\"downloadUrl\":\"https://example.test/setup\",\"sha256\":\"{digest}\"}}";
+        Assert.Equal(digest,(await update.GetManifestAsync()).Sha256);
+        handler.Content="{\"latestVersion\":\"9.0.0\",\"downloadUrl\":\"https://example.test/setup\",\"sha256\":\"invalid\"}";
+        await Assert.ThrowsAsync<InvalidDataException>(()=>update.GetManifestAsync());
     }
     private sealed class ManifestHandler:HttpMessageHandler
     {

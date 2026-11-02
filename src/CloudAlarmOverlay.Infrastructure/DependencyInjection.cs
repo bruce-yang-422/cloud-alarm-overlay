@@ -20,6 +20,8 @@ public static class DependencyInjection
         services.AddSingleton<ICalendarDataSource, GitHubCalendarDataSource>();
         services.AddSingleton<ISoundService, SoundService>();
         services.AddSingleton<IThemeService, ThemeService>();
+        services.AddSingleton<IInstallerLauncher,InstallerLauncher>();
+        services.AddSingleton<IUpdateInstallerService,UpdateInstallerService>();
         return services;
     }
 }

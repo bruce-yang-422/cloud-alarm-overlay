@@ -8,14 +8,22 @@
     <StackPanel Margin="0,0,16,0"><TextBlock Text="{Binding VersionLabel}" Style="{StaticResource WorkspaceMuted}" FontSize="13"/></StackPanel>
     <Button Grid.Column="1" Content="檢查更新" Command="{Binding CheckUpdateCommand}" Margin="0"/>
    </Grid>
-   <ProgressBar IsIndeterminate="True" Height="3" Margin="0,16,0,0" Visibility="{Binding Busy,Converter={StaticResource BoolVisibility}}"/>
+   <ProgressBar IsIndeterminate="{Binding DownloadIndeterminate}" Value="{Binding DownloadPercent}" Maximum="100" Height="5" Margin="0,16,0,0" Visibility="{Binding Busy,Converter={StaticResource BoolVisibility}}" AutomationProperties.Name="更新下載進度"/>
+   <StackPanel Visibility="{Binding IsDownloading,Converter={StaticResource BoolVisibility}}" Margin="0,8,0,0">
+    <TextBlock Text="{Binding DownloadProgressText}" Style="{StaticResource WorkspaceMuted}" AutomationProperties.LiveSetting="Polite"/>
+    <Button Content="取消下載" Command="{Binding CancelDownloadCommand}" HorizontalAlignment="Left" Margin="0,8,0,0"/>
+   </StackPanel>
    <TextBlock x:Name="UpdateStatus" Text="{Binding UpdateMessage}" Style="{StaticResource AdminResult}" AutomationProperties.LiveSetting="Polite"/>
    <StackPanel x:Name="ReleaseDetails" Visibility="{Binding HasRelease,Converter={StaticResource BoolVisibility}}">
     <Border BorderBrush="{adaptive:AdaptiveBrush WorkspaceBorder}" BorderThickness="0,1,0,0" Margin="0,20,0,20"/>
     <TextBlock Text="{Binding ReleaseHeading}" Style="{StaticResource WorkspaceSection}" FontSize="20" Margin="0,0,0,20"/>
     <controls:MarkdownView x:Name="ReleaseNotes" Text="{Binding ReleaseNotes,Mode=OneWay}" EditableTasks="False" ReadingLayout="True" FontSize="14" MaxWidth="640" HorizontalAlignment="Left" Foreground="{adaptive:AdaptiveBrush WorkspaceText}" AutomationProperties.Name="版本更新內容"/>
    </StackPanel>
-   <Button Content="{Binding DownloadLabel}" Command="{Binding OpenDownloadCommand}" IsEnabled="{Binding HasRelease}" Style="{StaticResource AdminPrimary}" HorizontalAlignment="Left" Margin="0,20,0,0"/>
+   <WrapPanel Margin="0,20,0,0">
+    <Button Content="{Binding DownloadLabel}" Command="{Binding OpenDownloadCommand}" IsEnabled="{Binding HasRelease}" Style="{StaticResource AdminPrimary}" Margin="0,0,12,8"/>
+    <Button Content="立即安裝" Command="{Binding InstallUpdateCommand}" Visibility="{Binding HasDownloadedUpdate,Converter={StaticResource BoolVisibility}}" Margin="0,0,0,8"/>
+   </WrapPanel>
+   <TextBlock Text="安裝檔僅從 GitHub Releases 下載，通過 SHA-256 驗證後才會詢問是否安裝。" Style="{StaticResource WorkspaceMuted}" TextWrapping="Wrap" Margin="0,4,0,0"/>
   </StackPanel>
  </Border>
 </UserControl>

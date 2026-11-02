@@ -16,12 +16,13 @@ public interface IUserDialogs
     void Export(string contents);
     Task ImportTasksAsync()=>Task.CompletedTask;
     Task ShareCountdownAsync(string id)=>Task.CompletedTask;
+    Task ExportCalendarAsync(bool includeTasks=true,bool includeCountdowns=true)=>Task.CompletedTask;
     void ExportNamed(string contents,string filename)=>Export(contents);
     Task<string?> OpenSettingsJsonAsync()=>Task.FromResult<string?>(null);
     void ExportSettingsTemplate() { }
     bool ExportSettingsJson(string contents, Action authorize)=>false;
 }
-public sealed class UserDialogs(ITaskService tasks,EmojiLibrary emojis,ITaskSchedulingService scheduling,LocalTaskCsvService csv,CountdownShareService shares):IUserDialogs
+public sealed class UserDialogs(ITaskService tasks,EmojiLibrary emojis,ITaskSchedulingService scheduling,LocalTaskCsvService csv,CountdownShareService shares,CalendarExportDialogService calendarExport):IUserDialogs
 {
     public bool ConfirmAdminAction(string title,string message,string action,bool destructive=false)
         =>new GoogleActionDialog(title,"",message,action,destructive){Owner=Application.Current?.MainWindow}.ShowDialog()==true;
@@ -51,6 +52,7 @@ public sealed class UserDialogs(ITaskService tasks,EmojiLibrary emojis,ITaskSche
         if(picker.ShowDialog()==true)File.WriteAllText(picker.FileName,AdminSettingsJson.Template,new UTF8Encoding(false));
     }
     public Task ShareCountdownAsync(string id)=>shares.ShowAsync(id);
+    public Task ExportCalendarAsync(bool includeTasks=true,bool includeCountdowns=true)=>calendarExport.ShowAsync(includeTasks,includeCountdowns);
     public async Task ImportTasksAsync()
     {
         var picker=new OpenFileDialog{Filter="CSV 檔案|*.csv",Multiselect=false};
