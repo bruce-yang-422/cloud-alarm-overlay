@@ -15,6 +15,115 @@ using Microsoft.Extensions.Hosting;
 namespace CloudAlarmOverlay.App.Tests;
 public sealed class NotificationDesignTests
 {
+    [Fact]
+    public void Notification_icons_follow_task_kind_and_severity()
+    {
+        var now=DateTime.Now;
+        var task=new AlarmTask{Id="icon",Title="測試",ScheduledAt=now,CreatedAt=now,UpdatedAt=now};
+        var cases=new (AlarmTask Task,string? Caption,string Label)[]
+        {
+            (task,null,"任務提醒"),
+            (task with{Recurrence="Daily"},null,"重複任務提醒"),
+            (task with{Source=TaskSources.SheetA},null,"雲端任務提醒"),
+            (task with{CalendarStartAt=now},null,"行事曆提醒"),
+            (task with{Level=AlarmLevels.High},null,"緊急提醒"),
+            (task with{Level=AlarmLevels.Max},null,"強制通知"),
+            (task,"健康工具","健康提醒"),
+            (task,"番茄鐘","番茄鐘提醒")
+        };
+        foreach(var item in cases)
+        {
+            var vm=new AlarmViewModel(item.Task,"",false,item.Caption);
+            Assert.Equal(item.Label,vm.Icon.Label);
+            Assert.False(Geometry.Parse(vm.Icon.PathData).Bounds.IsEmpty);
+        }
+        Assert.Equal(cases.Length,cases.Select(c=>NotificationIcon.For(c.Task,c.Caption).PathData).Distinct().Count());
+    }
+
+    [Theory]
+    [InlineData("亮色")]
+    [InlineData("暗色")]
+    public Task Rendered_action_text_uses_button_foreground_with_readable_contrast(string mode)
+        =>MilestoneOneTests.RunSta(async()=>
+        {
+            static IEnumerable<TextBlock> Texts(DependencyObject parent)
+            {
+                if(parent is TextBlock text)yield return text;
+                for(var i=0;i<VisualTreeHelper.GetChildrenCount(parent);i++)
+                    foreach(var child in Texts(VisualTreeHelper.GetChild(parent,i)))yield return child;
+            }
+            foreach(var level in new[]{AlarmLevels.Low,AlarmLevels.Mid,AlarmLevels.High,AlarmLevels.Max})
+            {
+                var now=DateTime.Now;
+                var task=new AlarmTask{Id="button-contrast",Title="測試",Level=level,ScheduledAt=now,CreatedAt=now,UpdatedAt=now};
+                var vm=new AlarmViewModel(task,"123-456-789",false,allowCompletion:true);
+                var window=new AlarmWindow(vm,level,colorMode:mode){ShowActivated=level==AlarmLevels.Max};
+                try
+                {
+                    window.Show();await Dispatcher.Yield(DispatcherPriority.ApplicationIdle);window.UpdateLayout();
+                    var read=(Button)window.FindName("ConfirmButton");
+                    var done=(Button)window.FindName("CompleteTaskButton");
+                    Assert.Equal(((SolidColorBrush)read.Background).Color,((SolidColorBrush)done.Background).Color);
+                    Assert.Equal(((SolidColorBrush)read.Foreground).Color,((SolidColorBrush)done.Foreground).Color);
+                    Assert.Equal(read.ActualWidth,done.ActualWidth);
+                    Assert.Equal(read.ActualHeight,done.ActualHeight);
+                    Assert.False(read.IsDefault);Assert.False(done.IsDefault);
+                    Assert.StartsWith("請依目前處理狀況選擇",vm.Instruction);
+                    foreach(var name in new[]{"ConfirmButton","CompleteTaskButton"})
+                    {
+                        var button=(Button)window.FindName(name);
+                        var text=Assert.Single(Texts(button));
+                        var foreground=((SolidColorBrush)text.Foreground).Color;
+                        Assert.Equal(((SolidColorBrush)button.Foreground).Color,foreground);
+                        Assert.True(Contrast(((SolidColorBrush)button.Background).Color.ToString(),foreground.ToString())>=4.5);
+                    }
+                    Assert.True(((System.Windows.Shapes.Path)window.FindName("TaskIconPath")).Data.Bounds.Width>0);
+                    Assert.True(((FrameworkElement)window.FindName("TitleIcon")).IsVisible);
+                    if(level==AlarmLevels.High)Screenshot(window,$"notice-actions-fixed-{mode}");
+                }
+                finally{window.Finish(false);}
+            }
+        });
+
+    [Theory]
+    [InlineData(480,"亮色")]
+    [InlineData(1060,"亮色")]
+    [InlineData(480,"暗色")]
+    [InlineData(1060,"暗色")]
+    public Task Long_notifications_scroll_without_hiding_actions(double width,string mode)
+        =>MilestoneOneTests.RunSta(async()=>
+        {
+            var now=DateTime.Now;
+            var task=new AlarmTask{Id="layout",Title="跨平台訂單整合完成",Description=string.Join("\n\n",Enumerable.Repeat("跨平台訂單資料已更新完成。可查看最新訂單資料與銷售報表。",40)),ScheduledAt=now,CreatedAt=now,UpdatedAt=now};
+            var vm=new AlarmViewModel(task,"",false,allowSnooze:true,allowCompletion:true);
+            var window=new AlarmWindow(vm,AlarmLevels.Mid,colorMode:mode){Width=width,Height=660,ShowActivated=false};
+            try
+            {
+                window.Show();await Dispatcher.Yield(DispatcherPriority.ApplicationIdle);window.UpdateLayout();
+                var scroll=(ScrollViewer)window.FindName("NoticeScroll");
+                Assert.True(scroll.ScrollableHeight>0);
+                scroll.ScrollToBottom();await Dispatcher.Yield(DispatcherPriority.ApplicationIdle);
+                Assert.True(scroll.VerticalOffset>0);
+                foreach(var name in new[]{"ConfirmButton","CompleteTaskButton","SnoozeActions"})
+                {
+                    var element=(FrameworkElement)window.FindName(name);
+                    Assert.True(element.IsVisible);
+                    var bounds=element.TransformToAncestor(window).TransformBounds(new Rect(element.RenderSize));
+                    Assert.True(bounds.Left>=0 && bounds.Right<=window.ActualWidth && bounds.Bottom<=window.ActualHeight);
+                }
+                Assert.Equal(width<700?1:0,Grid.GetRow((FrameworkElement)window.FindName("ConfirmActions")));
+                var interval=(ComboBox)window.FindName("SnoozeInterval");
+                interval.IsDropDownOpen=true;await Dispatcher.Yield(DispatcherPriority.ApplicationIdle);
+                Assert.True(((System.Windows.Controls.Primitives.Popup)interval.Template.FindName("PART_Popup",interval)).IsOpen);
+                interval.SelectedItem=15;interval.IsDropDownOpen=false;
+                Assert.Equal(15,vm.SnoozeMinutes);
+                // Capture the normal content length for visual review after verifying overflow.
+                window.DataContext=new AlarmViewModel(task with{Description="跨平台訂單資料已更新完成。可查看最新訂單資料與銷售報表。"},"",false,allowSnooze:true,allowCompletion:true);
+                window.UpdateLayout();scroll.ScrollToTop();await Dispatcher.Yield(DispatcherPriority.ApplicationIdle);
+                Screenshot(window,$"notice-layout-{width}-{mode}");
+            }
+            finally{window.Finish(false);}
+        });
     [Theory]
     [InlineData("012-345-678",true)]
     [InlineData("012345678",true)]
@@ -115,7 +224,8 @@ public sealed class NotificationDesignTests
                         Assert.Equal(task.Note,((CloudAlarmOverlay.App.Controls.MarkdownView)window.FindName("NoteText")).Text);
                         Assert.Equal(task.Description,((CloudAlarmOverlay.App.Controls.MarkdownView)window.FindName("DescriptionText")).Text);
                         Assert.True(alarmVm.HasNote);Assert.True(alarmVm.HasDescription);
-                        Assert.Equal((Color)ColorConverter.ConvertFromString(NotificationPalette.Create(level,mode).Background),((SolidColorBrush)window.Background).Color);
+                        Assert.Equal(Colors.Transparent,((SolidColorBrush)window.Background).Color);
+                        Assert.Equal((Color)ColorConverter.ConvertFromString(NotificationPalette.Create(level,mode).Surface),((SolidColorBrush)((Border)window.FindName("Frame")).Background).Color);
                         var button=(Button)window.FindName("ConfirmButton");
                         Assert.True(button.IsVisible);Assert.False(window.Completion.IsCompleted);
                         Screenshot(window,$"notice-{mode}-{level}");

@@ -28,6 +28,19 @@ public partial class CalendarReminderWindow : Window
     private async Task ApplyAsync(bool reset)
     {
         if(busy)return;
+        if(!reset && ReminderEnabled.IsChecked==true)
+        {
+            if(!ReminderHour.TryCommitInput())
+            {
+                ErrorText.Text="小時請輸入 0–23。";
+                ReminderHour.MoveFocus(new TraversalRequest(FocusNavigationDirection.First));return;
+            }
+            if(!ReminderMinute.TryCommitInput())
+            {
+                ErrorText.Text="分鐘請輸入 0–59。";
+                ReminderMinute.MoveFocus(new TraversalRequest(FocusNavigationDirection.First));return;
+            }
+        }
         busy=true;Editor.IsEnabled=false;SaveButton.IsEnabled=false;CancelButton.IsEnabled=false;ErrorText.Text="";
         try
         {

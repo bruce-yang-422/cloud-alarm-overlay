@@ -411,7 +411,7 @@ public sealed class GoogleWorkspaceTests
                     ((DatePicker)editor.FindName("ReminderDate")).SelectedDate=f.Handler.EventAt.LocalDateTime.Date.AddDays(1);
                     var hour=(CyclicTimeSelector)editor.FindName("ReminderHour");
                     var minute=(CyclicTimeSelector)editor.FindName("ReminderMinute");
-                    Assert.Null(Find<TextBox>(hour));Assert.Null(Find<TextBox>(minute));
+                    Assert.NotNull(Find<TextBox>(hour));Assert.NotNull(Find<TextBox>(minute));
                     void Roll(CyclicTimeSelector selector,int delta)
                     {
                         var wheel=new MouseWheelEventArgs(Mouse.PrimaryDevice,Environment.TickCount,delta){RoutedEvent=Mouse.PreviewMouseWheelEvent};
@@ -426,7 +426,13 @@ public sealed class GoogleWorkspaceTests
                     Roll(minute,-60);Assert.Equal(0,minute.Value);
                     hour.Value=23;Roll(hour,-120);Assert.Equal(0,hour.Value);
                     Roll(hour,120);Assert.Equal(23,hour.Value);
-                    hour.Value=8;minute.Value=15;
+                    Find<TextBox>(minute)!.Text="60";
+                    ((Button)editor.FindName("SaveButton")).RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+                    Assert.True(editor.IsVisible);
+                    Assert.Equal("分鐘請輸入 0–59。",((TextBlock)editor.FindName("ErrorText")).Text);
+                    ((TextBlock)editor.FindName("ErrorText")).Text="";
+                    Find<TextBox>(hour)!.Text="8";Find<TextBox>(minute)!.Text="15";
+                    Assert.Equal(8,hour.Value);Assert.Equal(15,minute.Value);
                     editor.UpdateLayout();Capture(editor,"calendar-reminder-editor");
                     Assert.InRange(((ScrollViewer)editor.FindName("EditorScroll")).ScrollableHeight,0,1);
                     var date=(DatePicker)editor.FindName("ReminderDate");

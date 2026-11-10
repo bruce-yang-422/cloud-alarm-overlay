@@ -1,5 +1,6 @@
 using System.ComponentModel;
 using System.Windows;
+using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Animation;
@@ -25,10 +26,8 @@ public partial class AlarmWindow:Window
         var work=SystemParameters.WorkArea;
         Width=work.Width*.30; Height=work.Height; Top=work.Top;
         Left=side switch { "Left"=>work.Left, "Center"=>work.Left+(work.Width-Width)/2, _=>work.Right-Width };
-        var padding=Math.Min(24,Width*.06);
-        Frame.Padding=new Thickness(padding);
-        var available=Math.Max(0,Width-2*padding-8);
-        ConfirmButton.MinWidth=Math.Min(240,available); ConfirmButton.MaxWidth=Math.Min(340,available);
+        var available=Math.Max(0,Width-100);
+        ConfirmButton.MinWidth=Math.Min(200,available); ConfirmButton.MaxWidth=Math.Min(340,available);
         ConfirmButton.FontSize=Math.Clamp(Width*.035,18,24);
         NoticeTitle.FontSize=Math.Clamp(Width*.055,28,42);
         DescriptionText.FontSize=Math.Clamp(Width*.038,20,28);
@@ -38,18 +37,30 @@ public partial class AlarmWindow:Window
         InitializeComponent();DataContext=vm;
         void FitContent()
         {
-            NoticeBody.MaxHeight=Math.Max(0,ContentSlot.ActualHeight);
-            NoticeScroll.MaxHeight=Math.Max(0,ContentSlot.ActualHeight-Actions.ActualHeight-24);
+            var compact=ContentSlot.ActualWidth<700;
+            Panel.Margin=compact?new Thickness(20,20,20,16):new Thickness(40,34,40,24);
+            TitleIcon.Width=TitleIcon.Height=compact?44:64;
+            TitleIcon.Margin=compact?new Thickness(0,2,14,0):new Thickness(0,2,20,0);
+            TitleIconArtwork.Width=TitleIconArtwork.Height=compact?26:32;
+            NoticeTitle.FontSize=healthDocked?Math.Clamp(Width*.055,28,42):compact?22:28;
+            ReadingHint.Visibility=compact?Visibility.Collapsed:Visibility.Visible;
+            Grid.SetRow(ConfirmActions,compact?1:0);
+            Grid.SetColumn(ConfirmActions,compact?0:1);
+            Grid.SetColumnSpan(ConfirmActions,compact?2:1);
+            Grid.SetColumnSpan(SnoozeActions,compact?2:1);
+            ConfirmActions.Margin=new Thickness(0,compact&&vm.CanSnooze?14:0,0,0);
         }
         ContentSlot.SizeChanged+=(_,_)=>FitContent();
-        Actions.SizeChanged+=(_,_)=>FitContent();
         var palette=CloudAlarmOverlay.App.Styles.NotificationPalette.Create(level,colorMode,colorScheme,vm.IsPomodoro);
         foreach(var pair in new[]{("NoticeBackground",palette.Background),("NoticeSurface",palette.Surface),("NoticeText",palette.Text),("NoticeMuted",palette.Muted),("NoticeAccent",palette.Accent),("NoticeButtonText",palette.ButtonText)})
             Resources[pair.Item1]=CloudAlarmOverlay.App.Styles.NotificationPalette.Brush(pair.Item2);
+        Resources["NoticeLine"]=CloudAlarmOverlay.App.Styles.NotificationPalette.Brush(colorMode=="暗色"?"#526171":"#DCE9E6");
+        // Transparency around the card keeps its rounded corners and shadow visible.
+        Background=Brushes.Transparent;
         var work=SystemParameters.WorkArea;
         if(level==AlarmLevels.Max)
         {
-            Frame.BorderThickness=new Thickness(8);Topmost=true;Left=0;Top=0;WindowState=WindowState.Maximized;
+            Frame.BorderThickness=new Thickness(8);Frame.BorderBrush=CloudAlarmOverlay.App.Styles.NotificationPalette.Brush(palette.Accent);Frame.Margin=new Thickness(0);Frame.CornerRadius=new CornerRadius(0);Topmost=true;Left=0;Top=0;WindowState=WindowState.Maximized;
             timer.Interval=TimeSpan.FromMilliseconds(Math.Clamp(flashMilliseconds,200,5000));
             timer.Tick+=(_,_)=>{red=!red;Frame.BorderBrush=CloudAlarmOverlay.App.Styles.NotificationPalette.Brush(red?(colorMode=="暗色"?"#F66E68":"#E5483F"):palette.Accent);};
         }
@@ -60,7 +71,7 @@ public partial class AlarmWindow:Window
         }
         else
         {
-            Topmost=level==AlarmLevels.Mid;Width=Math.Min(430,work.Width-32);Height=Math.Min(vm.HasNote?520:430,work.Height-32);
+            Topmost=level==AlarmLevels.Mid;Width=Math.Min(480,work.Width-32);Height=Math.Min(vm.HasNote||vm.CanSnooze||vm.CanComplete?620:520,work.Height-32);
             Left=work.Right-Width-16;Top=Math.Max(work.Top,work.Bottom-Height-16-stackIndex*(Height+12));
             if(level==AlarmLevels.Low)
             {
@@ -78,6 +89,10 @@ public partial class AlarmWindow:Window
         Closing+=OnClosing;
         Closed+=(_,_)=>{CloudAlarmOverlay.App.Services.SmallNotificationStack.Remove(this);timer.Stop();completion.TrySetResult(false);};
         PreviewKeyDown+=(_,e)=>{if(e.Key is Key.Escape || (e.Key==Key.System && e.SystemKey==Key.F4))e.Handled=true;};
+    }
+    private void OnHeaderMouseDown(object sender,MouseButtonEventArgs e)
+    {
+        if(e.ChangedButton==MouseButton.Left && WindowState!=WindowState.Maximized && !healthDocked)DragMove();
     }
     private void OnClosing(object? sender,CancelEventArgs e){if(!allowClose)e.Cancel=true;}
     public void Finish(bool acknowledged){allowClose=true;completion.TrySetResult(acknowledged);Close();}

@@ -14,20 +14,36 @@ public partial class AlarmViewModel(AlarmTask task,string code,bool preview,stri
     public event Action<int>? Snoozed;
     [RelayCommand] private void Snooze() { if(CanSnooze && SnoozePolicy.IsValidMinutes(SnoozeMinutes)) Snoozed?.Invoke(SnoozeMinutes); }
     public string Title=>task.Title;
+    public Styles.NotificationIcon Icon {get;}=Styles.NotificationIcon.For(task,caption);
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(Description))]
     [NotifyPropertyChangedFor(nameof(HasDescription))]
+    [NotifyPropertyChangedFor(nameof(HasNoDescription))]
     private string healthDescription="";
     public string Description=>string.Join("\n\n",new[]{task.Description,HealthDescription}.Where(s=>!string.IsNullOrWhiteSpace(s)));
     public string ConfirmLabel=>caption=="健康工具"?"確定":IsPomodoro&&task.Title.StartsWith("專注",StringComparison.Ordinal)?"開始休息":CanComplete?"只確認已讀":"我已閱讀，確認";
     public string Note=>task.Note??"";
     public bool HasDescription=>!string.IsNullOrWhiteSpace(Description);
+    public bool HasNoDescription=>!HasDescription;
+    public string SourceLabel=>caption??(task.Source==TaskSources.Local?"本機提醒":TaskSources.IsCloud(task.Source)?"雲端提醒":"系統通知");
+    public string ReminderTimeLabel=>$"提醒時間：{task.ScheduledAt:yyyy/MM/dd HH:mm:ss}  ·  台灣時間";
     public bool HasNote=>!string.IsNullOrWhiteSpace(Note);
     public bool IsPomodoro=>caption=="番茄鐘";
     public string Caption=>caption??(preview?"通知預覽 · ":"")+CloudAlarmOverlay.App.Styles.AlarmLevelLabelConverter.Label(task.Level)+(task.Level==AlarmLevels.Max?" · 公司／系統發布":"");
     public bool RequiresCode=>task.Level==AlarmLevels.Max;
     public string Code=>code;
-    public string Instruction=>(caption=="健康工具"?"閱讀後按「確定」關閉提醒；確認不代表已完成活動。":caption is not null?"閱讀後按下確認，繼續番茄鐘流程。":RequiresCode?"正式確認請輸入 9 位數字確認碼；可輸入 xxx-xxx-xxx 或連續 9 位數字。"+(CanSnooze?" 忙碌時可直接按「稍後提醒」，不需輸入確認碼。":""):task.Level==AlarmLevels.Low?"10 秒後自動關閉；滑鼠移入可暫停。":"閱讀後，按下確認即可完成提醒確認。")+(CanComplete?" 「只確認已讀」保留待處理狀態；「已完成」會完成本次任務。":"");
+    public string Instruction
+    {
+        get
+        {
+            if(caption=="健康工具")return "閱讀後按「確定」關閉提醒；確認不代表已完成活動。";
+            if(caption is not null)return "閱讀後按下確認，繼續番茄鐘流程。";
+            var choice=CanComplete?"請依目前處理狀況選擇：「只確認已讀」保留待處理狀態；「已完成」會完成本次任務。":"閱讀後，按下確認即可完成提醒確認。";
+            if(RequiresCode)return choice+" 請輸入 9 位數字確認碼；可輸入 xxx-xxx-xxx 或連續 9 位數字。"+(CanSnooze?" 忙碌時可直接按「稍後提醒」，不需輸入確認碼。":"");
+            if(task.Level==AlarmLevels.Low)return choice+" 10 秒後自動關閉；滑鼠移入可暫停。";
+            return choice;
+        }
+    }
     [ObservableProperty] private string input="";
     [ObservableProperty] private string error="";
     public event Action? Confirmed;
