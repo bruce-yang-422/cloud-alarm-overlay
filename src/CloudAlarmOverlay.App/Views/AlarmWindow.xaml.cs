@@ -1,4 +1,4 @@
-using System.ComponentModel;
+﻿using System.ComponentModel;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
@@ -13,7 +13,6 @@ public partial class AlarmWindow:Window
     private bool allowClose;
     private bool healthDocked;
     private readonly DispatcherTimer timer=new();
-    private int remaining=10;
     private bool red;
     private readonly TaskCompletionSource<bool> completion=new(TaskCreationOptions.RunContinuationsAsynchronously);
     public Task<bool> Completion=>completion.Task;
@@ -71,12 +70,11 @@ public partial class AlarmWindow:Window
         }
         else
         {
-            Topmost=level==AlarmLevels.Mid;Width=Math.Min(480,work.Width-32);Height=Math.Min(vm.HasNote||vm.CanSnooze||vm.CanComplete?620:520,work.Height-32);
+            Topmost=true;Width=Math.Min(480,work.Width-32);Height=Math.Min(vm.HasNote||vm.CanSnooze||vm.CanComplete?620:520,work.Height-32);
             Left=work.Right-Width-16;Top=Math.Max(work.Top,work.Bottom-Height-16-stackIndex*(Height+12));
             if(level==AlarmLevels.Low)
             {
-                ShowActivated=false;timer.Interval=TimeSpan.FromSeconds(1);
-                timer.Tick+=(_,_)=>{if(!IsMouseOver&&--remaining<=0)Finish(true);};
+                ShowActivated=false;
             }
         }
         vm.Confirmed+=()=>Finish(true);
@@ -85,7 +83,7 @@ public partial class AlarmWindow:Window
             var movement=new TranslateTransform();CodeInput.RenderTransform=movement;
             movement.BeginAnimation(TranslateTransform.XProperty,new DoubleAnimation(-8,8,TimeSpan.FromMilliseconds(65)){AutoReverse=true,RepeatBehavior=new RepeatBehavior(3)});
         };
-        Loaded+=(_,_)=>{if(!healthDocked && level is AlarmLevels.Low or AlarmLevels.Mid)CloudAlarmOverlay.App.Services.SmallNotificationStack.Add(this);if(!healthDocked && level is AlarmLevels.Max or AlarmLevels.Low)timer.Start();if(vm.RequiresCode)CodeInput.Focus();};
+        Loaded+=(_,_)=>{if(!healthDocked && level is AlarmLevels.Low or AlarmLevels.Mid)CloudAlarmOverlay.App.Services.SmallNotificationStack.Add(this);if(!healthDocked && level is AlarmLevels.Max)timer.Start();if(vm.RequiresCode)CodeInput.Focus();};
         Closing+=OnClosing;
         Closed+=(_,_)=>{CloudAlarmOverlay.App.Services.SmallNotificationStack.Remove(this);timer.Stop();completion.TrySetResult(false);};
         PreviewKeyDown+=(_,e)=>{if(e.Key is Key.Escape || (e.Key==Key.System && e.SystemKey==Key.F4))e.Handled=true;};

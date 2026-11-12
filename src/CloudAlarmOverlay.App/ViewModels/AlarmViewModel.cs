@@ -1,13 +1,14 @@
-using CommunityToolkit.Mvvm.ComponentModel;
+﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CloudAlarmOverlay.Core.Models;
 using CloudAlarmOverlay.Core.Services;
 namespace CloudAlarmOverlay.App.ViewModels;
 public partial class AlarmViewModel(AlarmTask task,string code,bool preview,string? caption=null,bool allowSnooze=false,int snoozeCount=0,bool allowCompletion=false):ObservableObject
 {
-    public bool CanComplete => allowCompletion && !preview && caption is null;
+    private bool IsGeneral => task.Level==AlarmLevels.Low && caption is null;
+    public bool CanComplete => !IsGeneral && allowCompletion && !preview && caption is null;
     public bool TaskCompleted {get;private set;}
-    public bool CanSnooze => allowSnooze && !preview && caption is null && snoozeCount<SnoozePolicy.MaximumCount;
+    public bool CanSnooze => !IsGeneral && task.Level!=AlarmLevels.Mid && allowSnooze && !preview && caption is null && snoozeCount<SnoozePolicy.MaximumCount;
     public int[] SnoozeChoices { get; } = [5,10,15,30];
     [ObservableProperty] private int snoozeMinutes=5;
     public string SnoozeLabel => $"忙碌中，稍後提醒（已延後 {snoozeCount}/3 次）";
@@ -21,7 +22,7 @@ public partial class AlarmViewModel(AlarmTask task,string code,bool preview,stri
     [NotifyPropertyChangedFor(nameof(HasNoDescription))]
     private string healthDescription="";
     public string Description=>string.Join("\n\n",new[]{task.Description,HealthDescription}.Where(s=>!string.IsNullOrWhiteSpace(s)));
-    public string ConfirmLabel=>caption=="健康工具"?"確定":IsPomodoro&&task.Title.StartsWith("專注",StringComparison.Ordinal)?"開始休息":CanComplete?"只確認已讀":"我已閱讀，確認";
+    public string ConfirmLabel=>IsGeneral?"確認":caption=="健康工具"?"確定":IsPomodoro&&task.Title.StartsWith("專注",StringComparison.Ordinal)?"開始休息":CanComplete?"只確認已讀":"我已閱讀，確認";
     public string Note=>task.Note??"";
     public bool HasDescription=>!string.IsNullOrWhiteSpace(Description);
     public bool HasNoDescription=>!HasDescription;
@@ -40,7 +41,7 @@ public partial class AlarmViewModel(AlarmTask task,string code,bool preview,stri
             if(caption is not null)return "閱讀後按下確認，繼續番茄鐘流程。";
             var choice=CanComplete?"請依目前處理狀況選擇：「只確認已讀」保留待處理狀態；「已完成」會完成本次任務。":"閱讀後，按下確認即可完成提醒確認。";
             if(RequiresCode)return choice+" 請輸入 9 位數字確認碼；可輸入 xxx-xxx-xxx 或連續 9 位數字。"+(CanSnooze?" 忙碌時可直接按「稍後提醒」，不需輸入確認碼。":"");
-            if(task.Level==AlarmLevels.Low)return choice+" 10 秒後自動關閉；滑鼠移入可暫停。";
+            if(IsGeneral)return "提醒會持續置頂，按「確認」後完成本次任務並關閉通知。";
             return choice;
         }
     }
@@ -59,7 +60,7 @@ public partial class AlarmViewModel(AlarmTask task,string code,bool preview,stri
         var entered=Input.Trim();
         if(RequiresCode&&entered!=Code&&entered!=Code.Replace("-",""))
         {Error="確認碼不正確，請再試一次。";Incorrect?.Invoke();return;}
-        TaskCompleted=complete;
+        TaskCompleted=complete || (IsGeneral && allowCompletion && !preview);
         Confirmed?.Invoke();
     }
 }

@@ -18,6 +18,25 @@ public partial class AdminView:UserControl
         InitializeComponent();
         sessionTimer.Tick+=(_,_)=>{vm?.Admin.Session.CheckExpiry();UpdateDraftFooter();};
     }
+    private void OpenSharedSpreadsheet(object sender,RoutedEventArgs e)
+    {
+        if(DataContext is not MainViewModel model || sender is not Button button)return;
+        var id=(button.Tag as string=="A"?model.SheetAId:model.SheetBId)?.Trim();
+        if(string.IsNullOrWhiteSpace(id))
+        {
+            MessageBox.Show("請先設定 Spreadsheet ID。","開啟試算表",MessageBoxButton.OK,MessageBoxImage.Information);
+            return;
+        }
+        try
+        {
+            System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(
+                $"https://docs.google.com/spreadsheets/d/{Uri.EscapeDataString(id)}/edit"){UseShellExecute=true});
+        }
+        catch(Exception ex)
+        {
+            MessageBox.Show($"無法開啟試算表：{ex.Message}","開啟試算表",MessageBoxButton.OK,MessageBoxImage.Warning);
+        }
+    }
     private void WorkspaceLoaded(object sender,RoutedEventArgs e)
     {
         if(vm is null&&DataContext is MainViewModel model)

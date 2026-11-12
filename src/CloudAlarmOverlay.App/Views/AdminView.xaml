@@ -196,7 +196,10 @@
                               </StackPanel>
                             </Grid>
                           </StackPanel>
-                          <Button Content="測試連線" Command="{Binding TestSheetACommand}" HorizontalAlignment="Left" Margin="0,10,0,0" />
+                          <WrapPanel Margin="0,10,0,0">
+                            <Button Content="測試連線" Command="{Binding TestSheetACommand}" Margin="0,0,10,0" />
+                            <Button Content="開啟試算表 ↗" Tag="A" Click="OpenSharedSpreadsheet" />
+                          </WrapPanel>
                           <Border BorderBrush="{adaptive:AdaptiveBrush #D6E1EF}" BorderThickness="0,1,0,0" Padding="0,12,0,0" Margin="0,12,0,0" DataContext="{Binding Admin}">
                             <Grid>
                               <Grid.ColumnDefinitions>
@@ -236,7 +239,10 @@
                             <TextBlock Text="Tasks GID" Style="{StaticResource WorkspaceMuted}" />
                             <TextBox Text="{Binding TasksBGid,UpdateSourceTrigger=PropertyChanged}" AutomationProperties.Name="Sheet B Tasks GID" />
                           </StackPanel>
-                          <Button Content="測試連線" Command="{Binding TestSheetBCommand}" HorizontalAlignment="Left" Margin="0,10,0,0" />
+                          <WrapPanel Margin="0,10,0,0">
+                            <Button Content="測試連線" Command="{Binding TestSheetBCommand}" Margin="0,0,10,0" />
+                            <Button Content="開啟試算表 ↗" Tag="B" Click="OpenSharedSpreadsheet" />
+                          </WrapPanel>
                           <Border BorderBrush="{adaptive:AdaptiveBrush #D6E1EF}" BorderThickness="0,1,0,0" Padding="0,12,0,0" Margin="0,12,0,0" DataContext="{Binding Admin}">
                             <Grid>
                               <Grid.ColumnDefinitions>
