@@ -15,27 +15,20 @@
 
 </div>
 
-原始碼與本機封裝版本：**v1.5.1**，優化提醒通知版面、操作區與深淺色顯示。詳見 [v1.5.1 發布說明](docs/v1.5.1發布說明.md)；公開下載版本以 GitHub Releases 為準。
+目前版本：**v1.5.1**。優化提醒通知版面、操作區與深淺色顯示；一般與重要提醒持續置頂直到確認，一般提醒確認即完成。另支援日曆提醒時間直接輸入，以及管理者共用試算表快捷入口。
 
-## 介面預覽
-
-| 亮色模式 | 暗色模式 |
-| --- | --- |
-| [![亮色任務清單：來源分類、交錯底色與選取指示線](site-assets/screenshots/tasks_light.png)](site-assets/screenshots/tasks_light.png) | [![暗色任務清單：來源分類、交錯底色與選取指示線](site-assets/screenshots/tasks_dark.png)](site-assets/screenshots/tasks_dark.png) |
-| [![亮色首頁：下一個提醒、今日進度與重要追蹤](site-assets/screenshots/home_light.png)](site-assets/screenshots/home_light.png) | [![暗色首頁：下一個提醒、今日進度與重要追蹤](site-assets/screenshots/home_dark.png)](site-assets/screenshots/home_dark.png) |
-
-其他畫面：[番茄鐘](site-assets/screenshots/pomodoro_light.png) · [倒數／正數](site-assets/screenshots/countdown_light.png) · [事件編輯](site-assets/screenshots/countdown_editor_light.png) · [提醒通知](site-assets/screenshots/notification_light.png)
+[下載 v1.5.1 Windows x64 安裝包](https://github.com/bruce-yang-422/cloud-alarm-overlay/releases/download/v1.5.1/CloudAlarmOverlay-v1.5.1-Setup-x64.exe) · [v1.5.1 發布說明](docs/v1.5.1發布說明.md)
 
 ## 主要功能
 
 - **任務與月曆**：建立一次性或重複提醒，支援工作日、每週複選、每月指定日期與月份、國曆及農曆規則；可略過假日，並以清單或月曆檢視。
 - **任務進度**：依待處理、已完成、已結束與全部分區管理；支援單筆或批次完成、恢復與復原。重複任務以單次發生時間記錄進度。
-- **分級通知**：提供一般、重要、緊急與強制通知；可依政策延後提醒，最高級通知須輸入確認碼。
+- **分級通知**：提供一般、重要、緊急與強制通知。一般與重要提醒持續置頂，不會自動關閉；一般提醒只需按「確認」即完成任務，重要提醒保留已讀與完成選項。緊急與強制通知可依政策延後，最高級通知須輸入確認碼。
 - **多來源同步**：讀取公開 Google Sheets，並可使用 Google 帳號連接私人試算表及自己的 Google 日曆。
 - **任務產生器**：使用隨附的瀏覽器表單挑選員工、產生資料列並匯出 CSV 或 Excel，供管理者更新試算表。
 - **計時與健康**：倒數／正數、番茄鐘，以及喝水、久坐、螢幕休息與伸展提醒。
 - **首頁與外觀**：任務摘要、首頁釘選、天氣與氣象警特報，支援明暗模式與多種色彩風格。
-- **管理與稽核**：公司政策、來源設定、存取控制、歷史紀錄、CSV 匯出、備份與還原。
+- **管理與稽核**：公司政策、來源設定、存取控制、歷史紀錄、CSV 匯出、備份與還原；共用試算表可透過「開啟試算表 ↗」快速開啟公司或團隊資料。
 - **行事曆匯出**：將本機任務及倒數／正數事件匯出為 ICS，可選 1、3、5、10 年或自訂日期；農曆與略過假日依所選期間展開。
 - **程式內更新**：直接下載 GitHub Releases 安裝檔、顯示進度並驗證 SHA-256，確認後啟動安裝精靈。
 
@@ -79,6 +72,7 @@
 | [健康工具](docs/健康工具.md) | 喝水、久坐、螢幕休息與伸展提醒。 |
 | [氣象署警特報](docs/氣象署警特報.md) | 警特報來源與限制。 |
 | [常用 CLI 指令](docs/常用CLI指令.md) | 建置、測試、封裝與發布。 |
+| [版本更新檢查清單](docs/版本更新檢查清單.md) | 版本更新時需同步的檔案、封裝順序與發布檢查。 |
 | [Google 整合待辦](docs/Google帳號與同步設定.md) | 尚未實作的 Google 整合項目。 |
 | [發布說明](https://github.com/bruce-yang-422/cloud-alarm-overlay/releases) | 各版本更新內容與升級須知。 |
 
